@@ -324,22 +324,13 @@ def main():
         print 'y_test_score: {}'.format(y_test_score[i])
         print 'y_test_true: {}'.format(y_test_true[i])
 
-    print 'y_test_score type: {}'.format(type(y_test_score))
-    print 'y_test_score shape: {}'.format(y_test_score.shape)
-    print 'roc-auc-score: {}'.format( roc_auc_score(y_test_true, y_test_score) )
+    print '\nroc-auc-score: {}'.format( roc_auc_score(y_test_true, y_test_score) )
+    # ---------------------------------------------------------------------------------
+    # -------------- plot ROC MVA output, effs and significance -----------------------
 
-
-    plot_ROC(y_test_true, y_test_score, class_number=3, NN=use_NN)
-    plot_ROC(y_test_true, y_test_score, class_number=2, NN=use_NN)
-    plot_ROC(y_test_true, y_test_score, class_number=1, NN=use_NN)
-    plot_ROC(y_test_true, y_test_score, class_number=0, NN=use_NN)
-    plot_MVAoutput(y_test_true, y_test_score, nbins=100, class_number=0, NN=use_NN)
-    plot_MVAoutput(y_test_true, y_test_score, nbins=100, class_number=1, NN=use_NN)
-    plot_MVAoutput(y_test_true, y_test_score, nbins=100, class_number=2, NN=use_NN)
-    plot_MVAoutput(y_test_true, y_test_score, nbins=100, class_number=3, NN=use_NN)
-    #print 'Type of saved root data: {}'.format(type( data ))
-    #print 'Data shape: {}'.format(data.shape)
-    #print 'Max evt Number: {}'.format(maxEvt)
+    print '\ncreating ROC-curves, plotting MVA outputs and significane...'
+    plot_ROC_MVA_eff_sign_allDiff( y_test_true, y_test_score, nbins=100, useNN=use_NN )
+    # ---------------------------------------------------------------------------------
 
     return
 
