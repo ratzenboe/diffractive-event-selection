@@ -21,6 +21,10 @@ from keras import backend as K
 from sklearn.metrics import roc_auc_score, roc_curve
 
 from modules.import_data import import_data_hdf5
+from modules.plot import plot_ROC, plot_MVAoutput, plot_ROC_MVA_eff_sign_allDiff
+from modules.models import conv2D_model, NN_model
+from modules.inputVars import set_variables
+from modules.load_save_data import heaviside_numpy
 
 batch_size = 128        # number of samples per gradient update
 nb_classes = 4          # number of different classes (ND, SD, DD, CD)
