@@ -27,7 +27,7 @@ def unison_shuffled_copies( a, b ):
 # the function puts pT into the eta-phi place, for all entries with the same eventID
 # the diffrCode is converted into a 4x1 vector ( ND, SD, DD, CD ), it is 1 for the certain
 # diffractive case and 0 for the others
-def get_XY_data( inp_data, hist_dim=32, etaMin=-13, etaMax=13, maxNumber=None ):
+def get_XY_data( inp_data, hist_dim=32, etaMin=-13, etaMax=13, maxNumber=None, n_dim=1 ):
     "Function that creates an array of histograms from the rootNumpy array"
 
     # first: arrays that define the histogram:
@@ -45,7 +45,7 @@ def get_XY_data( inp_data, hist_dim=32, etaMin=-13, etaMax=13, maxNumber=None ):
     if (maxNumber is None) or (maxNumber > evts_in_data):
         maxNumber = evts_in_data
 
-    x_data = np.zeros( (maxNumber, hist_dim, hist_dim, 3 ) )
+    x_data = np.zeros( (maxNumber, hist_dim, hist_dim, n_dim ) )
     y_data = np.zeros( (maxNumber) )
 
     for evtInt in range( minEvtInt, minEvtInt+maxNumber ):
@@ -64,45 +64,50 @@ def get_XY_data( inp_data, hist_dim=32, etaMin=-13, etaMax=13, maxNumber=None ):
         evt_data = evt_data.drop(evt_data[(evt_data.pT < 0.12) & (evt_data.charge == 0.)].index)
 
         # eta selection
-        # evt_data = evt_data.drop(evt_data[(evt_data.eta < -7.) or 
-        #                                   (evt_data.eta > 6.3) or
-        #                                   ((evt_data.eta > -4.9) and (evt_data.eta < -3.7))].index)
-
+        # evt_data = evt_data.drop(evt_data[(evt_data.eta < -7.) | 
+        #                                   (evt_data.eta > 6.3) |
+        #                                   ((evt_data.eta > -4.9) & (evt_data.eta < -3.7))].index)
+        # only TPC, TOF eta space
+        evt_data = evt_data.drop(evt_data[abs(evt_data.eta) > etaMax].index)
         # we get p with the inputs eta(as vector) phi, pT, pdgID
-        p_data = evt_data[['eta', 'phi', 'pT', 'pdgID']].T.as_matrix()
-        # returns p and e, if |eta| > 0.9, e is returned as -1 (needed for isInTPCTOF)
-        p_arr = get_p_e_vect( eta = p_data[0], 
-                              phi = p_data[1], 
-                              pt  = p_data[2], 
-                              pdg = p_data[3] )
+        if evt_data.size == 0:
+            continue
 
-        # bb_tof_arr[0] = bethebloch array, bb_tof_arr[1] = tof array
-        # returns 0,0 if pdg is neutral particle, and if isInTPCTOF is less than 0.
-        bb_tof_arr = bb_ToF_vect( p=p_arr[0], 
-                                  pdg=p_data[3],
-                                  isInTPCTOF=p_arr[1] )
+        if n_dim == 3:
+            p_data = evt_data[['eta', 'phi', 'pT', 'pdgID']].T.as_matrix()
+            # returns p and e, if |eta| > 0.9, e is returned as -1 (needed for isInTPCTOF)
+            p_arr = get_p_e_vect( eta = p_data[0], 
+                                  phi = p_data[1], 
+                                  pt  = p_data[2], 
+                                  pdg = p_data[3] )
 
-        # the dEdx numbers go up to a very high number, therefore we divide by the largest number
-        bb_arr = bb_tof_arr[0]/2000.
-        
+            # bb_tof_arr[0] = bethebloch array, bb_tof_arr[1] = tof array
+            # returns 0,0 if pdg is neutral particle, and if isInTPCTOF is less than 0.
+            bb_tof_arr = bb_ToF_vect( p=p_arr[0], 
+                                      pdg=p_data[3],
+                                      isInTPCTOF=p_arr[1] )
+
+            # the dEdx numbers go up to a very high number, therefore we divide by the largest number
+            bb_arr = bb_tof_arr[0]/2000.
+
+            # bethe bloch histogram
+            x_data[evtInt-minEvtInt,:,:,1] = np.histogram2d(evt_data.eta.as_matrix(), 
+                                                            evt_data.phi.as_matrix(), 
+                                                            bins=(xedges, yedges), 
+                                                            weights=bb_arr )[0]
+
+            # tof histogram
+            x_data[evtInt-minEvtInt,:,:,2] = np.histogram2d(evt_data.eta.as_matrix(), 
+                                                            evt_data.phi.as_matrix(), 
+                                                            bins=(xedges, yedges), 
+                                                            weights=bb_tof_arr[1] )[0]
+
         # make pT-histogram
         x_data[evtInt-minEvtInt,:,:,0] = np.histogram2d(evt_data.eta.as_matrix(), 
                                                         evt_data.phi.as_matrix(), 
                                                         bins=(xedges, yedges), 
                                                         weights=evt_data.pT.as_matrix() )[0]
-        # bethe bloch histogram
-        x_data[evtInt-minEvtInt,:,:,1] = np.histogram2d(evt_data.eta.as_matrix(), 
-                                                        evt_data.phi.as_matrix(), 
-                                                        bins=(xedges, yedges), 
-                                                        weights=bb_arr )[0]
-
-        # tof histogram
-        x_data[evtInt-minEvtInt,:,:,2] = np.histogram2d(evt_data.eta.as_matrix(), 
-                                                        evt_data.phi.as_matrix(), 
-                                                        bins=(xedges, yedges), 
-                                                        weights=bb_tof_arr[1] )[0]
-
-        # want the corrensponding diffractive code, which is our training goal
+       # want the corrensponding diffractive code, which is our training goal
         y_data[evtInt-minEvtInt] = evt_data['diffrCode'].iloc[-1]
 
     # x_data, y_data = unison_shuffled_copies(x_data, y_data)
@@ -113,6 +118,20 @@ def get_XY_data( inp_data, hist_dim=32, etaMin=-13, etaMax=13, maxNumber=None ):
     # x_data = x_data.reshape( x_data.shape[0], hist_dim, hist_dim, 1 )
     # returns the histograms in shuffled order
     return x_data, y_data
+
+
+def heaviside_numpy(arr):
+    """
+    numpy array input is transformed into a 0/1 array (just position is highlighted)
+    use the numpy.sign function that returns -1 for x<0, 0 for x=0 and 1 for x>0
+    we want: 0 for x<=0, else 1, hence, add 1 and multply by 0.5
+    as this gives 0.5 for the case 0 (most cases) we subtract a value from the np-arr
+    between 0.5 and 1 and redo the heviside calculation to arrive at the desired output
+    """
+    arr = 0.5 * (np.sign(arr) + 1)
+    arr = arr-0.6
+    return 0.5 * (np.sign(arr) + 1)
+
 
 def plot_feature_hists( data_in, feature='pT', nbins=100 ):
     """
@@ -125,7 +144,7 @@ def plot_feature_hists( data_in, feature='pT', nbins=100 ):
         - number of particles per evt
     """
     data = data_in
-    if feature is 'N':
+    if feature == 'N':
         # adds a column freq to the dataframe, which accounts for the number of the same
         # eventID, hence particles in the event
         data['freq'] = data.groupby('eventID')['eventID'].transform('count')
@@ -156,6 +175,7 @@ def plot_feature_hists( data_in, feature='pT', nbins=100 ):
     plt.legend()
 
     plt.show()
+
 
     
 def load_data( filename, branches=None, start=None, stop=None, selection=None ):
@@ -193,12 +213,12 @@ def save_data( x_file, y_file, x_data, y_data ):
         for i in range(0,x_data.shape[0]):
             for j in range(0,3):
                 # Writing out a break to indicate different slices
-                if j is 0:
+                if j == 0:
                     of.write('# New histogram\n')
                     of.write('# pt:\n')
-                if j is 1:
+                if j == 1:
                     of.write('# dE/dx TPC:\n')
-                if j is 2:
+                if j == 2:
                     of.write('# beta in TOF:\n')
 
                 # The formatting string indicates that I'm writing out
@@ -253,12 +273,12 @@ def main():
     print 'data loaded!'
 
     print 'converting data to histograms...'
-    X_train, y_train = get_XY_data( train_data, maxNumber=20000 )
+    X_train, y_train = get_XY_data( train_data, etaMax=13, etaMin=-13, maxNumber=20000, n_dim=1 )
     print 'first histogram finished'
     print 'validaiton data to histograms...'
-    X_valid, y_valid = get_XY_data( validation_data, maxNumber=4000 )
+    X_valid, y_valid = get_XY_data( validation_data,etaMax=13,etaMin=-13,maxNumber=4000,n_dim=1 )
     print 'final validation data to histograms...' 
-    x_test, y_test = get_XY_data( final_valid_data, maxNumber=5000 )
+    x_test, y_test = get_XY_data( final_valid_data,etaMax=13,etaMin=-13,maxNumber=5000,n_dim=1 )
     print 'data conversion finished!'
 
     # plot_feature_hists( final_valid_data, feature='N' )
