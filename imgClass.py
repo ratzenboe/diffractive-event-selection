@@ -23,12 +23,12 @@ from sklearn.metrics import roc_auc_score, roc_curve
 from modules.import_data import import_data_hdf5
 from modules.plot import plot_ROC, plot_MVAoutput, plot_ROC_MVA_eff_sign_allDiff
 from modules.models import conv2D_model, NN_model
-from modules.inputVars import set_variables
+from modules.inputVars import set_variables, get_data_model_path
 from modules.load_save_data import heaviside_numpy
 
 batch_size = 128        # number of samples per gradient update
 nb_classes = 4          # number of different classes (ND, SD, DD, CD)
-nb_epoch = 5           # number of training epochs
+nb_epoch = 10           # number of training epochs
 nb_datasplits = 10      # datasplits to speed up data->histogram making (=panda-manipulations)
 nb_test_evts = 20000    # number of evts in test sample
 nb_valid_evts = 5000    # number of evts in validation sample
@@ -47,34 +47,18 @@ output_folder = '/home/ratzenboe/Documents/imageClassification/plots/'
 # ### ------------------------------------------------------------------------------
 # ------------------------------------- main -------------------------------------
 def main():
-    ## ------------------- determine what we want to do --------------------------
+    ## ------------------- ask user about model etc --------------------------
     use_NN, load_weights_bool, img_channels, only_position_info, eta_LT09 = set_variables()
+    trainTestValidFile, model_fn = get_data_model_path( use_NN, 
+                                                        load_weights_bool, 
+                                                        img_channels, 
+                                                        only_position_info, 
+                                                        eta_LT09 )
     # ----------------------------------------------------------------------------
-    # --------------------- choose model and file path ---------------------------
-    trainTestValidFile='/media/hdd/eventInfo/train_valid_test'
-    if eta_LT09:
-        trainTestValidFile+='_etaLT09'
-    # if we want to test something, it is better to use the pretrained models:
-    model_path = '/home/ratzenboe/Documents/imageClassification/gettingStarted/'
-    if use_NN:
-        model_fn = 'NN_3d_weights'
-    else:
-        model_fn = 'cnn'
-    if img_channels == 3:
-        model_fn += '_3d_weights'
-        trainTestValidFile+='_3d'
-    else:
-        model_fn += '_weights'
-
-    if eta_LT09:
-        model_fn += '_etaLT09.h5'
-
-    trainTestValidFile += '.h5'
-    model_fn += '.h5'
-    # ----------------------------------------------------------------------------
+    #
     # --------------------- load data from files ---------------------------------
     print 'loading data...'
-    if load_weights_bool and (os.path.isfile(model_path+model_fn)):
+    if load_weights_bool and (os.path.isfile(model_fn)):
         x_test, y_test = import_data_hdf5( inFile=trainTestValidFile, 
                                            only_testvalid=True )
         if only_position_info:
@@ -91,9 +75,7 @@ def main():
         y_train = keras.utils.to_categorical(y_train, nb_classes)
         y_valid = keras.utils.to_categorical(y_valid, nb_classes)
     # ----------------------------------------------------------------------------
-    
-
-
+    #
     # ------------------- build model, and then fit it ---------------------------
     print 'building model...'
     if use_NN:
@@ -118,10 +100,10 @@ def main():
                                 normalize_batch=False )
 
     # convert class vectors to binary class matrices
-    if load_weights_bool and (os.path.isfile(model_path+model_fn)):
+    if load_weights_bool and (os.path.isfile(model_fn)):
         # load weights, to load weights into different architecture use by_name=True
         print 'using pretrained model!'
-        model.load_weights(model_path+model_fn)
+        model.load_weights(model_fn)
     else:
         print 'training model on imported data...'
         model.fit(  x_train, y_train,
@@ -136,7 +118,7 @@ def main():
         print 'test accuracy: {}'.format(score[1])
 
         # save weights in a file:
-        weights_file=model_path+model_fn
+        weights_file=model_fn
         model.save_weights(weights_file)
     # ---------------------------------------------------------------------------------
     # -------------------- test prediction on new dataset -----------------------------
