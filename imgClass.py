@@ -135,7 +135,9 @@ def main():
     # -------------- plot ROC MVA output, effs and significance -----------------------
 
     print '\ncreating ROC-curves, plotting MVA outputs and significane...'
-    plot_ROC_MVA_eff_sign_allDiff( y_test_true, y_test_score, nbins=100, useNN=use_NN )
+    plot_ROC_MVA_eff_sign_allDiff( y_test_true, y_test_score, 
+                                   nbins=100, useNN=use_NN,
+                                   )
     # ---------------------------------------------------------------------------------
 
     return
