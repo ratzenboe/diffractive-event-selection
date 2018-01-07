@@ -1,0 +1,82 @@
+
+fetching data...
+
+Tokenization took: 2.97 ms
+Type conversion took: 3.99 ms
+Parser memory cleanup took: 0.00 ms
+Parse all object type columns...
+[]
+X shape: (8690, 12)
+
+------------------------------
+
+Splitting data in training and test sample
+
+Info: The model will be trained anew. Existing saves will be overwritten.
+      (Program paused for 3 seconds. Hit Enter to abort the training.)
+No input received. Continue running the program...
+Creating the model using GBR_default...
+
+Grid search on GBR_default
+
+Fitting the model...
+Fitting 5 folds for each of 18 candidates, totalling 90 fits
+
+
+-----------------------------------
+Grid search summary (used folds: 5)
+-----------------------------------
+
+  Best estimator: GradientBoostingRegressor(alpha=0.9, criterion='friedman_mse', init=None,
+             learning_rate=0.1, loss='huber', max_depth=6,
+             max_features=None, max_leaf_nodes=None,
+             min_impurity_decrease=0.0, min_impurity_split=None,
+             min_samples_leaf=1, min_samples_split=3,
+             min_weight_fraction_leaf=0.0, n_estimators=300,
+             presort='auto', random_state=None, subsample=1.0, verbose=0,
+             warm_start=False) 
+
+  Best score: -25.8390647854 (optimized metric: neg_mean_absolute_error)
+
+
+  mean_fit_time                      :    4.999
+  mean_score_time                    :  0.05673
+  mean_test_neg_mean_absolute_error  :   -25.84
+  mean_test_neg_mean_squared_error   : -1.788e+03
+  mean_test_neg_median_absolute_error:   -14.79
+  mean_test_r2                       :   0.9438
+  mean_train_neg_mean_absolute_error :   -13.54
+  mean_train_neg_mean_squared_error  :   -630.2
+  mean_train_neg_median_absolute_error:    -7.38
+  mean_train_r2                      :   0.9802
+  std_fit_time                       :  0.08523
+  std_score_time                     : 0.0009318
+  std_test_neg_mean_absolute_error   :   0.7668
+  std_test_neg_mean_squared_error    :    152.1
+  std_test_neg_median_absolute_error :   0.4157
+  std_test_r2                        : 0.004804
+  std_train_neg_mean_absolute_error  :   0.1617
+  std_train_neg_mean_squared_error   :    16.32
+  std_train_neg_median_absolute_error:  0.04818
+  std_train_r2                       : 0.0004079
+
+---------- Evaluating the model on the test sample... ----------
+Predicting class labels...
+
+Explained variance score (best 1, worst 0):  0.9532
+Mean absolute error:  24.8902
+Mean squared error:  1532.8295
+r^2 score (best 1, can get negative=arbitraryliy bad):  0.9530
+
+Evaluation time test sample: 0.00664496421814 seconds
+
+-------------------
+- RUNTIME -
+-------------------
+
+Total runtime: 221.491881847 seconds
+
+Training time: 218.135510921 seconds
+
+------------------------------
+
