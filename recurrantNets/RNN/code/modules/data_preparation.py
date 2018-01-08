@@ -141,3 +141,18 @@ def save_data_h5py(outfile, all_evt_data, file_addition=''):
  
     return 
 
+
+def preprocess(evt_dic, data_params, load_fitted_attributes=False):
+    """
+    Performes preprocessing on the data, right now only standarad scaling
+    the fitted attributes are then saved in a file
+    """
+
+
+
+
+
+
+
+
+

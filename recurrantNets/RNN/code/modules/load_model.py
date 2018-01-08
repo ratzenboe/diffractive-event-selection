@@ -23,7 +23,6 @@ def load_model(data, run_params):
         particle_channel.add(GRU(5, name='particle_gru'))
         particle_channel.add(Dropout(0.3, name='particle_dropout'))
 
-    #combining the jet and photon classes to make a combined recurrent neural network
         combined_rnn = Sequential()
         combined_rnn.add(Concatenate([particle_channel], mode='concat'))  
         combined_rnn.add(Dense(36, activation='relu'))
@@ -58,7 +57,6 @@ def load_model(data, run_params):
         AD_SHAPE = X_ad_train.shape[1:]
         FMD_SHAPE = X_fmd_train.shape[1:]
         V0_SHAPE = X_v0_train.shape[1:]
-
 
         # adding layers to the particle, raw_tracking emcal and phos info,
         # calo clusters
@@ -112,11 +110,10 @@ def load_model(data, run_params):
                                       emc_channel, 
                                       phos_level, 
                                       calo_cluster_channel,
-                                      event_channel,
-                                      fmd_channel,
-                                      ad_channel,
-                                      v0_channel
-                                      ]))
+                                      event_level,
+                                      fmd_level,
+                                      ad_level,
+                                      v0_level] ))
         combined_rnn.add(Dense(36, activation='relu'))
         combined_rnn.add(Dropout(0.3))
         combined_rnn.add(Dense(24, activation='relu'))
