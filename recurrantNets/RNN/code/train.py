@@ -22,7 +22,7 @@ from modules.arg_config_parser                  import get_input_args, get_run_p
                                                        get_data_params, get_classifier_params 
 from modules.logger                             import logger
 from modules.load_model                         import load_model
-from modules.preprocess                         import get_data, save_data_h5py
+from modules.data_preparation                   import get_data, save_data_h5py
 from modules.CleanData                          import standardScale 
 
 def main():
@@ -52,7 +52,9 @@ def main():
     #    data['target'].shape = (n_evts, )
     #    etc. 
     evt_dictionary = get_data(data_params)
-    
+    outfile = output_prefix+model_saves_prefix+'all_evts.h5'
+    print'saving data in {}'.format(outfile)
+    save_data_h5py(outfile, evt_dictionary)
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------

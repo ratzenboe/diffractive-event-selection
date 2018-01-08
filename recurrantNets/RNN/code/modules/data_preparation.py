@@ -123,7 +123,7 @@ def load_data(filename, branches=None, start=None, stop=None, selection=None):
     return data, nb_entries
 
 
-def save_data_h5py( outfile, all_evt_data, file_addition='' ):
+def save_data_h5py(outfile, all_evt_data, file_addition=''):
     """
     save histograms in a .h5 file (hdf5-format)
     """
