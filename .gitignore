@@ -106,9 +106,10 @@ venv.bak/
 # emacs temporary files
 *~
 
-# output files of ratti
+# output and data files are too big for a online repository
 /recurrantNets/RNN/data/*
 /recurrantNets/RNN/code/output/*
+/imageNets/pretrainedmodels/*
 
 # jupyter notebooks 
 *.ipynb
