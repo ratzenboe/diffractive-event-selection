@@ -35,7 +35,7 @@ def load_model(data, run_params):
         # compile
         combined_rnn.compile('adam', 'sparse_categorical_crossentropy')
 
-    else if 'GridSim' in model_name:
+    elif 'GridSim' in model_name:
         X_track_train = data['track']
         X_raw_track_train = data['raw_track']
         X_emcal_train = data['emcal']
