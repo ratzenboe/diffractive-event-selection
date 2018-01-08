@@ -71,15 +71,9 @@ def main():
     if run_params['stdScale']:
         print'standarad scaling...'
         # returns a numpy array (due to fit_transform function)
-        X_train = standardScale(X_train, run_params)
-        X_test  = standardScale(X_test,  run_params, load_fitted_attributes=True)
-
-    # want the data in a numpy format
-    if not run_params['stdScale']:
-        X_train = X_train.as_matrix()
-        X_test  = X_test.as_matrix()
-    y_train = y_train.as_matrix()
-    y_test  = y_test.as_matrix()
+        preprocess(evt_dic_train, data_params, run_params)
+        preprocess(evt_dic_valid, data_params, run_params, load_fitted_attributes=True)
+        preprocess(evt_dic_test,  data_params, run_params, load_fitted_attributes=True)
 
     pause_for_input(run_params, timeout=3)
     model = load_model(run_params, classifier_params)
@@ -90,23 +84,7 @@ def main():
     # if we want cross validation (in most cases we do) we can in turn easily evaluate the
     # models by passing which metrics should be looked into
     start_time_training = time.time()
-    if not run_params['CV']:
-        print'\nGrid search on {}'.format(run_params['classifier_params_id'])
-        param_grid = load_grid(run_params, classifier_params)
-        model = GridSearchCV(model, param_grid         = param_grid,
-                                    scoring            = data_params['cross_validate_metrics'],
-                                    cv                 = run_params['CV_nfolds'],
-                                    refit              = data_params['gs_refit'],
-                                    return_train_score = True,
-                                    verbose            = 1,
-                                    n_jobs             = run_params['num_jobs'],
-                                    pre_dispatch       = '2*n_jobs')
-    else:
-        print'\nCross validation...'
-        scores = cross_validate(model, X_train, y_train,
-                                scoring            = data_params['cross_validate_metrics'],
-                                cv                 = run_params['CV_nfolds'],
-                                return_train_score = True)
+
     # we have to fit the model anyhow (even with CV) to make evaluations on the test
     # data sampple
     print'\nFitting the model...'

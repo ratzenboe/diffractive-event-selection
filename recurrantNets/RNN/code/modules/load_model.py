@@ -7,10 +7,10 @@ from keras.layers import Masking, LSTM, GRU, Concatenate, Input, Lambda
 
 def load_model(data, run_params): 
     model_name = run_params['classifier_params_id']
-    if 'small' in model_name:
+    if 'P8own' in model_name:
         # pass shape into Masking layer
         y_train = data['target']
-        X_particles_train = data['X_particles_train']
+        X_particles_train = data['tracks']
 
         PARTICLE_SHAPE = X_particles_train.shape[1:]
 
@@ -35,7 +35,7 @@ def load_model(data, run_params):
         # compile
         combined_rnn.compile('adam', 'sparse_categorical_crossentropy')
 
-    else if 'full' in model_name:
+    else if 'GridSim' in model_name:
         X_track_train = data['track']
         X_raw_track_train = data['raw_track']
         X_emcal_train = data['emcal']
@@ -46,17 +46,21 @@ def load_model(data, run_params):
         X_fmd_train=data['fmd']
         X_v0_train=data['v0']
 
-        y_train = data['y_train']
+        y_train = data['target']
 
+        # the data for the RNNs are of shape (n_evts, n_timesteps=n_particles, n_features) 
+        # the masking layer however is only intersted in (n_timesteps, n_features)
         TRACK_SHAPE = X_track_train.shape[1:]
         RAW_TRACK_SHAPE = X_raw_track_train.shape[1:]
         EMCAL_SHAPE = X_emcal_train.shape[1:]
         PHOS_SHAPE = X_phos_train.shape[1:]
         CALO_CLUSTER_SHAPE = X_calo_cluster_train.shape[1:]
-        EVENT_SHAPE = X_event_train.shape[1:]
-        AD_SHAPE = X_ad_train.shape[1:]
-        FMD_SHAPE = X_fmd_train.shape[1:]
-        V0_SHAPE = X_v0_train.shape[1:]
+        # this following data is of shape (n_evts, n_features)
+        # the network is fed with n_features
+        EVENT_SHAPE = X_event_train.shape[1]
+        AD_SHAPE = X_ad_train.shape[1]
+        FMD_SHAPE = X_fmd_train.shape[1]
+        V0_SHAPE = X_v0_train.shape[1]
 
         # adding layers to the particle, raw_tracking emcal and phos info,
         # calo clusters
