@@ -142,17 +142,49 @@ def save_data_h5py(outfile, all_evt_data, file_addition=''):
     return 
 
 
-def preprocess(evt_dic, data_params, load_fitted_attributes=False):
+def preprocess(evt_dic, data_params, run_params, load_fitted_attributes=False):
     """
     Performes preprocessing on the data, right now only standarad scaling
     the fitted attributes are then saved in a file
     """
 
+    output_prefix, model_saves_prefix = get_output_paths(run_params)
+    load_save_file = output_prefix + model_saves_prefix + 'scaling_attributes.npy'
+    
+    if not load_fitted_attributes:
+        # we loop through all datasets that are in the dictionary std_scale
+        # std_scale looks like:
+        #   {'fmd': ['a', 'b',...], 'ad': [...], ...}
+        for key, columns in data_params['std_scale'].iteritems():
+            # we have to fit new scaling attributes
+            scaling_attr = {}
+            for col in columns:
+                try:
+                    mean = evt_dic[key][col].mean()
+                    std  = evt_dic[key][col].std()
+                    evt_dic[key][col] -= mean
+                    evt_dic[key][col] /= std
+                except KeyError:
+                    print'Warning: Feature {} not found in the data!'.format(col)
+                    
+                # cannot save only the column, but we also have to 
+                # save the key, as some columns appear in different keys
+                # e.g. time in fmd, ad, v0
+                scaling_attr[col] = {key: {'mean': mean, 'std': std} }
 
+        np.save(load_save_file, scaling_attributes)
 
+    else:
+        # load previously fitted attributes
+        scaling_attr = np.load(load_save_file).item()
 
+        for key, columns in data_params['std_scale'].iteritems():
+            for col in columns:
+                try: 
+                    evt_dic[key][col] -= scaling_attributes[col][key]['mean']
+                    evt_dic[key][col] /= scaling_attributes[col][key]['std']
+                except KeyError:
+                    print'Warning: Feature {} not found in the data!'.format(col)
 
-
-
-
+    return evt_dic
 
