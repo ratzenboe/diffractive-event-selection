@@ -61,10 +61,12 @@ def main():
     ######################################################################################
     print'Splitting data in training and test sample'
     # output type is the same as input type!
-    evt_dic_train, evt_dic_valid =  split_dictionary(evt_dictionary,
-                                                     split_size=run_params['frac_valid_sample'])
-    X_train, X_test, y_train, y_test = train_test_split(X, y,
-                                            test_size=run_params['frac_test_sample'])
+    evt_dic, evt_dic_valid       = split_dictionary(evt_dictionary,
+                                                    split_size=run_params['frac_valid_sample'])
+    del evt_dictionary
+    evt_dic_train, evt_dic_test  = split_dictionary(evt_dic,
+                                                    split_size=run_params['frac_test_sample'])
+    del evt_dic
         
     if run_params['stdScale']:
         print'standarad scaling...'

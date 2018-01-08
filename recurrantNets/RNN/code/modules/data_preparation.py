@@ -111,6 +111,9 @@ def load_data(filename, branches=None, start=None, stop=None, selection=None):
         the raw data from the root file is then put into a shaping function that prepares the
         data for the RNNs (prepare_data) 
     """
+    if not os.path.exists(filename):
+        print'Error when loading the data. File {} is not a regular file.'.format(filename)
+        sys.exit(1)
 
     data = pd.DataFrame( root_numpy.root2array( filename,
                                                 branches=branches,
