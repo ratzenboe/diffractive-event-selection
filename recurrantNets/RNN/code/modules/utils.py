@@ -83,5 +83,3 @@ def split_dictionary(evt_dictionary, split_size):
 
     return valid_sample, rand_smpl_small
 
-
-
