@@ -1,16 +1,12 @@
 #!/bin/sh
 # script creates folder structure where we store the code, modules and output
 
-echo "Choose default model: [1=LSTM, 2=RNN, 3=GRU], followed by [ENTER]"
+echo "Choose default model: [1=LSTM, 2=GRU], followed by [ENTER]"
 read MODEL
 # SVR default and optimized
 if [ "$MODEL" = "1" ]; then
     echo "setting MODEL_PARAMS environment to LSTM..."
     export MODEL_PARAMS='LSTM'
-elif [ "$MODEL" = "1" ]; then
-    echo "setting MODEL_PARAMS environment to RNN..."
-    export MODEL_PARAMS='RNN'
-# GBR default and optimized
 elif [ "$MODEL" = "2" ]; then
     echo "setting MODEL_PARAMS environment to GRU..."
     export MODEL_PARAMS='GRU'
