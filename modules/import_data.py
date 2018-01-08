@@ -78,6 +78,7 @@ def import_data_hdf5(inFile=None, only_testvalid=False ):
     if inFile is None:
         inFile = '/media/hdd/eventInfo/train_valid_test.h5'
 
+    print 'load data from {}'.format(inFile)
     h5f = h5py.File(inFile, 'r')
     print 'loading test histograms'
     x_train = h5f['x_train'][:]
