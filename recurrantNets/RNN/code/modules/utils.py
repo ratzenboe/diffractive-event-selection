@@ -2,25 +2,12 @@ from __future__ import division
 import sys
 import os
 import time
+import random
 
 from select import select
 
 import numpy as np
 import pandas as pd
-
-def print_CV_results(scores):
-    """
-    Outputs the metrics evaluated by cross-validation (mean and standard deviation).
-    """
-
-    print'\nCross-validation results:'
-
-    for metric in sorted(scores.keys()):
-        print'  {:22s}: {:8.4} +/- {:8.4}'.format(
-            metric, np.mean(scores[metric]), np.var(scores[metric]))
-
-    return
-
 
 def print_number(y, name, **kwargs):
 
@@ -65,25 +52,6 @@ def get_output_paths(run_params):
     return output_prefix, model_saves
 
 
-def file_manipulation(func, data_params, **kwargs):
-    """
-    Simple wrapper for a pandas file import method.
-    """
-    
-    if not os.path.exists(data_params['data_path']):
-        print'Error when loading data. File {} file not found.'.format(data_params['data_path'])
-        sys.exit()
-
-    print'Reading file {}...'.format(data_params['data_path'])
-    
-    data = func(data_params['data_path'], **kwargs)
-
-    print'data: {}  rows, {} columns'.format(data.shape[0], data.shape[1])
-    print'data: branches = {}'.format(list(data.columns.values))
-
-    return data
-
-
 def print_dict(dictionary, headline=None):
     """
     Prints the contents of a dictionary to the terminal, line by line.
@@ -98,24 +66,22 @@ def print_dict(dictionary, headline=None):
     return
 
 
-def print_gridSearch_results(model, data_params, run_params):
+def split_dictionary(evt_dictionary, split_size):
+    """
+    as we only ever work with the event dicitionary (due to the many sub items in it)  
+    the usual train_test_split from sklearn does not suffice
 
-    output_prefix, model_saves_prefix = get_output_paths(run_params)
-    print('\n')
-    print('{}\nGrid search summary (used folds: {})\n{}\n'.format(
-        '-'*35, model.n_splits_, '-'*35))
-    print('  Best estimator: {} '.format(model.best_estimator_))
-    print('\n  Best score: {} (optimized metric: {})'.format(
-        model.best_score_, data_params['gs_refit']))
-    print('\n')
+    returns the large sample as the first argument, the small one is the second return
+    """
+    sample_size = split_size
+    if split_size < 1.:
+        sample_size = int(split_size*len(evt_dictionary))
+    randIndx = random.sample(xrange(len(evt_dictionary)), sample_size)
+    randIndex_comp = list(set(range(len(evt_dictionary))) - set(randIndex))
+    rand_smpl_compl = [ evt_dictionary[i] for i in randIndex_comp ]
+    rand_smpl_small = [ evt_dictionary[i] for i in randIndex ]
 
-    for item in sorted(model.cv_results_.keys()):
-        keywords = ['mean_', 'std_']
+    return valid_sample, rand_smpl_small
 
-        if not any(filter(lambda x: item.startswith(x), keywords)):
-            continue
-        print('  {:35s}: {:8.4}'.format(item, model.cv_results_[item][model.best_index_]))
 
-    np.save(output_prefix + model_saves_prefix + 'gridsearch_cv_results.npy', 
-                model.cv_results_)
 

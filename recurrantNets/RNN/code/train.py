@@ -59,10 +59,10 @@ def main():
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
     ######################################################################################
-    print'X shape: {}'.format(X.shape)
-    print'\n{}\n'.format(30*'-')
     print'Splitting data in training and test sample'
     # output type is the same as input type!
+    evt_dic_train, evt_dic_valid =  split_dictionary(evt_dictionary,
+                                                     split_size=run_params['frac_valid_sample'])
     X_train, X_test, y_train, y_test = train_test_split(X, y,
                                             test_size=run_params['frac_test_sample'])
         
