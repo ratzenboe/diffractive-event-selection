@@ -78,7 +78,7 @@ def prepare_data(inp_data, max_entries_per_evt, list_of_features, data_params):
     return all_events, y_data
 
 
-def get_data(data_params)
+def get_data(data_params):
     """
     a global function combining various functions to load the data and put it in the right
     form for ML
