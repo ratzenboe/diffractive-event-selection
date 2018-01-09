@@ -73,13 +73,21 @@ def split_dictionary(evt_dictionary, split_size):
 
     returns the large sample as the first argument, the small one is the second return
     """
+    # output dictionaries
+    big_sample = {}
+    small_sample = {}
     sample_size = split_size
+    n_evts = evt_dictionary['target'].shape[0]
     if split_size < 1.:
-        sample_size = int(split_size*len(evt_dictionary))
-    randIndx = random.sample(xrange(len(evt_dictionary)), sample_size)
-    randIndex_comp = list(set(range(len(evt_dictionary))) - set(randIndex))
-    rand_smpl_compl = [ evt_dictionary[i] for i in randIndex_comp ]
-    rand_smpl_small = [ evt_dictionary[i] for i in randIndex ]
+        sample_size = int(split_size*n_evts)
+    # create a random subsample
+    idx = np.arange(n_evts)
+    np.random.shuffle(idx)
 
-    return valid_sample, rand_smpl_small
+    for key, value in evt_dictionary.iteritems():
+        small_sample[key] = evt_dictionary[key][idx][:n_evts]
+        big_sample[key] = evt_dictionary[key][idx][n_evts:]
+
+
+    return big_sample, small_sample
 
