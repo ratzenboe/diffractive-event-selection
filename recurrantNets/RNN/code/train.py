@@ -51,6 +51,9 @@ def main():
     #    data['fmd'].shape = (n_evts, n_cells, n_features)
     #    data['target'].shape = (n_evts, )
     #    etc. 
+    run_config = config_file_to_dict(config_path + 'run_params.conf')
+    data_config = config_file_to_dict(config_path + 'data_params.conf')
+    model_config = config_file_to_dict(config_path + 'model_params.conf')
     evt_dictionary = get_data(data_params)
     outfile = output_prefix+model_saves_prefix+'all_evts.h5'
     print'saving data in {}'.format(outfile)
