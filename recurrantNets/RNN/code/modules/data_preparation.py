@@ -61,12 +61,14 @@ def prepare_data(inp_data, max_entries_per_evt, list_of_features, data_params):
             y = evt_data[data_params['target']].iloc[-1]
             evt_data = evt_data.drop([data_params['target']], axis=1)
             y_data.append(y)
-        # drop data with 0-charge, and with a too small pt, then we get closer to the
-        # real experimental setup
-        evt_data = evt_data.drop(evt_data[(evt_data.pT < 0.12) & (evt_data.charge == 0.)].index)
-        # only TPC, TOF eta space
-        evt_data = evt_data.drop(evt_data[abs(evt_data.eta) > 0.9].index)
-        # as_matrix() transfroms dataframe to numpy array -> needed for pad_array
+
+        # # drop data with 0-charge, and with a too small pt, then we get closer to the
+        # # real experimental setup
+        # evt_data = evt_data.drop(evt_data[(evt_data.pT < 0.12) & (evt_data.charge == 0.)].index)
+        # # only TPC, TOF eta space
+        # evt_data = evt_data.drop(evt_data[abs(evt_data.eta) > 0.9].index)
+        # # as_matrix() transfroms dataframe to numpy array -> needed for pad_array
+
         evt_data = evt_data.as_matrix()
         evt_list = pad_array(evt_data, max_entries_per_evt)
         all_events.append(evt_list)
@@ -112,8 +114,7 @@ def load_data(filename, branches=None, start=None, stop=None, selection=None):
         data for the RNNs (prepare_data) 
     """
     if not os.path.exists(filename):
-        print'Error when loading the data. File {} is not a regular file.'.format(filename)
-        sys.exit(1)
+        raise IOError('File {} does not exist.'.format(filename))
 
     data = pd.DataFrame( root_numpy.root2array( filename,
                                                 branches=branches,

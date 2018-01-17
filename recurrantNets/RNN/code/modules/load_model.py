@@ -5,9 +5,8 @@ from keras.models import Sequential
 from keras.layers.core import Activation, Dense, Dropout
 from keras.layers import Masking, LSTM, GRU, Concatenate, Input, Lambda
 
-def load_model(data, run_params): 
-    model_name = run_params['classifier_params_id']
-    if 'P8own' in model_name:
+def train_model(data, val_data, batch_size, n_epochs): 
+    if 'P8own' in run_mode_user:
         # pass shape into Masking layer
         y_train = data['target']
         X_particles_train = data['tracks']
@@ -35,7 +34,18 @@ def load_model(data, run_params):
         # compile
         combined_rnn.compile('adam', 'sparse_categorical_crossentropy')
 
-    elif 'GridSim' in model_name:
+        print(combined_rnn.summary())
+        try:
+            combined_rnn.fit(X_particles_train, y_train, 
+                             validation_data = (val_data['tracks'], val_data['target']),
+                             batch_size = batch_size,
+                             epochs = n_epochs)
+        except KeyboardInterrupt:
+            print 'Training ended early.'
+
+        return combined_rnn
+
+    elif 'GridSim' in run_mode_user:
         X_track_train = data['track']
         X_raw_track_train = data['raw_track']
         X_emcal_train = data['emcal']
@@ -127,10 +137,44 @@ def load_model(data, run_params):
         combined_rnn.add(Dense(1, activation='softmax'))
         combined_rnn.compile('adam', 'sparse_categorical_crossentropy')
 
+        print(combined_rnn.summary())
+        try:
+            combined_rnn.fit([X_track_train, 
+                              X_raw_track_train, 
+                              X_emcal_train,
+                              X_phos_train,
+                              X_calo_cluster_train,
+                              X_event_train,
+                              X_ad_train,
+                              X_fmd_train,
+                              X_v0_train],
+                             y_train, 
+                             validation_data = ([val_data['track'],
+                                                  val_data['raw_track'],  
+                                                  val_data['emcal'],  
+                                                  val_data['phos'],  
+                                                  val_data['calo_cluster'],  
+                                                  val_data['event'],  
+                                                  val_data['ad'],  
+                                                  val_data['fmd'],  
+                                                  val_data['v0'] ], val_data['target']),
+                             batch_size = batch_size,
+                             epochs = n_epochs
+                             callbacks = callback_ROC([X_track_train, 
+                                                       X_raw_track_train, 
+                                                       X_emcal_train,
+                                                       X_phos_train,
+                                                       X_calo_cluster_train,
+                                                       X_event_train,
+                                                       X_ad_train,
+                                                       X_fmd_train,
+                                                       X_v0_train],
+                                                      y_train)) 
+        except KeyboardInterrupt:
+            print 'Training ended early.'
+
         return combined_rnn
 
     else:
-        print'ERROR: Unrecognized model {}'.format(run_params['classifier_params_id'])
+        print'ERROR: Unrecognized model {}'.format(run_mode_user)
         exit(1)
-
-    return model

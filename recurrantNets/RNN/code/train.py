@@ -12,16 +12,13 @@ import seaborn                                  as sns
 sns.set()
 
 import numpy                                    as np
-import pandas                                   as pd
 
 from sklearn.model_selection                    import train_test_split
 from sklearn.externals                          import joblib
-from sklearn                                    import preprocessing
 
-from modules.control                            import get_input_args, get_run_params, \
-                                                       get_data_params, get_classifier_params 
+from modules.control                            import config_file_to_dict
 from modules.logger                             import logger
-from modules.load_model                         import load_model
+from modules.load_model                         import train_model
 from modules.data_preparation                   import get_data, save_data_h5py
 from modules.CleanData                          import standardScale 
 
@@ -54,8 +51,14 @@ def main():
     run_config = config_file_to_dict(config_path + 'run_params.conf')
     data_config = config_file_to_dict(config_path + 'data_params.conf')
     model_config = config_file_to_dict(config_path + 'model_params.conf')
-    evt_dictionary = get_data(data_params)
+
+    run_config = run_config[run_mode_user]
+    data_config = data_config[run_mode_user]
+    model_config = model_config[run_mode_user]
+
+    evt_dictionary = get_data(data_params[run_mode_user])
     outfile = output_prefix+model_saves_prefix+'all_evts.h5'
+
     print'saving data in {}'.format(outfile)
     save_data_h5py(outfile, evt_dictionary)
     ######################################################################################
@@ -79,7 +82,6 @@ def main():
         preprocess(evt_dic_test,  data_params, run_params, load_fitted_attributes=True)
 
     pause_for_input(run_params, timeout=3)
-    model = load_model(run_params, classifier_params)
     ######################################################################################
     # STEP 2:
     # ------------------------------- Fitting the model -----------------------------------
@@ -88,15 +90,9 @@ def main():
     # models by passing which metrics should be looked into
     start_time_training = time.time()
 
-    # we have to fit the model anyhow (even with CV) to make evaluations on the test
-    # data sampple
     print'\nFitting the model...'
-    model = model.fit(X_train, y_train)
-    if run_params['CV']:
-        print_CV_results(scores)
-    else:
-        print_gridSearch_results(model, data_params, run_params)
-    # save the training time
+    model = train_model(evt_dic_train, evt_dic_valid, run_mode_user)
+ 
     end_time_training = time.time()
 
     # Save the model
@@ -120,7 +116,6 @@ def main():
     
 if __name__ == "__main__":
 
-
     output_path = 'output/'
     config_path = 'config/'
     sys.stdout = logger(output_path)
@@ -139,7 +134,7 @@ if __name__ == "__main__":
 			      choose from the config file (default: "run_params")',
                         action='store',
                         dest='run_mode',
-                        default='run_params',
+                        default='P8Own',
                         type=str)
     command_line_args = parser.parse_args(user_argv)
 
