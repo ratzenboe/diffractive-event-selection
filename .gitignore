@@ -106,8 +106,7 @@ venv.bak/
 # emacs temporary files
 *~
 
-# output and data files are too big for a online repository
-/recurrantNets/RNN/data/*
+# output files are too big for a online repository
 /recurrantNets/RNN/code/output/*
 /imageNets/pretrainedmodels/*
 
