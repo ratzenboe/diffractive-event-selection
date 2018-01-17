@@ -107,6 +107,7 @@ venv.bak/
 *~
 
 # output files are too big for a online repository
+/recurrantNets/RNN/data/*
 /recurrantNets/RNN/code/output/*
 /imageNets/pretrainedmodels/*
 
