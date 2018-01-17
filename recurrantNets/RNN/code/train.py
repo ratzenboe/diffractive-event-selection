@@ -18,7 +18,7 @@ from sklearn.model_selection                    import train_test_split
 from sklearn.externals                          import joblib
 from sklearn                                    import preprocessing
 
-from modules.arg_config_parser                  import get_input_args, get_run_params, \
+from modules.control                            import get_input_args, get_run_params, \
                                                        get_data_params, get_classifier_params 
 from modules.logger                             import logger
 from modules.load_model                         import load_model
@@ -121,24 +121,28 @@ def main():
 if __name__ == "__main__":
 
 
+    output_path = 'output/'
+    config_path = 'config/'
+    sys.stdout = logger(output_path)
+
+    # fix random seed for reproducibility
+    np.random.seed(7)
+
     user_argv = None
-    
+
     if(len(sys.argv) > 1):
         user_argv = sys.argv[1:]
-        
-    parser_results = get_input_args(user_argv)
-    print('Received input arguments: ', parser_results)
-    run_params = get_run_params(parser_results)
-    sys.stdout = logger(run_params)
-    print_dict(run_params, 'Continue with the following run parameters:')
 
-    data_params = get_data_params(run_params['data_params_id'])
-    print_dict(data_params)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-run_mode', '-run_setting',
+                        help='keyword to identify which run settings to \
+			      choose from the config file (default: "run_params")',
+                        action='store',
+                        dest='run_mode',
+                        default='run_params',
+                        type=str)
+    command_line_args = parser.parse_args(user_argv)
 
-    classifier_params = get_classifier_params(run_params['classifier_params_id'])
-    print_dict(classifier_params)
+    run_mode_user = command_line_args.run_mode
 
-    output_prefix, model_saves_prefix = get_output_paths(run_params)
-
-
-    main()
+main()
