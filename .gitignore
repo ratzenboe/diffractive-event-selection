@@ -118,3 +118,4 @@ venv.bak/
 
 # vim temporary files
 .*.swp
+.*.swo
