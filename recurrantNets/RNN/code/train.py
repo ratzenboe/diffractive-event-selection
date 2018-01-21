@@ -60,7 +60,7 @@ def main():
     outfile = output_prefix+model_saves_prefix+'all_evts.h5'
 
     print('saving data in {}'.format(outfile)
-    save_data_h5py(outfile, evt_dictionary))
+    save_data_h5py(outfile, evt_dictionary)
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
