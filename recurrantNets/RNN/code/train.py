@@ -42,7 +42,7 @@ def main():
     # therefore we want to have a data structure where we have a dataframe for each  
     # of these 9 departments
     ######################################################################################    
-    print'\nfetching data...\n'
+    print('\nfetching data...\n')
     # data is a dictionary which contains the 9 numpy arrays in form 
     # -> data['raw_track'].shape = (n_evts, n_parts, n_features)
     #    data['fmd'].shape = (n_evts, n_cells, n_features)
@@ -59,13 +59,13 @@ def main():
     evt_dictionary = get_data(data_params[run_mode_user])
     outfile = output_prefix+model_saves_prefix+'all_evts.h5'
 
-    print'saving data in {}'.format(outfile)
-    save_data_h5py(outfile, evt_dictionary)
+    print('saving data in {}'.format(outfile)
+    save_data_h5py(outfile, evt_dictionary))
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
     ######################################################################################
-    print'Splitting data in training and test sample'
+    print('Splitting data in training and test sample')
     # output type is the same as input type!
     evt_dic, evt_dic_valid       = split_dictionary(evt_dictionary,
                                                     split_size=run_params['frac_valid_sample'])
@@ -75,7 +75,7 @@ def main():
     del evt_dic
         
     if run_params['stdScale']:
-        print'standarad scaling...'
+        print('standarad scaling...')
         # returns a numpy array (due to fit_transform function)
         preprocess(evt_dic_train, data_params, run_params)
         preprocess(evt_dic_valid, data_params, run_params, load_fitted_attributes=True)
@@ -90,7 +90,7 @@ def main():
     # models by passing which metrics should be looked into
     start_time_training = time.time()
 
-    print'\nFitting the model...'
+    print('\nFitting the model...')
     model = train_model(evt_dic_train, evt_dic_valid, run_mode_user)
  
     end_time_training = time.time()
@@ -107,12 +107,12 @@ def main():
     # -------------------- print some runtime information --------------------------------
     ######################################################################################
     end_time_main = time.time()
-    print'\n{}'.format(19*'-')
-    print'- RUNTIME -'
-    print'{}'.format(19*'-')
-    print'\nTotal runtime: {} seconds'.format(end_time_main - start_time_main)
-    print'\nTraining time: {} seconds'.format(end_time_training - start_time_training)
-    print'\n{}\n'.format(30*'-')
+    print('\n{}'.format(19*'-'))
+    print('- RUNTIME -')
+    print('{}'.format(19*'-'))
+    print('\nTotal runtime: {} seconds'.format(end_time_main - start_time_main))
+    print('\nTraining time: {} seconds'.format(end_time_training - start_time_training))
+    print('\n{}\n'.format(30*'-'))
     
 if __name__ == "__main__":
 
