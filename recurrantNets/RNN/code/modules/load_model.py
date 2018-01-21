@@ -41,7 +41,7 @@ def train_model(data, val_data, batch_size, n_epochs):
                              batch_size = batch_size,
                              epochs = n_epochs)
         except KeyboardInterrupt:
-            print 'Training ended early.'
+            print('Training ended early.')
 
         return combined_rnn
 
@@ -171,10 +171,10 @@ def train_model(data, val_data, batch_size, n_epochs):
                                                        X_v0_train],
                                                       y_train)) 
         except KeyboardInterrupt:
-            print 'Training ended early.'
+            print('Training ended early.')
 
         return combined_rnn
 
     else:
-        print'ERROR: Unrecognized model {}'.format(run_mode_user)
+        print('ERROR: Unrecognized model {}'.format(run_mode_user))
         exit(1)
