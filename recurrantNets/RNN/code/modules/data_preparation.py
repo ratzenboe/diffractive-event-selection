@@ -29,7 +29,7 @@ def pad_array(array, max_entries):
             return array.tolist()
 
     except AttributeError:
-        print 'please provide numpy array to pad_array function'
+        print('please provide numpy array to pad_array function')
 
 
 def prepare_data(inp_data, max_entries_per_evt, list_of_features, data_params):
@@ -53,7 +53,7 @@ def prepare_data(inp_data, max_entries_per_evt, list_of_features, data_params):
     # this loop works also if there is only one evt in the inp_data 
     for evtInt in range(minEvtInt, maxNumber+1):
         if evtInt%1000 == 0:
-            print '{} events from {} fetched'.format(evtInt, minEvtInt+maxNumber)
+            print('{} events from {} fetched'.format(evtInt, minEvtInt+maxNumber))
         # get relevant data for one event 
         evt_data = inp_data.loc[inp_data.eventID == evtInt, list_of_features]
 
@@ -166,7 +166,7 @@ def preprocess(evt_dic, data_params, run_params, load_fitted_attributes=False):
                     evt_dic[key][col] -= mean
                     evt_dic[key][col] /= std
                 except KeyError:
-                    print'Warning: Feature {} not found in the data!'.format(col)
+                    print('Warning: Feature {} not found in the data!'.format(col))
                     
                 # cannot save only the column, but we also have to 
                 # save the key, as some columns appear in different keys
@@ -185,7 +185,7 @@ def preprocess(evt_dic, data_params, run_params, load_fitted_attributes=False):
                     evt_dic[key][col] -= scaling_attributes[col][key]['mean']
                     evt_dic[key][col] /= scaling_attributes[col][key]['std']
                 except KeyError:
-                    print'Warning: Feature {} not found in the data!'.format(col)
+                    print('Warning: Feature {} not found in the data!'.format(col))
 
     return evt_dic 
 
