@@ -1,11 +1,11 @@
 import os
 import math
 import sys
+import warnings
 
 import numpy as np
-import root_numpy
 import pandas as pd
-import h5py
+import root_numpy
 
 def pad_array(array, max_entries):
     """
@@ -13,18 +13,21 @@ def pad_array(array, max_entries):
     if the maximum entries exceeds the size the array is
     filled with -999 columns. This is then masked in the NN model
     """
+
     if max_entries is None:
         return array.tolist()
     try: 
         length = array.shape[0]
         if length > max_entries:
             return array[:max_entries,:].tolist()
+
         elif length < max_entries:
-            dummy_arr = np.array(array[0])
-            dummy_arr.fill(-999)
+            dummy_arr = np.zeros(shape=(array.shape[1],), dtype='float')
+            dummy_arr.fill(float(-999))
             for i in range(length, max_entries):
                 array = np.append(array, [dummy_arr], axis=0)
             return array.tolist()
+
         elif length == max_entries:
             return array.tolist()
 
@@ -32,42 +35,76 @@ def pad_array(array, max_entries):
         print('please provide numpy array to pad_array function')
 
 
-def prepare_data(inp_data, max_entries_per_evt, list_of_features, data_params):
+def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_string, targets)
     """
-    Function that loops trough the data array which we get from the TTree
-    The event is stored as individual particles that all carry the same event number
-    The events are stored in (5,x) arrays (5=eta, pt, phi, pdgID, charge) & x=number of 
-    particles in the event and appended to a super array which stores all events 
+    Args
+        inp_data: 
+            data in a the shape of ((n_evt*n_parts), n_features), 
+            e.g. (1000, 3) for 10 evts with each 10 particles and 3 features
+            will be converted into an event-wise arrangement (n_evt, n_parts, n_feats)
+        __________________________________________________________________________________
 
-    returns: two ndarrays:
-                - all_events (n_evts, n_parts, n_features)
-                - y_data     (n_evts,)
+        max_entries_per_evt:
+            if an event contains more or less particles/entries than this number
+            the event is either discarded or padded with -999 columns (for the Masking layer)
+        __________________________________________________________________________________
+                
+        list_of_features: 
+            list of features to work with (maybe all features or a subset of them
+        __________________________________________________________________________________
+
+        evt_id_string:
+            the name of the event id column, as this is not consistend accross files
+        __________________________________________________________________________________
+
+        targets:
+            the target value(s)
+            may also be multiple values, as there may be multiple information available
+            that determine the final target.
+        __________________________________________________________________________________
+    
+    Operation breakdown:
+        Function that loops trough the data array which comes from a TTree
+        All paricles/etc that belong to the same event are grouped together and are stored 
+
+    returns: 
+        two ndarrays:
+            - all_events (n_evts, n_parts, n_features)
+            - y_data     (n_evts,)
     """
 
-    minEvtInt = inp_data[data_params['evt_id']].min()
-    maxEvtInt = inp_data[data_params['evt_id']].max()
-    evts_in_data = maxEvtInt - minEvtInt
+    min_evt_nb = inp_data[evt_id_string].min()
+    max_evt_nb = inp_data[evt_id_string].max()
+    evts_in_data = max_evt_nb - min_evt_nb
 
     all_events = []
     y_data = []
-    # this loop works also if there is only one evt in the inp_data 
-    for evtInt in range(minEvtInt, maxNumber+1):
-        if evtInt%1000 == 0:
-            print('{} events from {} fetched'.format(evtInt, minEvtInt+maxNumber))
+    if evts_in_data == 0:
+        warnings.warn('No entries found in input data!\nReturning the unprocessed input.')
+        return all_events, y_data
+    
+    for evt_int in range(min_evt_nb, max_evt_nb+1):
+        if evt_int%1000 == 0:
+            print('{} events from {} fetched'.format(evt_int, min_evt_nb+max_evt_nb))
         # get relevant data for one event 
-        evt_data = inp_data.loc[inp_data.eventID == evtInt, list_of_features]
+        evt_data = inp_data.loc[inp_data[evt_id_string] == evt_int, list_of_features]
 
-        if data_params['target'] in list_of_features:
-            y = evt_data[data_params['target']].iloc[-1]
-            evt_data = evt_data.drop([data_params['target']], axis=1)
-            y_data.append(y)
-
-        # # drop data with 0-charge, and with a too small pt, then we get closer to the
-        # # real experimental setup
-        # evt_data = evt_data.drop(evt_data[(evt_data.pT < 0.12) & (evt_data.charge == 0.)].index)
-        # # only TPC, TOF eta space
-        # evt_data = evt_data.drop(evt_data[abs(evt_data.eta) > 0.9].index)
-        # # as_matrix() transfroms dataframe to numpy array -> needed for pad_array
+        # the target is only present in the event column
+        target_list = []
+        if set(targets) <= set(list_of_features):
+            for trgt in targets:
+                # the target is represented by the last incident in the particle list
+                # in the grid case the event is however just a single entry 
+                # in this case .iloc[-1] does not matter
+                y = evt_data[trgt].iloc[-1]
+                # if the target is in the columns we have to drop it
+                evt_data = evt_data.drop(trgt, axis=1)
+                target_list.append(y)
+            
+            if 106 and 1 target_list:
+                y_data.append(1)
+            else:
+                y_data.append(0)
 
         evt_data = evt_data.as_matrix()
         evt_list = pad_array(evt_data, max_entries_per_evt)
@@ -88,10 +125,11 @@ def get_data(data_params):
     evt_dictionary = {}
     for key, value in data_params['branches'].iteritems():
         list_of_features = value
-        list_of_features.remove(data_params['evt_id'])
-        
-        data = load_data(data_params['path'][key], branches=data_params['branches'][key])[0]
-        evt_dictionary[key], y_data = prepare_data(
+        # list_of_features.remove(data_params['evt_id'])
+
+        data = load_data(data_params['path'][key], branches=list_of_features)
+
+        evt_dictionary[key], y_data = event_grouping(
                                             inp_data            = data, 
                                             max_entries_per_evt = data_params['max_entries'][key],
                                             list_of_features    = list_of_features,
@@ -111,37 +149,36 @@ def load_data(filename, branches=None, start=None, stop=None, selection=None):
 
     sidenote: 
         the raw data from the root file is then put into a shaping function that prepares the
-        data for the RNNs (prepare_data) 
+        data for the RNNs (event_grouping) 
     """
     if not os.path.exists(filename):
         raise IOError('File {} does not exist.'.format(filename))
 
-    data = pd.DataFrame( root_numpy.root2array( filename,
-                                                branches=branches,
-                                                start=start,
-                                                stop=stop,
-                                                selection=selection ) )
+    data = pd.DataFrame(root_numpy.root2array(filename, branches=branches))
 
-    nb_entries = data.shape[0]
-
-    return data, nb_entries
+    return data
 
 
-def save_data_h5py(outfile, all_evt_data, file_addition=''):
+def save_data_dictionary(outfile, all_evt_data):
     """
-    save histograms in a .h5 file (hdf5-format)
+    save histograms in a numpy format
     """
+    np.save(outfile, all_evt_data)
 
-    h5f = h5py.File(outfile, 'w')
 
-    data_name = 'all_evts' 
-    data_name += file_addition
-    h5f.create_dataset(data_name, data=all_evt_data)
+def get_data_dictionary(infile):
+    """
+    retrieve the dictionay containing the data
+    """
+    if not os.path.isfile(infile):
+        raise IOError('File {} does not exist.'.format(infile))
 
-    h5f.close()
- 
-    return 
-
+    evt_dic = np.load(infile)[()]
+    if not isinstance(evt_dic, dict):
+        raise TypeError('The element stored in {} is not a dictionary \
+                         but instead a {}'.format(infile, type(evt_dic)))
+    
+    return evt_dic
 
 def preprocess(evt_dic, data_params, run_params, load_fitted_attributes=False):
     """
