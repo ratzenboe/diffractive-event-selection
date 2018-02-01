@@ -67,7 +67,10 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
                 raise TypeError('The key {} of the "value"-dictionary ' \
                         'is not of type numpy ndarrays but rather {}'.format(key, type(value)))
 
-    if not isinstance(
+    if not isinstance(rnn_layer, str):
+        raise TypeError('The variable "rnn_layer" is not a string type ' \
+                'but insted {}'.format(type(rnn_layer)))
+
 
     if 'P8own' in run_mode_user:
         # pass shape into Masking layer
@@ -156,14 +159,17 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
         track_channel.add(Masking(mask_value=-999, 
                                      input_shape=TRACK_SHAPE, 
                                      name='track_masking'))
-        track_channel.add(getattr(keras.layers, rnn_layer)(16, name='track_rnn'))
-        track_channel.add(Dropout(0.3, name='track_dropout'))
+        try:
+            track_channel.add(getattr(keras.layers, rnn_layer)(16, name='track_rnn'))
+            track_channel.add(Dropout(0.3, name='track_dropout'))
 
-        raw_track_channel.add(Masking(mask_value=-999,
-                                     input_shape=RAW_TRACK_SHAPE, 
-                                     name='raw_track_masking'))
-        raw_track_channel.add(getattr(keras.layers, rnn_layer)(14, name='raw_track_rnn'))
-        raw_track_channel.add(Dropout(0.3, name='raw_track_dropout'))
+            raw_track_channel.add(Masking(mask_value=-999,
+                                         input_shape=RAW_TRACK_SHAPE, 
+                                         name='raw_track_masking'))
+            raw_track_channel.add(getattr(keras.layers, rnn_layer)(14, name='raw_track_rnn'))
+            raw_track_channel.add(Dropout(0.3, name='raw_track_dropout'))
+        except AttributeError:
+            raise AttributeError('Keras layers does not have a layer called {}.'.format(rnn_layer))
 
         # event level layer
         event_level.add(Lambda(lambda x: x, input_shape=(EVENT_SHAPE, ))) 
@@ -198,21 +204,25 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
             emcal_channel.add(Masking(mask_value=-999,
                                          input_shape=EMCAL_SHAPE, 
                                          name='emcal_masking'))
-            emcal_channel.add(getattr(keras.layers, rnn_layer)(2, name='emcal_rnn'))
-            emcal_channel.add(Dropout(0.3, name='emcal_dropout'))
+            try:
+                emcal_channel.add(getattr(keras.layers, rnn_layer)(2, name='emcal_rnn'))
+                emcal_channel.add(Dropout(0.3, name='emcal_dropout'))
 
-            phos_channel.add(Masking(mask_value=-999,
-                                         input_shape=PHOS_SHAPE, 
-                                         name='emcal_masking'))
-            phos_channel.add(getattr(keras.layers, rnn_layer)(2, name='phos_rnn'))
-            phos_channel.add(Dropout(0.3, name='phos_dropout'))
+                phos_channel.add(Masking(mask_value=-999,
+                                             input_shape=PHOS_SHAPE, 
+                                             name='emcal_masking'))
+                phos_channel.add(getattr(keras.layers, rnn_layer)(2, name='phos_rnn'))
+                phos_channel.add(Dropout(0.3, name='phos_dropout'))
 
-            calo_cluster_channel.add(Masking(mask_value=-999,
-                                         input_shape=CALO_CLUSTER_SHAPE, 
-                                         name='calo_cluster_masking'))
-            calo_cluster_channel.add(getattr(keras.layers, rnn_layer)(4, name='calo_cluster_rnn'))
-            calo_cluster_channel.add(Dropout(0.3, name='calo_cluster_dropout'))
-            
+                calo_cluster_channel.add(Masking(mask_value=-999,
+                                             input_shape=CALO_CLUSTER_SHAPE, 
+                                             name='calo_cluster_masking'))
+                calo_cluster_channel.add(getattr(keras.layers, rnn_layer)(4, name='calo_cluster_rnn'))
+                calo_cluster_channel.add(Dropout(0.3, name='calo_cluster_dropout'))
+            except AttributeError:
+                raise AttributeError('Keras layers does not have a layer called {}.'.format(rnn_layer))
+
+ 
             # NNs feeding into the event-level net
             ad_level.add(Lambda(lambda x: x, input_shape=(AD_SHAPE, ))) 
             ad_level.add(Dense(16, activation='relu'))
