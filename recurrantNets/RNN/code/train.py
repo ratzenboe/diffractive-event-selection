@@ -4,6 +4,8 @@ import sys
 import os
 import time
 from select                                     import select
+import argparse 
+import ast 
 
 import matplotlib
 matplotlib.use('agg')
@@ -19,8 +21,10 @@ from sklearn.externals                          import joblib
 from modules.control                            import config_file_to_dict
 from modules.logger                             import logger
 from modules.load_model                         import train_model
-from modules.data_preparation                   import get_data, save_data_h5py
-from modules.CleanData                          import standardScale 
+from modules.data_preparation                   import get_data, save_data_dictionary, \
+                                                       get_data_dictionary
+# from modules.???                              import standardScale 
+from modules.utils                              import print_dict
 
 def main():
 
@@ -48,19 +52,21 @@ def main():
     #    data['fmd'].shape = (n_evts, n_cells, n_features)
     #    data['target'].shape = (n_evts, )
     #    etc. 
-    run_config = config_file_to_dict(config_path + 'run_params.conf')
-    data_config = config_file_to_dict(config_path + 'data_params.conf')
-    model_config = config_file_to_dict(config_path + 'model_params.conf')
+    print('run_mode_user: {}'.format(run_mode_user))
+    run_params = config_file_to_dict(config_path + 'run_params.conf')
+    data_params = config_file_to_dict(config_path + 'data_params.conf')
+    model_params = config_file_to_dict(config_path + 'model_params.conf')
 
-    run_config = run_config[run_mode_user]
-    data_config = data_config[run_mode_user]
-    model_config = model_config[run_mode_user]
+    data_params = data_params[run_mode_user]
+    model_params = model_params[run_mode_user]
 
-    evt_dictionary = get_data(data_params[run_mode_user])
-    outfile = output_prefix+model_saves_prefix+'all_evts.h5'
-
-    print('saving data in {}'.format(outfile)
-    save_data_h5py(outfile, evt_dictionary)
+    data_outfile = data_path+'all_evts.npy'
+    try:
+        evt_dictionary = get_data_dictionary(data_outfile)
+    except (IOError, TypeError):
+        evt_dictionary = get_data(data_params)
+        print('saving data in {}'.format(data_outfile))
+        save_data_dictionary(data_outfile, evt_dictionary)
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
@@ -117,6 +123,7 @@ def main():
 if __name__ == "__main__":
 
     output_path = 'output/'
+    data_path   = '../data/'
     config_path = 'config/'
     sys.stdout = logger(output_path)
 
@@ -134,10 +141,10 @@ if __name__ == "__main__":
 			      choose from the config file (default: "run_params")',
                         action='store',
                         dest='run_mode',
-                        default='P8Own',
+                        default='GridSim',
                         type=str)
     command_line_args = parser.parse_args(user_argv)
 
     run_mode_user = command_line_args.run_mode
 
-main()
+    main()
