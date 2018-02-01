@@ -6,7 +6,7 @@
 #include <iostream>
 
 
-void FillOutTrees(const char* filename)
+void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
 {
     TFile* CEPfile = 0x0;
     try {
@@ -21,6 +21,9 @@ void FillOutTrees(const char* filename)
     CEPEventBuffer* CEPEvts = 0x0;
 
     TString save_dir("/media/hdd/train_files/");
+    TString file_addon_str(TString::Itoa(file_addon, 10));
+    if (file_addon == -1) file_addon_str = ".root";
+    else file_addon_str += ".root";
 
     CEPtree->SetBranchAddress("CEPRawEvents", &CEPRawEvts);
     CEPtree->SetBranchAddress("CEPEvents", &CEPEvts);
@@ -28,7 +31,7 @@ void FillOutTrees(const char* filename)
     // every detector, track etc
     UInt_t event_nb;
 
-    TFile* eventFile = new TFile((save_dir+"event_info.root").Data(), "RECREATE");
+    TFile* eventFile = new TFile((save_dir+"event_info"+file_addon_str).Data(), "RECREATE");
     TTree* eventTree = new TTree("event", "event level info");
     Int_t evt_n_tracks_total, mc_process_type;
     Double_t evt_tot_ad_mult, evt_tot_ad_time, evt_tot_ad_charge,
@@ -51,11 +54,11 @@ void FillOutTrees(const char* filename)
     eventTree->Branch("tot_phos_ampl", &evt_tot_phos_ampl);
     eventTree->Branch("tot_phos_time", &evt_tot_phos_time);
 
-    TFile* trackFile = new TFile((save_dir+"track_info.root").Data(), "RECREATE");
+    TFile* trackFile = new TFile((save_dir+"track_info"+file_addon_str).Data(), "RECREATE");
     TTree* trackTree = new TTree("track", "high level track info");
     // hlt = high level track
     Double_t hlt_tof_bunch_crossing, hlt_dca_vtx_z,
-             hlt_px, hlt_py, hlt_pz, hlt_pid_global, 
+             hlt_px, hlt_py, hlt_pz, hlt_pid_global, hlt_eta, hlt_phi, hlt_pt, hlt_P,
              // TPC
              hlt_pid_tpc_status, hlt_pid_tpc_signal, 
              hlt_pid_tpc_n_sigma_pion, hlt_pid_tpc_n_sigma_kaon, hlt_pid_tpc_n_sigma_proton,
@@ -70,9 +73,10 @@ void FillOutTrees(const char* filename)
     trackTree->Branch("event_id", &event_nb);
     trackTree->Branch("tof_bunch_crossing", &hlt_tof_bunch_crossing);
     trackTree->Branch("dca_vtx_z", &hlt_dca_vtx_z);
-    trackTree->Branch("px", &hlt_px);
-    trackTree->Branch("py", &hlt_py);
-    trackTree->Branch("pz", &hlt_pz);
+    trackTree->Branch("pt", &hlt_pt);
+    trackTree->Branch("eta", &hlt_eta);
+    trackTree->Branch("phi", &hlt_phi);
+    trackTree->Branch("P", &hlt_P);
     trackTree->Branch("pid_global", &hlt_pid_global);
     trackTree->Branch("pid_tpc_status", &hlt_pid_tpc_status);
     trackTree->Branch("pid_tpc_signal", &hlt_pid_tpc_signal);
@@ -95,22 +99,22 @@ void FillOutTrees(const char* filename)
     trackTree->Branch("pid_bayes_proba_kaon", &hlt_pid_bayes_proba_pion);
     trackTree->Branch("pid_bayes_proba_proton", &hlt_pid_bayes_proba_proton);
 
-    TFile* adFile = new TFile((save_dir+"ad_info.root").Data(), "RECREATE");
-    TTree* adTree = new TTree("AD", "raw AD info");
+    TFile* adFile = new TFile((save_dir+"ad_info"+file_addon_str).Data(), "RECREATE");
+    TTree* adTree = new TTree("ad", "raw AD info");
     Double_t AD_mult, AD_charge, AD_time;
     adTree->Branch("event_id", &event_nb);
     adTree->Branch("multiplicity", &AD_mult);
     adTree->Branch("adc_charge", &AD_charge);
     adTree->Branch("time", &AD_time);
     
-    TFile* fmdFile = new TFile((save_dir+"fmd_info.root").Data(), "RECREATE");
-    TTree* fmdTree = new TTree("FMD", "raw FMD info");
+    TFile* fmdFile = new TFile((save_dir+"fmd_info"+file_addon_str).Data(), "RECREATE");
+    TTree* fmdTree = new TTree("fmd", "raw FMD info");
     Double_t FMD_mult;
     fmdTree->Branch("event_id", &event_nb);
     fmdTree->Branch("multiplicity", &FMD_mult);
 
-    TFile* v0File = new TFile((save_dir+"v0_info.root").Data(), "RECREATE");
-    TTree* v0Tree = new TTree("V0", "raw V0 info");
+    TFile* v0File = new TFile((save_dir+"v0_info"+file_addon_str).Data(), "RECREATE");
+    TTree* v0Tree = new TTree("v0", "raw V0 info");
     Double_t v0_mult, v0_charge, v0_time, v0_sigwidth;
     v0Tree->Branch("event_id", &event_nb);
     v0Tree->Branch("multiplicity", &FMD_mult);
@@ -118,17 +122,23 @@ void FillOutTrees(const char* filename)
     v0Tree->Branch("time", &v0_time);
     v0Tree->Branch("signal_width", &v0_sigwidth);
 
-    TFile* rawTrackFile = new TFile((save_dir+"raw_track_info.root").Data(), "RECREATE");
-    TTree* rawTrackTree = new TTree("Tracking", "raw tracking info");
-    Double_t trackLength, globalChi2, pidITSsig, pidHMPIDsig, pidTRDsig, pidTOFsig_raw;
-    Double_t track_xy, track_z, track_dz, track_dx, track_phiEMC, track_etaEMC, track_pEMC, track_ptEMC;
+    TFile* rawTrackFile = new TFile((save_dir+"raw_track_info"+file_addon_str).Data(), "RECREATE");
+    TTree* rawTrackTree = new TTree("raw_track", "raw tracking info");
+    Double_t trackLength, globalChi2, pid_its_sig_tuned, pid_tpc_sig_tuned, pidHMPIDsig, 
+             pidTRDsig, pid_tof_sig_tuned;
+    Double_t track_xy, track_z, track_dz, track_dx, track_phiEMC, track_etaEMC, 
+             track_pEMC, track_ptEMC;
+    Double_t rawtrk_its_chi2, rawtrk_tpc_chi2;
     rawTrackTree->Branch("event_id", &event_nb);
     rawTrackTree->Branch("track_length", &trackLength);
     rawTrackTree->Branch("global_chi2", &globalChi2);
-    rawTrackTree->Branch("pid_its_signal", &pidITSsig);
+    rawTrackTree->Branch("its_chi2", &rawtrk_its_chi2);
+    rawTrackTree->Branch("tpc_chi2", &rawtrk_tpc_chi2);
+    rawTrackTree->Branch("pid_its_signal_tuned", &pid_its_sig_tuned);
     rawTrackTree->Branch("pid_hmpid_signal", &pidHMPIDsig);
     rawTrackTree->Branch("pid_trd_signal", &pidTRDsig);
-    rawTrackTree->Branch("pid_tof_signal_raw", &pidTOFsig_raw);
+    rawTrackTree->Branch("pid_tpc_signal_tuned", &pid_tpc_sig_tuned);
+    rawTrackTree->Branch("pid_tof_signal_tuned", &pid_tof_sig_tuned);
     rawTrackTree->Branch("xy_impact", &track_xy);
     rawTrackTree->Branch("z_impact", &track_z);
     rawTrackTree->Branch("dx_tof_impact", &track_dx);
@@ -138,8 +148,8 @@ void FillOutTrees(const char* filename)
     rawTrackTree->Branch("pt_on_emc", &track_ptEMC);
     rawTrackTree->Branch("p_on_emc", &track_pEMC);
 
-    TFile* caloClusterFile = new TFile((save_dir+"calo_cluster_info.root").Data(), "RECREATE");
-    TTree* caloClusterTree = new TTree("CaloCluster", "raw calo cluster info");
+    TFile* caloClusterFile = new TFile((save_dir+"calo_cluster_info"+file_addon_str).Data(), "RECREATE");
+    TTree* caloClusterTree = new TTree("calo_cluster", "raw calo cluster info");
     Double_t CC_E, CC_shapeDispersion, CC_chi2, CC_CPVDist;
     caloClusterTree->Branch("event_id", &event_nb);
     caloClusterTree->Branch("energy", &CC_E);
@@ -147,15 +157,15 @@ void FillOutTrees(const char* filename)
     caloClusterTree->Branch("chi2", &CC_chi2);
     caloClusterTree->Branch("cpv_distance", &CC_CPVDist);
 
-    TFile* emcalFile = new TFile((save_dir+"emcal_info.root").Data(), "RECREATE");
-    TTree* emcalTree = new TTree("EMCAL", "raw emcal info");
+    TFile* emcalFile = new TFile((save_dir+"emcal_info"+file_addon_str).Data(), "RECREATE");
+    TTree* emcalTree = new TTree("emcal", "raw emcal info");
     Double_t emcal_amplidude, emcal_time; 
     emcalTree->Branch("event_id", &event_nb);
     emcalTree->Branch("amplitude", &emcal_amplidude);
     emcalTree->Branch("time", &emcal_time);
 
-    TFile* phosFile = new TFile((save_dir+"phos_info.root").Data(), "RECREATE");
-    TTree* phosTree = new TTree("PHOS", "raw phos info");
+    TFile* phosFile = new TFile((save_dir+"phos_info"+file_addon_str).Data(), "RECREATE");
+    TTree* phosTree = new TTree("phos", "raw phos info");
     Double_t phos_amplidude, phos_time; 
     phosTree->Branch("event_id", &event_nb);
     phosTree->Branch("amplitude", &emcal_amplidude);
@@ -211,9 +221,10 @@ void FillOutTrees(const char* filename)
             hlt_dca_vtx_z = trk->GetZv(); 
             // momentum 
             v = trk->GetMomentum(); 
-            hlt_px = v.Px();
-            hlt_py = v.Py();
-            hlt_pz = v.Pz();
+            hlt_pt = v.Pt();
+            hlt_eta = v.Eta();
+            hlt_phi = v.Phi();
+            hlt_P = v.Mag();
             // PID
             hlt_pid_global = trk->GetPID();
             // TPC
@@ -297,11 +308,14 @@ void FillOutTrees(const char* filename)
             // put here all track info
             trackLength = rawTrack->GetTrackLength();
             globalChi2 = rawTrack->GetGlobalChi2();
+            rawtrk_its_chi2 = rawTrack->GetITSChi2();
+            rawtrk_tpc_chi2 = rawTrack->GetTPCChi2();
 
-            pidITSsig = rawTrack->GetPIDITSsig();
+            pid_its_sig_tuned = rawTrack->GetPIDITSsigTunedOnData();
             pidHMPIDsig = rawTrack->GetPIDHMPsig();
             pidTRDsig = rawTrack->GetPIDTRDsig();
-            pidTOFsig_raw = rawTrack->GetPIDTOFsigRaw();
+            pid_tof_sig_tuned = rawTrack->GetPIDTOFsigTunedOnData();
+            pid_tpc_sig_tuned = rawTrack->GetPIDTPCsigTunedOnData();
 
             track_xy = rawTrack->GetImpactXY();
             track_z = rawTrack->GetImpactZ();
