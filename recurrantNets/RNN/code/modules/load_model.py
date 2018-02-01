@@ -167,6 +167,19 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50):
 
         layer_list = [track_channel, raw_track_channel, event_level]
         data_list = [X_track_train, X_raw_track_train, X_event_train]
+        val_data_list = None
+
+        if isinstance(val_data, dict):
+            try: 
+                val_data_list = [val_data['track'], val_data['raw_track'], val_data['event']]
+            except KeyError:
+                warnings.warn('The provided valiation dictionary does not contain ' \
+                        'all necessary columns!\nConsequently 20% of the training data ' \
+                        'are now used to fit the model!')
+                val_data_list = None
+                val_data = 0.2
+                pass
+
 
         if 'Sim' in run_mode_user:
             # here we now add additional channels to the network
@@ -214,8 +227,25 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50):
                               ad_level, fmd_level, v0_level]
             sim_data_list = [X_emcal_train, X_phos_train, X_calo_cluster_train,
                              X_ad_train, X_fmd_train, X_v0_train]
-            layer_list.append(sim_layer_list)
 
+            layer_list.extend(sim_layer_list)
+            data_list.extend(sim_data_list)
+
+            if isinstance(val_data, dict):
+                try: 
+                    sim_val_data_list = [val_data['emcal'], val_data['phos'], val_data['calo_cluster'],
+                                         val_data['ad'], val_data['fmd'], val_data['v0']]
+                except KeyError:
+                    warnings.warn('The provided valiation dictionary does not contain ' \
+                            'all necessary columns!\nConsequently 20% of the training data ' \
+                            'are now used to fit the model!')
+                    val_data_list = None
+                    val_data = 0.2
+                    pass
+
+
+
+        # stack the layers on top of a fully connected DNN
         combined_rnn = Sequential()
         combined_rnn.add(Concatenate(layer_list))
         combined_rnn.add(Dense(36, activation='relu'))
@@ -229,37 +259,13 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50):
 
         print(combined_rnn.summary())
         try:
-            combined_rnn.fit([X_track_train, 
-                              X_raw_track_train, 
-                              X_emcal_train,
-                              X_phos_train,
-                              X_calo_cluster_train,
-                              X_event_train,
-                              X_ad_train,
-                              X_fmd_train,
-                              X_v0_train],
-                             y_train, 
-                             validation_data = ([val_data['track'],
-                                                  val_data['raw_track'],  
-                                                  val_data['emcal'],  
-                                                  val_data['phos'],  
-                                                  val_data['calo_cluster'],  
-                                                  val_data['event'],  
-                                                  val_data['ad'],  
-                                                  val_data['fmd'],  
-                                                  val_data['v0'] ], val_data['target']),
-                             batch_size = batch_size,
-                             epochs = n_epochs,
-                             callbacks = callback_ROC([X_track_train, 
-                                                       X_raw_track_train, 
-                                                       X_emcal_train,
-                                                       X_phos_train,
-                                                       X_calo_cluster_train,
-                                                       X_event_train,
-                                                       X_ad_train,
-                                                       X_fmd_train,
-                                                       X_v0_train],
-                                                      y_train)) 
+            combined_rnn.fit(data_list, y_train, 
+                             validation_split = val_data,
+                             validation_data  = val_data_list,
+                             batch_size       = batch_size,
+                             epochs           = n_epochs,
+                             callbacks        = callback_ROC(data_list, y_train)) 
+
         except KeyboardInterrupt:
             print('Training ended early.')
 
