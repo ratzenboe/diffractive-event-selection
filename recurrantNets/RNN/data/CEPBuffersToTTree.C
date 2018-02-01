@@ -4,6 +4,7 @@
 #include <TFile.h>
 #include <TString.h>
 #include <iostream>
+#include <stdlib.h> 
 
 
 void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
@@ -33,13 +34,15 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
 
     TFile* eventFile = new TFile((save_dir+"event_info"+file_addon_str).Data(), "RECREATE");
     TTree* eventTree = new TTree("event", "event level info");
-    Int_t evt_n_tracks_total, mc_process_type;
+    Int_t evt_n_tracks_total, mc_process_type, evt_is_full_recon;
     Double_t evt_tot_ad_mult, evt_tot_ad_time, evt_tot_ad_charge,
              evt_tot_fmd_mult,
              evt_tot_v0_mult, evt_tot_v0_time, evt_tot_v0_charge, evt_tot_v0_sig_width,
              evt_tot_emc_ampl, evt_tot_emc_time,
              evt_tot_phos_ampl, evt_tot_phos_time;
     eventTree->Branch("event_id", &event_nb);
+    eventTree->Branch("mc_process_type", &mc_process_type);
+    eventTree->Branch("is_full_recon", &evt_is_full_recon);
     eventTree->Branch("n_tracks_total", &evt_n_tracks_total);
     eventTree->Branch("tot_ad_mult", &evt_tot_ad_mult);
     eventTree->Branch("tot_ad_time", &evt_tot_ad_time);
@@ -179,10 +182,10 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     CEPRawCaloBuffer* emcal = 0x0;
     CEPRawCaloBuffer* phos  = 0x0;
     
-    CEPEventBuffer* event = 0x0;
-
+    std::cout << CEPtree->GetEntries() << " events in the file: " << filename << std::endl;
     for (UInt_t ii(0); ii<CEPtree->GetEntries(); ii++){
         CEPtree->GetEntry(ii);
+        if (!CEPEvts) std::cout << "Event number " << ii << " cannot be found!" << std::endl;
         if (ii==0){
             std::cout << "Nb tracks in CEPEvts: " << CEPEvts->GetnTracks() << std::endl;
             std::cout << "Nb tracks in CEPRawEvts: " << CEPRawEvts->GetnTracksTotal() << std::endl;
@@ -207,6 +210,9 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         evt_tot_emc_time = CEPRawEvts->GetTotalEMCTime();
         evt_tot_phos_ampl = CEPRawEvts->GetTotalPHOSAmplitude();
         evt_tot_phos_time = CEPRawEvts->GetTotalPHOSTime();
+
+        evt_is_full_recon = is_full_recon(CEPEvts);
+        mc_process_type = CEPEvts->GetMCProcessType();
 
         eventTree->Fill();
 
@@ -389,4 +395,39 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     v0File->Close();
     delete v0File;
 
+}
+
+Int_t is_full_recon(CEPEventBuffer* cepevt)
+{
+    if (!cepevt) {
+        std::cout << "Event does not exist!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    // extract info if event is fully reconstruced
+    // by the tracks in the TPC or not 
+    TLorentzVector lv_MCparticle;       // initialized by (0., 0., 0., 0.)
+    TLorentzVector lv_trks_total;       // initialized by (0., 0., 0., 0.)
+    TLorentzVector lv_trk_temp;         // initialized by (0., 0., 0., 0.)
+    lv_MCparticle = cepevt->GetMCParticle();
+    // looping through the detected tracks
+    // to see if they match the 4-mom of the
+    // original particle -> if so the whole evt is
+    // detected
+    CEPTrackBuffer* trk = 0x0;
+    for (int kk(0); kk<cepevt->GetnTracks(); kk++) {
+        trk = cepevt->GetTrack(kk); 
+        if (!trk) break;
+
+        lv_trk_temp.SetVectM(trk->GetMCMomentum(), trk->GetMCMass());
+        lv_trks_total += lv_trk_temp;
+    }
+    if ( abs_val(lv_MCparticle.M() - lv_trks_total.M()) < 10e-5 ) {
+        return 1;
+    } else return 0;
+}
+
+double abs_val(double val)
+{
+    if (val > 0.) return val;
+    else return -val;
 }
