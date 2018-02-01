@@ -5,7 +5,7 @@ from keras.models import Sequential
 from keras.layers.core import Activation, Dense, Dropout
 from keras.layers import Masking, LSTM, GRU, Concatenate, Input, Lambda
 
-def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50): 
+def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, rnn_layer='LSTM')
     """
     Args 
         data:
@@ -31,6 +31,8 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50):
         n_epochs:
             integer, number of training epochs
 
+        rnn_layer:
+            string that is evaluated as a keras layer
     _______________________________________________________________
 
     Operation breakdown:
@@ -65,6 +67,7 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50):
                 raise TypeError('The key {} of the "value"-dictionary ' \
                         'is not of type numpy ndarrays but rather {}'.format(key, type(value)))
 
+    if not isinstance(
 
     if 'P8own' in run_mode_user:
         # pass shape into Masking layer
@@ -153,13 +156,13 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50):
         track_channel.add(Masking(mask_value=-999, 
                                      input_shape=TRACK_SHAPE, 
                                      name='track_masking'))
-        track_channel.add(GRU(16, name='track_gru'))
+        track_channel.add(getattr(keras.layers, rnn_layer)(16, name='track_rnn'))
         track_channel.add(Dropout(0.3, name='track_dropout'))
 
         raw_track_channel.add(Masking(mask_value=-999,
                                      input_shape=RAW_TRACK_SHAPE, 
                                      name='raw_track_masking'))
-        raw_track_channel.add(GRU(14, name='raw_track_gru'))
+        raw_track_channel.add(getattr(keras.layers, rnn_layer)(14, name='raw_track_rnn'))
         raw_track_channel.add(Dropout(0.3, name='raw_track_dropout'))
 
         # event level layer
@@ -195,19 +198,19 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50):
             emcal_channel.add(Masking(mask_value=-999,
                                          input_shape=EMCAL_SHAPE, 
                                          name='emcal_masking'))
-            emcal_channel.add(GRU(2, name='emcal_gru'))
+            emcal_channel.add(getattr(keras.layers, rnn_layer)(2, name='emcal_rnn'))
             emcal_channel.add(Dropout(0.3, name='emcal_dropout'))
 
             phos_channel.add(Masking(mask_value=-999,
                                          input_shape=PHOS_SHAPE, 
                                          name='emcal_masking'))
-            phos_channel.add(GRU(2, name='phos_gru'))
+            phos_channel.add(getattr(keras.layers, rnn_layer)(2, name='phos_rnn'))
             phos_channel.add(Dropout(0.3, name='phos_dropout'))
 
             calo_cluster_channel.add(Masking(mask_value=-999,
                                          input_shape=CALO_CLUSTER_SHAPE, 
                                          name='calo_cluster_masking'))
-            calo_cluster_channel.add(GRU(4, name='calo_cluster_gru'))
+            calo_cluster_channel.add(getattr(keras.layers, rnn_layer)(4, name='calo_cluster_rnn'))
             calo_cluster_channel.add(Dropout(0.3, name='calo_cluster_dropout'))
             
             # NNs feeding into the event-level net
@@ -273,3 +276,5 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50):
 
     else:
         raise NameError('ERROR: Unrecognized model {}'.format(run_mode_user))
+
+
