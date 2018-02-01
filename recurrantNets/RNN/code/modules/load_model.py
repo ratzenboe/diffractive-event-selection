@@ -106,9 +106,15 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50):
         return combined_rnn
 
     elif 'Grid' in run_mode_user:
-        X_track_train = data['track']
-        X_raw_track_train = data['raw_track']
-        X_event_train=data['event']
+        try:
+            X_track_train     = data['track']
+            X_raw_track_train = data['raw_track']
+            X_event_train     = data['event']
+            y_train           = data['target']
+        except KeyError:
+            raise KeyError('The data-dictionary provided does not contain' \
+                    'all necessary keys for the selected run-mode (run_mode_user)')
+
         # the data for the RNNs are of shape (n_evts, n_timesteps=n_particles, n_features) 
         # the masking layer however is only intersted in (n_timesteps, n_features)
         TRACK_SHAPE = X_track_train.shape[1:]
@@ -117,12 +123,17 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50):
         # the network is fed with n_features
         EVENT_SHAPE = X_event_train.shape[1]
         if 'Sim' in run_mode_user:
-            X_emcal_train = data['emcal']
-            X_phos_train=data['phos']
-            X_calo_cluster_train=data['calo_cluster']
-            X_ad_train=data['ad']
-            X_fmd_train=data['fmd']
-            X_v0_train=data['v0']
+            try:
+                X_emcal_train        = data['emcal']
+                X_phos_train         = data['phos']
+                X_calo_cluster_train = data['calo_cluster']
+                X_ad_train           = data['ad']
+                X_fmd_train          = data['fmd']
+                X_v0_train           = data['v0']
+            except KeyError:
+                raise KeyError('The data-dictionary provided does not contain' \
+                        'all necessary keys for the selected run-mode (run_mode_user)')
+
             EMCAL_SHAPE = X_emcal_train.shape[1:]
             PHOS_SHAPE = X_phos_train.shape[1:]
             CALO_CLUSTER_SHAPE = X_calo_cluster_train.shape[1:]
@@ -130,7 +141,6 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50):
             FMD_SHAPE = X_fmd_train.shape[1]
             V0_SHAPE = X_v0_train.shape[1]
          
-        y_train = data['target']
 
 
         # basis network
