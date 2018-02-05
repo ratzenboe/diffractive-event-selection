@@ -169,7 +169,7 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
             raw_track_channel.add(getattr(keras.layers, rnn_layer)(14, name='raw_track_rnn'))
             raw_track_channel.add(Dropout(0.3, name='raw_track_dropout'))
         except AttributeError:
-            raise AttributeError('Keras layers does not have a layer called {}.'.format(rnn_layer))
+            raise AttributeError('{} is not a valid Keras layer!'.format(rnn_layer))
 
         # event level layer
         event_level.add(Lambda(lambda x: x, input_shape=(EVENT_SHAPE, ))) 
@@ -220,7 +220,7 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
                 calo_cluster_channel.add(getattr(keras.layers, rnn_layer)(4, name='calo_cluster_rnn'))
                 calo_cluster_channel.add(Dropout(0.3, name='calo_cluster_dropout'))
             except AttributeError:
-                raise AttributeError('Keras layers does not have a layer called {}.'.format(rnn_layer))
+                raise AttributeError('{} is not a valid Keras layers!'.format(rnn_layer))
 
  
             # NNs feeding into the event-level net
