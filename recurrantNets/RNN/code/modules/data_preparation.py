@@ -84,7 +84,7 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
         __________________________________________________________________________________
 
         targets:
-            the target value(s)
+            the target value(s), list
             may also be multiple values, as there may be multiple information available
             that determine the final target.
     _______________________________________________________________________________________
@@ -101,6 +101,29 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
             - y_data     (n_evts,)
 
     """
+    if not isinstance(inp_data, pd.DataFrame):
+        raise TypeError('Attention: the variable "inp_data" should be a pandas.DataFrame ' \
+                'but insted is a {}!'.format(type(inp_data)))
+
+    if not isinstance(max_entries_per_evt, int):
+        raise TypeError('Attention: the variable "max_entries_per_evt" should be a ' \
+                'integer but instead is a {}!'.format(type(max_entries_per_evt)))
+
+     if not isinstance(list_of_features, list):
+        raise TypeError('Attention: the variable "list_of_features" should be a ' \
+                'list but instead is a {}!'.format(type(list_of_features))) 
+
+    if not isinstance(list_of_features, list):
+        raise TypeError('Attention: the variable "list_of_features" should be a ' \
+                'list but instead is a {}!'.format(type(list_of_features))) 
+        
+    if not isinstance(evt_id_string, str):
+        raise TypeError('Attention: the variable "evt_id_string" should be a ' \
+                'string but insted is a {}!'.format(type(evt_id_string)))
+
+    if not isinstance(targets, list):
+        raise TypeError('Attention: the variable "targets" should be a ' \
+                'list but insted is a {}!'.format(type(targets)))
 
     min_evt_nb = inp_data[evt_id_string].min()
     max_evt_nb = inp_data[evt_id_string].max()
@@ -301,6 +324,10 @@ def get_data_dictionary(infile):
 
 
 
+
+# #############################################################################
+# --------------- will be updated if data loading part works ------------------
+# #############################################################################
 def preprocess(evt_dic, data_params, run_params, load_fitted_attributes=False):
     """
     Performes preprocessing on the data, right now only standarad scaling
