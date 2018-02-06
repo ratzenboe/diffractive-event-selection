@@ -5,7 +5,7 @@ from keras.models import Sequential
 from keras.layers.core import Activation, Dense, Dropout
 from keras.layers import Masking, LSTM, GRU, Concatenate, Input, Lambda
 
-def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, rnn_layer='LSTM')
+def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, rnn_layer='LSTM'):
     """
     Args 
         data:
