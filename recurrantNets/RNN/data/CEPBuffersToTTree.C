@@ -34,7 +34,7 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
 
     TFile* eventFile = new TFile((save_dir+"event_info"+file_addon_str).Data(), "RECREATE");
     TTree* eventTree = new TTree("event", "event level info");
-    Int_t evt_n_tracks_total, mc_process_type, evt_is_full_recon;
+    Int_t evt_n_tracks, evt_n_raw_tracks_total, mc_process_type, evt_is_full_recon;
     Double_t evt_tot_ad_mult, evt_tot_ad_time, evt_tot_ad_charge,
              evt_tot_fmd_mult,
              evt_tot_v0_mult, evt_tot_v0_time, evt_tot_v0_charge, evt_tot_v0_sig_width,
@@ -43,7 +43,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     eventTree->Branch("event_id", &event_nb);
     eventTree->Branch("mc_process_type", &mc_process_type);
     eventTree->Branch("is_full_recon", &evt_is_full_recon);
-    eventTree->Branch("n_tracks_total", &evt_n_tracks_total);
+    eventTree->Branch("n_tracks", &evt_n_tracks);
+    eventTree->Branch("n_raw_tracks", &evt_n_raw_tracks_total);
     eventTree->Branch("tot_ad_mult", &evt_tot_ad_mult);
     eventTree->Branch("tot_ad_time", &evt_tot_ad_time);
     eventTree->Branch("tot_ad_charge", &evt_tot_ad_charge);
@@ -193,7 +194,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         event_nb = ii;
         
         // Event  
-        evt_n_tracks_total = CEPRawEvts->GetnTracksTotal();
+        evt_n_tracks = CEPEvts->GetnTracks();
+        evt_n_raw_tracks_total = CEPRawEvts->GetnTracksTotal();
 
         evt_tot_ad_mult = CEPRawEvts->GetTotalADMult();
         evt_tot_ad_time = CEPRawEvts->GetTotalADTime();
