@@ -4,14 +4,11 @@ import shutil
 import datetime
 import warnings
 import pickle
-import arff
 
 import matplotlib
 import numpy as np
 import pandas as pd
 from pandas import HDFStore
-
-from generalization.utils import pandas2arff
 
 
 session_prefix = 'session_'
@@ -154,7 +151,7 @@ class OutputManager:
         return self.session_dir
 
             
-    def save(self, output_object, output_name, folder=None, to_arff=False):
+    def save(self, output_object, output_name, folder=None):
         """Stores the passed object in the current session's output folder.
         Args:
             output_object: the object to be stored
@@ -169,7 +166,6 @@ class OutputManager:
 
         assert isinstance(output_name, str)
         assert isinstance(folder, str) or folder is None
-        assert isinstance(to_arff, bool) or to_arff is None
 
         output_basename = self.session_dir
 
@@ -191,16 +187,9 @@ class OutputManager:
             np.save(output_basename + '.npy', output_object,
                     allow_pickle=False)
 
-        elif isinstance(output_object, dict) and to_arff:
-            arff.dump(output_object, open(output_basename+'.arff','w'))
-
         elif isinstance(output_object, pd.core.frame.DataFrame):
-            if to_arff:
-                pandas2arff(output_object, output_basename + '.arff',
-                            wekaname=output_name)
-            else:
-                np.save(output_basename + '.npy', output_object.as_matrix(),
-                        allow_pickle=True)
+            np.save(output_basename + '.npy', output_object.as_matrix(),
+                    allow_pickle=True)
             
         else:
             warnings.warn('no methods to save objects of type {} implemented, ' \
