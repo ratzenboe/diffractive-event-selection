@@ -23,8 +23,8 @@ from modules.logger                             import logger
 from modules.load_model                         import train_model
 from modules.data_preparation                   import get_data, save_data_dictionary, \
                                                        get_data_dictionary
-# from modules.???                              import standardScale 
 from modules.utils                              import print_dict
+from modules.file_management                    import OutputManager
 
 def main():
 
@@ -60,25 +60,51 @@ def main():
     data_params = data_params[run_mode_user]
     model_params = model_params[run_mode_user]
 
-    data_outfile = data_path+'all_evts.npy'
+    # here is a collection of variables extracted from the 
+    # config files
+    path_dic        = data_params['path']
+    branches_dic    = data_params['branches']
+    max_entries_dic = data_params['max_entries']
+    std_scale_dic   = data_params['std_scale']
+    target_list     = data_params['target']
+    evt_id_string   = data_params['evt_id']
+    n_track_id      = data_params['n_track_id']
+
+    data_outfile = om.get_session_folder() + 'all_evts.npy'
     try:
         evt_dictionary = get_data_dictionary(data_outfile)
     except (IOError, TypeError):
-        evt_dictionary = get_data(data_params)
-        print('saving data in {}'.format(data_outfile))
+        evt_dictionary = get_data(branches_dic    = branches_dic, 
+                                  max_entries_dic = max_entries_dic, 
+                                  path_dic        = path_dic, 
+                                  evt_id_string   = evt_id_string, 
+                                  target_list     = target_list,
+                                  n_track_id      = n_track_id)
+        print('\n : : saving data in {}'.format(data_outfile))
         save_data_dictionary(data_outfile, evt_dictionary)
+
+    print('\n\n : : Loading the data worked well')
+    counter = 0
+
+    for key, array in evt_dictionary.iteritems():
+        print('\n{}'.format(key))
+        print('type(array): {}'.format(type(array)))
+        print(array)
+        # print('array.shape: {}'.format(array.shape))
+
+    sys.exit(1)
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
     ######################################################################################
     print('Splitting data in training and test sample')
     # output type is the same as input type!
-    evt_dic, evt_dic_valid       = split_dictionary(evt_dictionary,
-                                                    split_size=run_params['frac_valid_sample'])
+    evt_dic_train, evt_dic_test = split_dictionary(evt_dictionary,
+                                                   split_size=run_params['frac_test_sample'])
     del evt_dictionary
-    evt_dic_train, evt_dic_test  = split_dictionary(evt_dic,
-                                                    split_size=run_params['frac_test_sample'])
-    del evt_dic
+    # evt_dic_train, evt_dic_test  = split_dictionary(evt_dic,
+    #                                                 split_size=run_params['frac_test_sample'])
+    # del evt_dic
         
     if run_params['stdScale']:
         print('standarad scaling...')
@@ -97,12 +123,17 @@ def main():
     start_time_training = time.time()
 
     print('\nFitting the model...')
-    model = train_model(evt_dic_train, evt_dic_valid, run_mode_user)
+    model = train_model(evt_dic_train, 
+                        run_mode_user, 
+                        val_data    = run_params['frac_val_sample'],
+                        batch_size  = run_params['batch_size'],
+                        n_epochs    = run_params['n_epochs'],
+                        rnn_layer   = model_params['rnn'])
  
     end_time_training = time.time()
 
     # Save the model
-    joblib.dump(model, output_prefix + model_saves_prefix + 'model_save.pkl')
+    joblib.dump(model, output_prefix + 'model_save.pkl')
     ######################################################################################
     # STEP 3:
     # ----------------------------- Evaluating the model ---------------------------------
@@ -125,7 +156,8 @@ if __name__ == "__main__":
     output_path = 'output/'
     data_path   = '../data/'
     config_path = 'config/'
-    sys.stdout = logger(output_path)
+    om = OutputManager(output_path, keep_sessions=20)
+    sys.stdout = logger(om.get_session_folder())
 
     # fix random seed for reproducibility
     np.random.seed(7)
@@ -141,7 +173,7 @@ if __name__ == "__main__":
 			      choose from the config file (default: "run_params")',
                         action='store',
                         dest='run_mode',
-                        default='GridSim',
+                        default='SimpleGrid',
                         type=str)
     command_line_args = parser.parse_args(user_argv)
 

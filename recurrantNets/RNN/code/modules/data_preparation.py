@@ -37,9 +37,9 @@ def pad_array(array, max_entries):
         raise TypeError('The variable "array" has to be a numpy.ndarray ' \
                 'but {} was provided'.format(type(array)))
 
-    if not isinstance(max_entries, int):
-        raise TypeError('The variable "max_entries" has to be a int ' \
-                'but {} was provided'.format(type(max_entries)))
+    if not isinstance(max_entries, int) and max_entries is not None:
+        raise TypeError('The variable "max_entries" has to be a either an integer ' \
+                'or None but {} was provided'.format(type(max_entries)))
 
 
     if max_entries is None:
@@ -60,7 +60,8 @@ def pad_array(array, max_entries):
         return array.tolist()
 
 
-def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_string, targets):
+def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_string, targets, 
+                   n_track_id):
     """
     Args
 
@@ -87,6 +88,12 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
             the target value(s), list
             may also be multiple values, as there may be multiple information available
             that determine the final target.
+        __________________________________________________________________________________
+
+        n_track_id:
+            The branch-name (string) that contains the number of tracks (only pick even
+            number of tracks)
+
     _______________________________________________________________________________________
     
     Operation breakdown
@@ -105,14 +112,6 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
         raise TypeError('Attention: the variable "inp_data" should be a pandas.DataFrame ' \
                 'but insted is a {}!'.format(type(inp_data)))
 
-    if not isinstance(max_entries_per_evt, int):
-        raise TypeError('Attention: the variable "max_entries_per_evt" should be a ' \
-                'integer but instead is a {}!'.format(type(max_entries_per_evt)))
-
-    if not isinstance(list_of_features, list):
-        raise TypeError('Attention: the variable "list_of_features" should be a ' \
-                'list but instead is a {}!'.format(type(list_of_features))) 
-
     if not isinstance(list_of_features, list):
         raise TypeError('Attention: the variable "list_of_features" should be a ' \
                 'list but instead is a {}!'.format(type(list_of_features))) 
@@ -125,9 +124,24 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
         raise TypeError('Attention: the variable "targets" should be a ' \
                 'list but insted is a {}!'.format(type(targets)))
 
+    if not isinstance(n_track_id, str):
+        raise TypeError('Attention: the variable "n_track_id" should be a ' \
+                'string but insted is a {}!'.format(type(n_track_id)))
+
+    ###########################################################################
+    # TODO:
+    #   - here we put a selection criterion regarding the number of tracks
+    #     we should get a list of indices which events have a right number of
+    #     tracks that will in turn be looped over and only this subset of 
+    #     events (with 2,4 or 6 tracks) will be part of the final event 
+    #     dictionary
+
     min_evt_nb = inp_data[evt_id_string].min()
     max_evt_nb = inp_data[evt_id_string].max()
     evts_in_data = max_evt_nb - min_evt_nb
+
+    # remove event id from the list of features
+    list_of_features = filter(lambda x: x != evt_id_string, list_of_features)
 
     all_events = []
     y_data = []
@@ -137,10 +151,11 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
     
     for evt_int in range(min_evt_nb, max_evt_nb+1):
         if evt_int%1000 == 0:
-            print('{} events from {} fetched'.format(evt_int, min_evt_nb+max_evt_nb))
+            print(' : : {} events from {} fetched'.format(evt_int, min_evt_nb+max_evt_nb))
         # get relevant data for one event 
         evt_data = inp_data.loc[inp_data[evt_id_string] == evt_int, list_of_features]
-
+        if evt_data.empty:
+            evt_data = pd.DataFrame([])
         # the target is only present in the event column
         target_list = []
         if set(targets) <= set(list_of_features):
@@ -169,7 +184,7 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
     return all_events, y_data
 
 
-def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list):
+def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list, n_track_id):
     """
     Args
         
@@ -197,6 +212,11 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
         target_list:
             The target may depend on numerous varibles stored in the TTree.
             This list captures these variables. 
+        __________________________________________________________________________
+
+        n_track_id:
+            The branch name which stores the number of particles that are detected
+            in the TPC
     ______________________________________________________________________________
 
     Operation breakdown
@@ -217,6 +237,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
     evt_dictionary = {}
     for key, list_of_features in branches_dic.iteritems():
         # list_of_features.remove(data_params['evt_id'])
+        print('\n{} Loading {} data {}'.format(10*'-', key, 10*'-'))
 
         data = load_data(path_dic[key], branches=list_of_features)
 
@@ -225,10 +246,13 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
                                             max_entries_per_evt = max_entries_dic[key],
                                             list_of_features    = list_of_features,
                                             evt_id_string       = evt_id_string,
-                                            targets             = target_list )
+                                            targets             = target_list,
+                                            n_track_id          = n_track_id)
         # if the y_data array has a size, then we add the 
         # target information to the evt_dictionary 
-        if y_data:
+        if isinstance(y_data, list):
+            y_data = np.array(y_data)
+        if y_data.size is not 0:
             evt_dictionary['target'] = y_data
 
     return evt_dictionary
