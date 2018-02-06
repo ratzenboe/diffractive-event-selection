@@ -153,7 +153,7 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
                 evt_data = evt_data.drop(trgt, axis=1)
                 target_list.append(y)
             
-            if 106 and 1 target_list:
+            if 106 and 1 in target_list:
                 y_data.append(1)
             else:
                 y_data.append(0)
