@@ -109,7 +109,7 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
         raise TypeError('Attention: the variable "max_entries_per_evt" should be a ' \
                 'integer but instead is a {}!'.format(type(max_entries_per_evt)))
 
-     if not isinstance(list_of_features, list):
+    if not isinstance(list_of_features, list):
         raise TypeError('Attention: the variable "list_of_features" should be a ' \
                 'list but instead is a {}!'.format(type(list_of_features))) 
 
