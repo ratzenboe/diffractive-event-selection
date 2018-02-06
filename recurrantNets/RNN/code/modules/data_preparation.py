@@ -60,7 +60,7 @@ def pad_array(array, max_entries):
         return array.tolist()
 
 
-def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_string, targets)
+def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_string, targets):
     """
     Args
 
