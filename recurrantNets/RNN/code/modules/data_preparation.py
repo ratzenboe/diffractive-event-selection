@@ -261,7 +261,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
             # the integers in this list are long-ints -> convert them here to standard ints
             list_of_events = map(int, list_of_events)
             percentage_of_all = n_evts_total/len(list_of_events)
-            print(':: Processing {}/{} events ({}%) with the following number of ' \
+            print(':: Processing {}/{} events ({:.2f}%) with the following number of ' \
                     'tracks: {}'.format(
                         len(list_of_events), n_evts_total, percentage_of_all, cut_list_n_tracks))
         elif cut_list_n_tracks is not None:
@@ -393,20 +393,46 @@ def get_data_dictionary(infile):
 # #############################################################################
 # --------------- will be updated if data loading part works ------------------
 # #############################################################################
-def preprocess(evt_dic, data_params, run_params, load_fitted_attributes=False):
+def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
     """
-    Performes preprocessing on the data, right now only standarad scaling
-    the fitted attributes are then saved in a file
+    Args
+        evt_dic:
+            dictionary containing the event information; requires a certain 
+            structure predefined in the config files
+        __________________________________________________________________________
+        
+        std_scale_dic:
+            dictionary containing the branches which will be standard scaled
+        __________________________________________________________________________
+
+        out_path:
+            string, path to where the file will be saved and read
+        __________________________________________________________________________
+
+        load_fitted_attributes:
+            bool, if the attributes will be picked up from the file or
+            will be newly fitted
+    ______________________________________________________________________________
+
+    Operation breakdown
+
+        Performes preprocessing on the data (right now only standarad scaling)
+        the fitted attributes are then saved in a file
+    ______________________________________________________________________________
+
+    Return 
+        
+        the preprocessed/fitted dictionary 
+
     """
 
-    output_prefix, model_saves_prefix = get_output_paths(run_params)
-    load_save_file = output_prefix + model_saves_prefix + 'scaling_attributes.npy'
+    load_save_file = out_path + 'scaling_attributes.npy'
     
     if not load_fitted_attributes:
         # we loop through all datasets that are in the dictionary std_scale
         # std_scale looks like:
-        #   {'fmd': ['a', 'b',...], 'ad': [...], ...}
-        for key, columns in data_params['std_scale'].iteritems():
+        #   {'event': ['a', 'b',...], 'track': [...], ...}
+        for key, columns in std_scale_dic.iteritems():
             # we have to fit new scaling attributes
             scaling_attr = {}
             for col in columns:
@@ -429,7 +455,7 @@ def preprocess(evt_dic, data_params, run_params, load_fitted_attributes=False):
         # load previously fitted attributes
         scaling_attr = np.load(load_save_file).item()
 
-        for key, columns in data_params['std_scale'].iteritems():
+        for key, columns in std_scale_dic.iteritems():
             for col in columns:
                 try: 
                     evt_dic[key][col] -= scaling_attributes[col][key]['mean']
