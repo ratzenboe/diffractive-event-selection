@@ -20,9 +20,9 @@ def print_number(y, name, **kwargs):
     return
 
 
-def pause_for_input(run_params, timeout=5):
-    print'\nInfo: The model will be trained anew. Existing saves will be overwritten.'
-    print'      (Program paused for {} seconds. Hit Enter to abort the training.)'.format(timeout)
+def pause_for_input(message, timeout=5):
+    print(message)
+    print'      (Program paused for {} seconds. Hit Enter to abort the program.)'.format(timeout)
     rlist = select([sys.stdin], [], [], timeout)[0]
 
     if rlist:
@@ -30,7 +30,6 @@ def pause_for_input(run_params, timeout=5):
         sys.exit()
     else:
         print'No input received. Continue running the program...'
-        print'Creating the model using {}...'.format(run_params['classifier_params_id'])
     
     return
 
