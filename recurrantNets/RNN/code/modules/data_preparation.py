@@ -389,10 +389,6 @@ def get_data_dictionary(infile):
 
 
 
-
-# #############################################################################
-# --------------- will be updated if data loading part works ------------------
-# #############################################################################
 def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
     """
     Args
