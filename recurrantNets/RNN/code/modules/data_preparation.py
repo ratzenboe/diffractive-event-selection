@@ -1,3 +1,5 @@
+from __future__ import division
+
 import os
 import math
 import sys
@@ -6,6 +8,8 @@ import warnings
 import numpy as np
 import pandas as pd
 import root_numpy
+
+from modules.utils import pause_for_input
 
 def pad_array(array, max_entries):
     """
@@ -60,8 +64,8 @@ def pad_array(array, max_entries):
         return array.tolist()
 
 
-def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_string, targets, 
-                   n_track_id):
+def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_string,
+                   targets, list_of_events):
     """
     Args
 
@@ -90,10 +94,9 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
             that determine the final target.
         __________________________________________________________________________________
 
-        n_track_id:
-            The branch-name (string) that contains the number of tracks (only pick even
-            number of tracks)
-
+        list_of_events:
+            An index-list containing the event numbers of the desired events (right amount
+            of tracks)
     _______________________________________________________________________________________
     
     Operation breakdown
@@ -124,38 +127,29 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
         raise TypeError('Attention: the variable "targets" should be a ' \
                 'list but insted is a {}!'.format(type(targets)))
 
-    if not isinstance(n_track_id, str):
-        raise TypeError('Attention: the variable "n_track_id" should be a ' \
-                'string but insted is a {}!'.format(type(n_track_id)))
-
-    ###########################################################################
-    # TODO:
-    #   - here we put a selection criterion regarding the number of tracks
-    #     we should get a list of indices which events have a right number of
-    #     tracks that will in turn be looped over and only this subset of 
-    #     events (with 2,4 or 6 tracks) will be part of the final event 
-    #     dictionary
-
-    min_evt_nb = inp_data[evt_id_string].min()
-    max_evt_nb = inp_data[evt_id_string].max()
-    evts_in_data = max_evt_nb - min_evt_nb
+    if not isinstance(list_of_events, list):
+        raise TypeError('Attention: the variable "list_of_events" should be a ' \
+                'list but instead is a {}!'.format(type(list_of_events)))
 
     # remove event id from the list of features
     list_of_features = filter(lambda x: x != evt_id_string, list_of_features)
 
     all_events = []
     y_data = []
-    if evts_in_data == 0:
+    if len(list_of_events) == 0:
         warnings.warn('No entries found in input data!\nReturning the unprocessed input.')
         return all_events, y_data
     
-    for evt_int in range(min_evt_nb, max_evt_nb+1):
-        if evt_int%1000 == 0:
-            print(' : : {} events from {} fetched'.format(evt_int, min_evt_nb+max_evt_nb))
+    current_n_evts = 0
+    for evt_int in list_of_events:
+        current_n_evts += 1
+        if current_n_evts%1000 == 0:
+            print(':: {} events from {} fetched'.format(current_n_evts, len(list_of_events)))
         # get relevant data for one event 
         evt_data = inp_data.loc[inp_data[evt_id_string] == evt_int, list_of_features]
         if evt_data.empty:
             evt_data = pd.DataFrame([])
+            warnings.warn('The event {} has no information stored!'.format(evt_int))
         # the target is only present in the event column
         target_list = []
         if set(targets) <= set(list_of_features):
@@ -184,7 +178,8 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
     return all_events, y_data
 
 
-def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list, n_track_id):
+def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list, n_track_id,
+             cut_list_n_tracks, event_string):
     """
     Args
         
@@ -217,6 +212,16 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
         n_track_id:
             The branch name which stores the number of particles that are detected
             in the TPC
+        __________________________________________________________________________
+    
+        cut_list_n_tracks:
+            list of ints determining the number of possible tracks that will be
+            allowed in an event (default [2, 4, 6]) 
+        __________________________________________________________________________
+
+        event_string:
+            string corresponding to the dictionary key of the event 
+            (default 'event')
     ______________________________________________________________________________
 
     Operation breakdown
@@ -235,6 +240,42 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
 
     """
     evt_dictionary = {}
+
+    if not isinstance(cut_list_n_tracks, list) and cut_list_n_tracks is not None:
+        warnings.warn('The variable "cut_list_n_tracks" is not set properly!' \
+                'It has to be a list of integers or None, ' \
+                'but here is type {}.'.format(type(cut_list_n_tracks))) 
+
+    # selection criterion regarding the number of tracks
+    # we get a list of events (subset of events) that have the right number of
+    # tracks (with 2,4 or 6 tracks) Only these events will be part 
+    # of the final event dictionary
+    try:
+        data = load_data(path_dic[event_string], branches=[n_track_id,evt_id_string])
+        n_evts_total = data.shape[0]
+        if isinstance(cut_list_n_tracks, list):
+            # array that only contains the indices of events with the right amount
+            # of tracks
+            list_of_events = data[evt_id_string][data[n_track_id].isin(
+                cut_list_n_tracks)].values.tolist()
+            # the integers in this list are long-ints -> convert them here to standard ints
+            list_of_events = map(int, list_of_events)
+            percentage_of_all = n_evts_total/len(list_of_events)
+            print(':: Processing {}/{} events ({}%) with the following number of ' \
+                    'tracks: {}'.format(
+                        len(list_of_events), n_evts_total, percentage_of_all, cut_list_n_tracks))
+        elif cut_list_n_tracks is not None:
+            # if the variable is not properly set in the config files then 
+            # we take all events that have at least 1 track
+            list_of_events = data[evt_id_string][data[n_track_id]>0].values.tolist()
+            list_of_events = map(int, list_of_events)
+
+    except (IOError, KeyError):
+        raise NameError('The event data cannot be loaded! Either the path {} ' \
+                'does not exist or the column {} ' \
+                'does not exist in the data.\nCheck the config file for any' \
+                'name errors!'.format(path_dic[event_string], n_track_id))
+
     for key, list_of_features in branches_dic.iteritems():
         # list_of_features.remove(data_params['evt_id'])
         print('\n{} Loading {} data {}'.format(10*'-', key, 10*'-'))
@@ -247,7 +288,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
                                             list_of_features    = list_of_features,
                                             evt_id_string       = evt_id_string,
                                             targets             = target_list,
-                                            n_track_id          = n_track_id)
+                                            list_of_events      = list_of_events)
         # if the y_data array has a size, then we add the 
         # target information to the evt_dictionary 
         if isinstance(y_data, list):
