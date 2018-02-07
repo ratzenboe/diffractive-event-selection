@@ -1,8 +1,10 @@
 from __future__ import division
+
 import sys
 import os
 import time
 import random
+import warnings
 
 from select import select
 
@@ -67,16 +69,52 @@ def print_dict(dictionary, headline=None):
 
 def split_dictionary(evt_dictionary, split_size):
     """
-    as we only ever work with the event dicitionary (due to the many sub items in it)  
-    the usual train_test_split from sklearn does not suffice
+    Args
+        evt_dictionary:
+            dictionary, containing the event numpy arrays stored in its
+            keys (see config files for structural information)
+        ________________________________________________________________________
 
-    returns the large sample as the first argument, the small one is the second return
+        split_size:
+            float or int, the fraction or number of the numpy arrays that will 
+            be used as test example
+    ____________________________________________________________________________
+
+    Operation breakdown
+    
+        as we only ever work with the event dicitionary (due to the many sub-items 
+        in it)  the usual train_test_split from sklearn does not suffice; we split
+        the dictionary by taking the lenght of the numpy arrays and putting this in
+        a range of numbers; then this range is shuffled, thus shuffling all numpy 
+        arrays at the same time; The the dictionary is split into a big and small one
+        according to the split_size - fraction
+    ____________________________________________________________________________
+
+    Return
+        
+        2 dictionaries with shoretened numpy arrays in the following convetion:
+            - 1st dictionary is the BIG one
+            - 2nd is the small one
+
     """
+    if not isinstance(evt_dictionary, dict):
+        raise TypeError('The variable "evt_dictionary" is expected to be of type ' \
+                'dictionary but instead it is a {}!'.format(type(evt_dictionary)))
+    if not isinstance(split_size, int) and not isinstance(split_size, float):
+        raise TypeError('The variable "split_size" is expected to be of type ' \
+                'int or float but instead it is a {}!'.format(type(split_size)))
+
     # output dictionaries
     big_sample = {}
     small_sample = {}
+
     sample_size = split_size
     n_evts = evt_dictionary['target'].shape[0]
+    if split_size > n_evts:
+        warnings.warn('The test sample size (variable "split_size") exceeds the ' \
+                'the number of instances. Consequently a test split of 0.2 is used!')
+        split_size = 0.2
+
     if split_size < 1.:
         sample_size = int(split_size*n_evts)
     # create a random subsample
