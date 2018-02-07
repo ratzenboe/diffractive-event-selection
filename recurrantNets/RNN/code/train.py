@@ -62,37 +62,41 @@ def main():
 
     # here is a collection of variables extracted from the 
     # config files
-    path_dic        = data_params['path']
-    branches_dic    = data_params['branches']
-    max_entries_dic = data_params['max_entries']
-    std_scale_dic   = data_params['std_scale']
-    target_list     = data_params['target']
-    evt_id_string   = data_params['evt_id']
-    n_track_id      = data_params['n_track_id']
+    path_dic          = data_params['path']
+    branches_dic      = data_params['branches']
+    max_entries_dic   = data_params['max_entries']
+    std_scale_dic     = data_params['std_scale']
+    target_list       = data_params['target']
+    evt_id_string     = data_params['evt_id']
+    n_track_id        = data_params['n_track_id']
+    cut_list_n_tracks = data_params['cut_list_n_tracks']
+    event_string      = data_params['event_string']
 
     data_outfile = om.get_session_folder() + 'all_evts.npy'
     try:
         evt_dictionary = get_data_dictionary(data_outfile)
     except (IOError, TypeError):
-        evt_dictionary = get_data(branches_dic    = branches_dic, 
-                                  max_entries_dic = max_entries_dic, 
-                                  path_dic        = path_dic, 
-                                  evt_id_string   = evt_id_string, 
-                                  target_list     = target_list,
-                                  n_track_id      = n_track_id)
-        print('\n : : saving data in {}'.format(data_outfile))
+        evt_dictionary = get_data(branches_dic      = branches_dic, 
+                                  max_entries_dic   = max_entries_dic, 
+                                  path_dic          = path_dic, 
+                                  evt_id_string     = evt_id_string, 
+                                  target_list       = target_list,
+                                  n_track_id        = n_track_id,
+                                  cut_list_n_tracks = cut_list_n_tracks,
+                                  event_string      = event_string)
+
+        print('\n:: saving data in {}'.format(data_outfile))
         save_data_dictionary(data_outfile, evt_dictionary)
 
-    print('\n\n : : Loading the data worked well')
+    print('\n\n:: Loading the data worked well')
     counter = 0
 
     for key, array in evt_dictionary.iteritems():
         print('\n{}'.format(key))
         print('type(array): {}'.format(type(array)))
-        print(array)
-        # print('array.shape: {}'.format(array.shape))
+        print('array.shape: {}'.format(array.shape))
 
-    sys.exit(1)
+    # sys.exit(1)
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
