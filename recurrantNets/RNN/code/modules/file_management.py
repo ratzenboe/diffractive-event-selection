@@ -96,8 +96,14 @@ class OutputManager:
 
     def __init__(self, output_basepath='output/', keep_sessions=20):
 
-        assert isinstance(output_basepath, str)
-        assert isinstance(keep_sessions, int) or keep_sessions is None
+        if not isinstance(output_basepath, str):
+            raise TypeError('Attention: variable "output_basepath" has to be a string ' \
+                    'but got type {} insted!'.format(type(output_basepath)))
+
+        if not isinstance(keep_sessions, int) and keep_sessions is not None:
+            raise TypeError('Attention: variable "keep_sessions" has to be an integer ' \
+                    'or None but got type {} instead!'.format(type(keep_sessions)))
+
 
         if not os.path.isabs(output_basepath):
             output_basepath = os.path.abspath(output_basepath)
