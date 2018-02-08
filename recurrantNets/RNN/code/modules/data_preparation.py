@@ -11,12 +11,12 @@ import root_numpy
 
 from modules.utils import pause_for_input
 
-def pad_array(array, max_entries):
+def pad_dataframe(df, max_entries):
     """
     Args
 
-        array:
-            numpy array of the shape (n_particles, n_features) 
+        df:
+            pandas dataframe of the shape (n_particles, n_features) 
         ____________________________________________________________
 
         max_entries:
@@ -25,21 +25,27 @@ def pad_array(array, max_entries):
 
     Operation breakdown
         
-        Extends "array" to a fixed size, if "max_entries" exceeds the 
-        array size the array is filled with -999 columns. 
+        Extends "dataframe" to a fixed size, if "max_entries" exceeds the 
+        df size the df is filled with -999 columns. 
         This is then masked in the NN model
     ________________________________________________________________
 
     Returns
         
-        the array with shape (max_entries, n_features)
+        the dataframe with shape (max_entries, n_features)
         with n_particles <= max_entries
 
     """
 
-    if not isinstance(array, np.ndarray):
-        raise TypeError('The variable "array" has to be a numpy.ndarray ' \
-                'but {} was provided'.format(type(array)))
+    if isinstance(df, np.ndarray):
+        warnings.warn('The variable "df" is a numpy.ndarray ' \
+                'but it should be a pandas dataframe. We convert it now!')
+        df = pd.DataFrame(df)
+
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError('The variable "df" has to be a pandas dataframe ' \
+                'but {} was provided'.format(type(df)))
+
 
     if not isinstance(max_entries, int) and max_entries is not None:
         raise TypeError('The variable "max_entries" has to be a either an integer ' \
@@ -47,21 +53,24 @@ def pad_array(array, max_entries):
 
 
     if max_entries is None:
-        return array.tolist()
+        return df
 
-    length = array.shape[0]
+    length = df.shape[0]
     if length > max_entries:
-        return array[:max_entries,:].tolist()
+        warnings.warn('The input dataframe exceeds the maxiumum entries! It is cut from {} ' \
+                'instances to {} entries! This may affect the performance. Please adjust ' \
+                'the maximum entries in the data-config file accordingly!'.format(
+                    length, max_entries))
+        pause_for_input('A warning was issued, do you want to abort the program?', timeout=2)
+        return df.loc[:max_entries]
 
     elif length < max_entries:
-        dummy_arr = np.zeros(shape=(array.shape[1],), dtype='float')
-        dummy_arr.fill(float(-999))
         for i in range(length, max_entries):
-            array = np.append(array, [dummy_arr], axis=0)
-        return array.tolist()
+            df.loc[i] = float(-999)
+        return df
 
     elif length == max_entries:
-        return array.tolist()
+        return df
 
 
 def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_string,
@@ -146,9 +155,9 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
         if current_n_evts%1000 == 0:
             print(':: {} events from {} fetched'.format(current_n_evts, len(list_of_events)))
         # get relevant data for one event 
-        evt_data = inp_data.loc[inp_data[evt_id_string] == evt_int, list_of_features]
-        if evt_data.empty:
-            evt_data = pd.DataFrame([])
+        evt_dataframe = inp_data.loc[inp_data[evt_id_string] == evt_int, list_of_features]
+        if evt_dataframe.empty:
+            evt_dataframe = pd.DataFrame([])
             warnings.warn('The event {} has no information stored!'.format(evt_int))
         # the target is only present in the event column
         target_list = []
@@ -157,9 +166,9 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
                 # the target is represented by the last incident in the particle list
                 # in the grid case the event is however just a single entry 
                 # in this case .iloc[-1] does not matter
-                y = evt_data[trgt].iloc[-1]
+                y = evt_dataframe[trgt].iloc[-1]
                 # if the target is in the columns we have to drop it
-                evt_data = evt_data.drop(trgt, axis=1)
+                evt_dataframe = evt_dataframe.drop(trgt, axis=1)
                 target_list.append(y)
             
             if 106 and 1 in target_list:
@@ -167,10 +176,38 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
             else:
                 y_data.append(0)
 
-        evt_data = evt_data.as_matrix()
-        evt_list = pad_array(evt_data, max_entries_per_evt)
-        all_events.append(evt_list)
+        #######################################################################
+        # Attention:
+        #
+        #   standard scaling is not working properly if we only use numpy arrays
+        #   due to the lack of column control (cannot access column by name,
+        #   as is the case for dataframes)
+        #   
+        #   at this point in the progrom we still have dataframes that we can 
+        #   simply transform into a numpy records format; the records format can
+        #   be accessed in the same way a dataframe can access its columns with
+        #   the advantage that we can kind of stack these together and are able to 
+        #   produce different shapes (compared to the row-column shape of dataframes)
+        #   
+        #   Stacking can simply be done by creating a list (here: all_events) and 
+        #   appending the record arrays piece by piece; afterwards the list is 
+        #   transformed into a numpy array; IMPORTANT: before sending the data
+        #   to the model the data have to be transformed from a records format to
+        #   the standard numpy array format by doning:
+        #       
+        #               np.array(rec_array_list.tolist()) )
+        #       
+        #   this has to be done after standard scaling or if the data are not scaled
+        #   right before they are put into the model
+        #
+        #######################################################################
+        
+        evt_filled_up_dataframe = pad_dataframe(evt_dataframe, max_entries_per_evt)
+        # transform dataframe to numpy records array (no indexing, as ordering does not
+        # contain information)
+        all_events.append(evt_filled_up_dataframe.to_records(index=False))
 
+    # this is neccessary (see above)
     all_events = np.array(all_events) 
     y_data = np.array(y_data)
 
@@ -433,10 +470,13 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
             scaling_attr = {}
             for col in columns:
                 try:
-                    mean = evt_dic[key][col].mean()
-                    std  = evt_dic[key][col].std()
-                    evt_dic[key][col] -= mean
-                    evt_dic[key][col] /= std
+                    # here we can access the columns directly (due to record array) 
+                    # and exclude the masking value of -999 from the mean calculation
+                    # evt_dic[key] is accessing the record array, col the right column
+                    mean = evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)].mean()
+                    std  = evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)].std()
+                    evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)] -= mean
+                    evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)] /= std
                 except KeyError:
                     print('Warning: Feature {} not found in the data!'.format(col))
                     
@@ -444,6 +484,10 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
                 # save the key, as some columns appear in different keys
                 # e.g. time in fmd, ad, v0
                 scaling_attr[col] = {key: {'mean': mean, 'std': std} }
+
+            # we only work with numpy records arrays (see event_grouing) 
+            # here we transform back to the standard numpy array
+            evt_dic[key] = np.array(evt_dic[key].tolist())
 
         np.save(load_save_file, scaling_attributes)
 
@@ -454,10 +498,18 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
         for key, columns in std_scale_dic.iteritems():
             for col in columns:
                 try: 
-                    evt_dic[key][col] -= scaling_attributes[col][key]['mean']
-                    evt_dic[key][col] /= scaling_attributes[col][key]['std']
+                    evt_dic[key][col][np.where(
+                        evt_dic[key][col] != -999.0)] -= scaling_attr[col][key]['mean']
+                    evt_dic[key][col][np.where(
+                        evt_dic[key][col] != -999.0)] /= scaling_attr[col][key]['std']
                 except KeyError:
                     print('Warning: Feature {} not found in the data!'.format(col))
 
+            # we only work with numpy records arrays (see event_grouing) 
+            # here we transform back to the standard numpy array
+            evt_dic[key] = np.array(evt_dic[key].tolist())
+
+
     return evt_dic 
+
 
