@@ -122,8 +122,14 @@ def split_dictionary(evt_dictionary, split_size):
     np.random.shuffle(idx)
 
     for key, value in evt_dictionary.iteritems():
-        small_sample[key] = evt_dictionary[key][idx][:n_evts]
-        big_sample[key] = evt_dictionary[key][idx][n_evts:]
+        if value.shape[0] != n_evts:
+            raise ValueError('The {} level data does not agree with the ' \
+                    'rest. It has stored {} events in contrast to the expected {}!'.format(
+                        key, value.shape[0], n_evts))
+
+
+        small_sample[key] = value[idx][:sample_size]
+        big_sample[key] = value[idx][sample_size:]
 
 
     return big_sample, small_sample
