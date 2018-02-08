@@ -22,8 +22,8 @@ from modules.control                            import config_file_to_dict
 from modules.logger                             import logger
 from modules.load_model                         import train_model
 from modules.data_preparation                   import get_data, save_data_dictionary, \
-                                                       get_data_dictionary
-from modules.utils                              import print_dict
+                                                       get_data_dictionary, preprocess
+from modules.utils                              import print_dict, split_dictionary
 from modules.file_management                    import OutputManager
 
 def main():
@@ -59,20 +59,31 @@ def main():
 
     data_params = data_params[run_mode_user]
     model_params = model_params[run_mode_user]
+    run_params = run_params[run_mode_user]
 
-    # here is a collection of variables extracted from the 
-    # config files
-    path_dic          = data_params['path']
-    branches_dic      = data_params['branches']
-    max_entries_dic   = data_params['max_entries']
-    std_scale_dic     = data_params['std_scale']
-    target_list       = data_params['target']
-    evt_id_string     = data_params['evt_id']
-    n_track_id        = data_params['n_track_id']
-    cut_list_n_tracks = data_params['cut_list_n_tracks']
-    event_string      = data_params['event_string']
+    # here is a collection of variables extracted from the config files
+    # ----------- data-parameters --------------
+    try:
+        path_dic          = data_params['path']
+        branches_dic      = data_params['branches']
+        max_entries_dic   = data_params['max_entries']
+        std_scale_dic     = data_params['std_scale']
+        target_list       = data_params['target']
+        evt_id_string     = data_params['evt_id']
+        n_track_id        = data_params['n_track_id']
+        cut_list_n_tracks = data_params['cut_list_n_tracks']
+        event_string      = data_params['event_string']
+        # ------------ run-parameters --------------
+        frac_test_sample  = run_params['frac_test_sample']
+        batch_size        = run_params['batch_size']
+        n_epochs          = run_params['n_epochs']
+        do_standard_scale = run_params['do_standard_scale']
+    except KeyError:
+        raise KeyError('The variable names in the main either have a typo ' \
+                'or do not exist in the config files!')
 
-    data_outfile = om.get_session_folder() + 'all_evts.npy'
+    out_path = om.get_session_folder()
+    data_outfile = out_path + 'all_evts.npy'
     try:
         evt_dictionary = get_data_dictionary(data_outfile)
     except (IOError, TypeError):
@@ -96,28 +107,27 @@ def main():
         print('type(array): {}'.format(type(array)))
         print('array.shape: {}'.format(array.shape))
 
-    # sys.exit(1)
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
     ######################################################################################
     print('Splitting data in training and test sample')
     # output type is the same as input type!
-    evt_dic_train, evt_dic_test = split_dictionary(evt_dictionary,
-                                                   split_size=run_params['frac_test_sample'])
+    evt_dic_train, evt_dic_test = split_dictionary(evt_dictionary, split_size=frac_test_sample)
     del evt_dictionary
     # evt_dic_train, evt_dic_test  = split_dictionary(evt_dic,
     #                                                 split_size=run_params['frac_test_sample'])
     # del evt_dic
         
-    if run_params['stdScale']:
-        print('standarad scaling...')
+    if do_standard_scale:
+        print(':: Standarad scaling...')
         # returns a numpy array (due to fit_transform function)
-        preprocess(evt_dic_train, data_params, run_params)
-        preprocess(evt_dic_valid, data_params, run_params, load_fitted_attributes=True)
+        preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
         preprocess(evt_dic_test,  data_params, run_params, load_fitted_attributes=True)
 
-    pause_for_input(run_params, timeout=3)
+
+    pause_for_input('The model will be trained anew '\
+            'if this is not desired please hit enter', timeout=3)
     ######################################################################################
     # STEP 2:
     # ------------------------------- Fitting the model -----------------------------------
