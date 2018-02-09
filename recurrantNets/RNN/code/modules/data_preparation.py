@@ -183,6 +183,7 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
             
             if 106 and 1 in target_list:
                 y_data.append(1)
+                print('Signal event! Event number: {}'.format(evt_int))
             else:
                 y_data.append(0)
 
@@ -496,6 +497,9 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
                     else:
                         mean = mean_std_array.mean()
                         std  = mean_std_array.std()
+                        # if all values are equal
+                        if std == 0:
+                            std = 1.
 
                     evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)] -= mean
                     evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)] /= std
@@ -505,10 +509,6 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
                 # save the key, as some columns appear in different keys
                 # e.g. time in fmd, ad, v0
                 scaling_attr[key][col] = {'mean': mean, 'std': std}
-
-            # we only work with numpy records arrays (see event_grouing) 
-            # here we transform back to the standard numpy array
-            evt_dic[key] = np.array(evt_dic[key].tolist())
 
         np.save(load_save_file, scaling_attr)
 
@@ -525,10 +525,6 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
                         evt_dic[key][key_inner] != -999.0)] /= values_inner['std']
                 except KeyError:
                     print('Warning: Feature {} not found in the data!'.format(key_inner))
-
-            # we only work with numpy records arrays (see event_grouing) 
-            # here we transform back to the standard numpy array
-            evt_dic[key] = np.array(evt_dic[key].tolist())
 
 
     return evt_dic 
@@ -564,16 +560,67 @@ def fix_missing_values(event_data, missing_vals_dic):
         event dictionary with the correct missing values.
 
     """
-    for key, values_dic in missing_vals_dic.iteritems():
-        for key_inner, values_inner in values_dic.iteritems():
-            # key_inner is the feature (e.g. tof_bunch_crossing)
-            # values_inner is the missing value, e.g. -100
-            print('\n:: Fixing feature {} in {}...'.format(key_inner, key))
-            event_data[key][key_inner][np.where(
-                event_data[key][key_inner] == values_inner)] = float(-999)
+    try:
+        print('Fixing missing values in feature:')
+        for key, values_dic in missing_vals_dic.iteritems():
+            for key_inner, values_inner in values_dic.iteritems():
+                # key_inner is the feature (e.g. tof_bunch_crossing)
+                # values_inner is the missing value, e.g. -100
+                print('\n:: {} (from {})...'.format(key_inner, key))
+                event_data[key][key_inner][np.where(
+                    event_data[key][key_inner] == values_inner)] = float(-999)
+
+        print('\n{}'.format(50*'-'))
+    except IndexError:
+        raise TypeError('Standard numpy arrays are passed to the function! ' \
+                'However the event-dictionary should contain numpy record arrays ' \
+                'that can be indexed by column-name!')
+
 
     return event_data
 
 
+def shape_data(evt_data):
+    """
+    Args
+        event_data:
+            dicionary containing record arrays that hold the data; the data have
+            to be present in a record array as they are adressed via column names
+    _______________________________________________________________________________
 
+    Operation breakdown:
+
+        the data is converted from numpy records array into standard numpy format;
+        If the data has unnecessary dimensions in the second axis (as is the case 
+        e.g. for event) this dimension is removed.
+
+        (this function should be used right before the data are fit with a model)
+        
+    _______________________________________________________________________________
+
+    Return
+
+        the event dicitonary containing standard numpy arrays ready for the model
+
+    """
+    # convert to standard numpy array
+    try:
+        for key in evt_data.keys():
+            if not isinstance(evt_data[key], np.ndarray):
+                raise TypeError('The key {} does not hold a numpy ndarray' \
+                        'but rather a {}!'.format(type(evt_data[key])))
+            evt_data[key] = np.array(evt_data[key].tolist())
+
+            # remove unnecessary dimensions
+            # only if dimenstions are greater than 1
+            if len(evt_data[key].shape) >= 2:
+                if evt_data[key].shape[1] == 1:
+                    evt_data[key] = np.squeeze(evt_data[key], axis=1)
+
+    except AttributeError:
+        raise TypeError('The variable "evt_data" is not a dictionary but ' \
+                'instead a {}!'.format(type(evt_data)))
+    
+
+    return evt_data
 
