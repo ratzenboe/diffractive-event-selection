@@ -65,8 +65,8 @@ def main():
     run_params = run_params[run_mode_user]
 
     # here is a collection of variables extracted from the config files
-    # ----------- data-parameters --------------
     try:
+        # ----------- data-parameters --------------
         path_dic          = data_params['path']
         branches_dic      = data_params['branches']
         max_entries_dic   = data_params['max_entries']
@@ -79,9 +79,12 @@ def main():
         missing_vals_dic  = data_params['missing_values']
         # ------------ run-parameters --------------
         frac_test_sample  = run_params['frac_test_sample']
+        frac_val_sample   = run_params['frac_val_sample']
         batch_size        = run_params['batch_size']
         n_epochs          = run_params['n_epochs']
         do_standard_scale = run_params['do_standard_scale']
+        # ------------ model-parametrs -------------
+        rnn_layer         = model_params['rnn']
     except KeyError:
         raise KeyError('The variable names in the main either have a typo ' \
                 'or do not exist in the config files!')
@@ -139,7 +142,7 @@ def main():
     
 
     pause_for_input('\n\n:: The model will be trained anew '\
-            'if this is not desired please hit enter', timeout=4)
+            'if this is not desired please hit enter', timeout=1)
     ######################################################################################
     # STEP 2:
     # ------------------------------- Fitting the model -----------------------------------
@@ -151,10 +154,10 @@ def main():
     print('\nFitting the model...')
     model = train_model(evt_dic_train, 
                         run_mode_user, 
-                        val_data    = run_params['frac_val_sample'],
-                        batch_size  = run_params['batch_size'],
-                        n_epochs    = run_params['n_epochs'],
-                        rnn_layer   = model_params['rnn'])
+                        val_data    = frac_val_sample,
+                        batch_size  = batch_size,
+                        n_epochs    = n_epochs,
+                        rnn_layer   = rnn_layer)
  
     end_time_training = time.time()
 
