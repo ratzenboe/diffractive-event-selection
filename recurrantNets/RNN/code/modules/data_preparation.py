@@ -62,7 +62,9 @@ def pad_dataframe(df, max_entries):
                 'the maximum entries in the data-config file accordingly!'.format(
                     length, max_entries))
         pause_for_input('A warning was issued, do you want to abort the program?', timeout=2)
-        return df.loc[:max_entries]
+        # max_entries-1 will give return a dataframe with length max_entries as the 
+        # first entry is 0
+        return df.loc[:max_entries-1]
 
     elif length < max_entries:
         for i in range(length, max_entries):
@@ -147,6 +149,7 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
     y_data = []
     if len(list_of_events) == 0:
         warnings.warn('No entries found in input data!\nReturning the unprocessed input.')
+        pause_for_input('A warning was issued, do you want to abort the program?', timeout=4)
         return all_events, y_data
     
     current_n_evts = 0
@@ -156,6 +159,13 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
             print(':: {} events from {} fetched'.format(current_n_evts, len(list_of_events)))
         # get relevant data for one event 
         evt_dataframe = inp_data.loc[inp_data[evt_id_string] == evt_int, list_of_features]
+        # the dataframe has some arbitraty indices because we just slice some
+        # instances out of it: we fix the index here
+        evt_dataframe = evt_dataframe.reset_index(drop=True)
+
+        ###########################################################################
+        # we are already finished getting the dataframe however we have to
+        # extract the target values:
         if evt_dataframe.empty:
             evt_dataframe = pd.DataFrame([])
             warnings.warn('The event {} has no information stored!'.format(evt_int))
@@ -326,6 +336,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
                                             evt_id_string       = evt_id_string,
                                             targets             = target_list,
                                             list_of_events      = list_of_events)
+            
         # if the y_data array has a size, then we add the 
         # target information to the evt_dictionary 
         if isinstance(y_data, list):
@@ -371,6 +382,7 @@ def load_data(filename, branches=None, selection=None):
     data = pd.DataFrame(root_numpy.root2array(filename, 
                                               branches = branches,
                                               selection = selection))
+    data = data.astype(float)
 
     return data
 
@@ -459,51 +471,60 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
 
     """
 
+
     load_save_file = out_path + 'scaling_attributes.npy'
     
     if not load_fitted_attributes:
         # we loop through all datasets that are in the dictionary std_scale
         # std_scale looks like:
         #   {'event': ['a', 'b',...], 'track': [...], ...}
+        scaling_attr = {}
         for key, columns in std_scale_dic.iteritems():
             # we have to fit new scaling attributes
-            scaling_attr = {}
+            scaling_attr[key] = {}
             for col in columns:
                 try:
                     # here we can access the columns directly (due to record array) 
                     # and exclude the masking value of -999 from the mean calculation
                     # evt_dic[key] is accessing the record array, col the right column
-                    mean = evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)].mean()
-                    std  = evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)].std()
+                    mean_std_array = evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)]
+                    # if only -999 in the array then we get nans for mean and std-dev
+                    # hence we check the lenght of the non-(-999) data
+                    if mean_std_array.size == 0:
+                        mean = 0.
+                        std = 1.
+                    else:
+                        mean = mean_std_array.mean()
+                        std  = mean_std_array.std()
+
                     evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)] -= mean
                     evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)] /= std
                 except KeyError:
                     print('Warning: Feature {} not found in the data!'.format(col))
-                    
                 # cannot save only the column, but we also have to 
                 # save the key, as some columns appear in different keys
                 # e.g. time in fmd, ad, v0
-                scaling_attr[col] = {key: {'mean': mean, 'std': std} }
+                scaling_attr[key][col] = {'mean': mean, 'std': std}
 
             # we only work with numpy records arrays (see event_grouing) 
             # here we transform back to the standard numpy array
             evt_dic[key] = np.array(evt_dic[key].tolist())
 
-        np.save(load_save_file, scaling_attributes)
+        np.save(load_save_file, scaling_attr)
 
     else:
         # load previously fitted attributes
         scaling_attr = np.load(load_save_file).item()
 
-        for key, columns in std_scale_dic.iteritems():
-            for col in columns:
+        for key, values_dic in scaling_attr.iteritems():
+            for key_inner, values_inner in values_dic.iteritems():
                 try: 
-                    evt_dic[key][col][np.where(
-                        evt_dic[key][col] != -999.0)] -= scaling_attr[col][key]['mean']
-                    evt_dic[key][col][np.where(
-                        evt_dic[key][col] != -999.0)] /= scaling_attr[col][key]['std']
+                    evt_dic[key][key_inner][np.where(
+                        evt_dic[key][key_inner] != -999.0)] -= values_inner['mean']
+                    evt_dic[key][key_inner][np.where(
+                        evt_dic[key][key_inner] != -999.0)] /= values_inner['std']
                 except KeyError:
-                    print('Warning: Feature {} not found in the data!'.format(col))
+                    print('Warning: Feature {} not found in the data!'.format(key_inner))
 
             # we only work with numpy records arrays (see event_grouing) 
             # here we transform back to the standard numpy array
@@ -511,5 +532,48 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
 
 
     return evt_dic 
+
+
+def fix_missing_values(event_data, missing_vals_dic):
+    """
+    Args
+        event_data:
+            dicionary containing record arrays that hold the data; the data have
+            to be present in a record array as they are adressed via column names
+        ___________________________________________________________________________
+
+        missing_vals_dic:
+            dictionary where the keys are the data names (e.g. track, event, etc) 
+            and the values are dictionaries with branch names and their missing
+            values, for example:
+
+                { 'track': {'tof_bunch_crossing': -100, 'pid_tof_signal': 99999} 
+                , 'event': {...} }
+    _______________________________________________________________________________
+
+    Operation breakdown:
+        
+        the keys from the missing values are looped through and also correspond to 
+        the keys in the event_data dictionary. The missing_vals_dic then presents
+        features that have missing values that differ from the default missing value
+        -999. These missing values are then changed to -999 (to be properly masked)
+    _______________________________________________________________________________
+
+    Return
+        
+        event dictionary with the correct missing values.
+
+    """
+    for key, values_dic in missing_vals_dic.iteritems():
+        for key_inner, values_inner in values_dic.iteritems():
+            # key_inner is the feature (e.g. tof_bunch_crossing)
+            # values_inner is the missing value, e.g. -100
+            print('\n:: Fixing feature {} in {}...'.format(key_inner, key))
+            event_data[key][key_inner][np.where(
+                event_data[key][key_inner] == values_inner)] = float(-999)
+
+    return event_data
+
+
 
 
