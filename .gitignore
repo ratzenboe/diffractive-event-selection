@@ -111,6 +111,9 @@ venv.bak/
 /recurrantNets/RNN/code/output/*
 /imageNets/pretrainedmodels/*
 
+# ignore the save copy
+recurrantNets/RNN/code/modules/load_model_save.py
+
 # jupyter notebooks 
 *.ipynb
 # .pyc files 
