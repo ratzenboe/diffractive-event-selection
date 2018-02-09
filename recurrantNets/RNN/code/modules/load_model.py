@@ -1,6 +1,9 @@
 import os
 import sys
 
+import numpy as np
+
+import keras
 from keras.models import Sequential
 from keras.layers.core import Activation, Dense, Dropout
 from keras.layers import Masking, LSTM, GRU, Concatenate, Input, Lambda
@@ -57,7 +60,7 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
         raise TypeError('The variable "run_mode_user" is not a string type ' \
                 'but instead {}'.format(type(run_mode_user)))
 
-    if not isinstance(val_data, float) or not isinstance(val_data, dict):
+    if not isinstance(val_data, float) and not isinstance(val_data, dict):
         raise TypeError('The variable "val_data" is neither a dictionary ' \
                 'nor a float but instead {}'.format(type(val_data)))
 
@@ -82,7 +85,7 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
         particle_channel = Sequential()
 
         #adding layers to the jet and photon class neural networks
-        particle_channel.add(Masking(mask_value=-999, 
+        particle_channel.add(Masking(mask_value=float(-999), 
                                      input_shape=PARTICLE_SHAPE, 
                                      name='particle_masking'))
         particle_channel.add(GRU(5, name='particle_gru'))
@@ -128,7 +131,8 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
         # this following data is of shape (n_evts, n_features)
         # the network is fed with n_features
         EVENT_SHAPE = X_event_train.shape[1]
-        if 'Sim' in run_mode_user:
+        COMBINED_SHAPE = TRACK_SHAPE[0] + RAW_TRACK_SHAPE[0] + EVENT_SHAPE
+        if 'Full' in run_mode_user:
             try:
                 X_emcal_train        = data['emcal']
                 X_phos_train         = data['phos']
@@ -138,7 +142,8 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
                 X_v0_train           = data['v0']
             except KeyError:
                 raise KeyError('The data-dictionary provided does not contain' \
-                        'all necessary keys for the selected run-mode (run_mode_user)')
+                        'all necessary keys for the selected run-mode ' \
+                        '(run_mode_user = {})'.format(run_mode_user))
 
             EMCAL_SHAPE = X_emcal_train.shape[1:]
             PHOS_SHAPE = X_phos_train.shape[1:]
@@ -147,6 +152,8 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
             FMD_SHAPE = X_fmd_train.shape[1]
             V0_SHAPE = X_v0_train.shape[1]
          
+            COMBINED_SHAPE += EMCAL_SHAPE[0] + PHOS_SHAPE[0] + CALO_CLUSTER_SHAPE[0]
+            COMBINED_SHAPE += AD_SHAPE + FMD_SHAPE + V0_SHAPE
 
 
         # basis network
@@ -156,14 +163,14 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
 
         # ------ Build the model ---------
         # RNNs feeding into the event level layer
-        track_channel.add(Masking(mask_value=-999, 
+        track_channel.add(Masking(mask_value=float(-999), 
                                      input_shape=TRACK_SHAPE, 
                                      name='track_masking'))
         try:
             track_channel.add(getattr(keras.layers, rnn_layer)(16, name='track_rnn'))
             track_channel.add(Dropout(0.3, name='track_dropout'))
 
-            raw_track_channel.add(Masking(mask_value=-999,
+            raw_track_channel.add(Masking(mask_value=float(-999),
                                          input_shape=RAW_TRACK_SHAPE, 
                                          name='raw_track_masking'))
             raw_track_channel.add(getattr(keras.layers, rnn_layer)(14, name='raw_track_rnn'))
@@ -190,7 +197,7 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
                 pass
 
 
-        if 'Sim' in run_mode_user:
+        if 'Full' in run_mode_user:
             # here we now add additional channels to the network
             emcal_channel = Sequential()
             phos_channel = Sequential()
@@ -201,20 +208,20 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
 
             # ------ Build the model ---------
             # RNNs
-            emcal_channel.add(Masking(mask_value=-999,
+            emcal_channel.add(Masking(mask_value=float(-999),
                                          input_shape=EMCAL_SHAPE, 
                                          name='emcal_masking'))
             try:
                 emcal_channel.add(getattr(keras.layers, rnn_layer)(2, name='emcal_rnn'))
                 emcal_channel.add(Dropout(0.3, name='emcal_dropout'))
 
-                phos_channel.add(Masking(mask_value=-999,
+                phos_channel.add(Masking(mask_value=float(-999),
                                              input_shape=PHOS_SHAPE, 
                                              name='emcal_masking'))
                 phos_channel.add(getattr(keras.layers, rnn_layer)(2, name='phos_rnn'))
                 phos_channel.add(Dropout(0.3, name='phos_dropout'))
 
-                calo_cluster_channel.add(Masking(mask_value=-999,
+                calo_cluster_channel.add(Masking(mask_value=float(-999),
                                              input_shape=CALO_CLUSTER_SHAPE, 
                                              name='calo_cluster_masking'))
                 calo_cluster_channel.add(getattr(keras.layers, rnn_layer)(4, name='calo_cluster_rnn'))
@@ -260,7 +267,10 @@ def train_model(data, run_mode_user, val_data=0.2, batch_size=64, n_epochs=50, r
 
         # stack the layers on top of a fully connected DNN
         combined_rnn = Sequential()
-        combined_rnn.add(Concatenate(layer_list))
+        #######################################################
+        # rewrite model based on https://keras.io/getting-started/functional-api-guide/
+        # the add(Concatenate(..)) does not work properly here!
+        combined_rnn.add(Concatenate([layer_list], input_shape=(COMBINED_SHAPE,)))
         combined_rnn.add(Dense(36, activation='relu'))
         combined_rnn.add(Dropout(0.3))
         combined_rnn.add(Dense(24, activation='relu'))
