@@ -22,8 +22,10 @@ from modules.control                            import config_file_to_dict
 from modules.logger                             import logger
 from modules.load_model                         import train_model
 from modules.data_preparation                   import get_data, save_data_dictionary, \
-                                                       get_data_dictionary, preprocess
-from modules.utils                              import print_dict, split_dictionary
+                                                       get_data_dictionary, preprocess, \
+                                                       fix_missing_values
+from modules.utils                              import print_dict, split_dictionary, \
+                                                       pause_for_input 
 from modules.file_management                    import OutputManager
 
 def main():
@@ -73,6 +75,7 @@ def main():
         n_track_id        = data_params['n_track_id']
         cut_list_n_tracks = data_params['cut_list_n_tracks']
         event_string      = data_params['event_string']
+        missing_vals_dic  = data_params['missing_values']
         # ------------ run-parameters --------------
         frac_test_sample  = run_params['frac_test_sample']
         batch_size        = run_params['batch_size']
@@ -97,21 +100,20 @@ def main():
                                   event_string      = event_string)
 
         print('\n:: saving data in {}'.format(data_outfile))
+        evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
         save_data_dictionary(data_outfile, evt_dictionary)
 
     print('\n\n:: Loading the data worked well')
-    counter = 0
-
     for key, array in evt_dictionary.iteritems():
         print('\n{}'.format(key))
         print('type(array): {}'.format(type(array)))
-        print('array.shape: {}'.format(array.shape))
+        print('array.shape: {}'.format(np.array(array.tolist()).shape))
 
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
     ######################################################################################
-    print('Splitting data in training and test sample')
+    print('\n:: Splitting data in training and test sample')
     # output type is the same as input type!
     evt_dic_train, evt_dic_test = split_dictionary(evt_dictionary, split_size=frac_test_sample)
     del evt_dictionary
@@ -120,14 +122,14 @@ def main():
     # del evt_dic
         
     if do_standard_scale:
-        print(':: Standarad scaling...')
+        print('\n:: Standarad scaling...')
         # returns a numpy array (due to fit_transform function)
         preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
-        preprocess(evt_dic_test,  data_params, run_params, load_fitted_attributes=True)
+        preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
 
 
-    pause_for_input('The model will be trained anew '\
-            'if this is not desired please hit enter', timeout=3)
+    pause_for_input('\n\n:: The model will be trained anew '\
+            'if this is not desired please hit enter', timeout=4)
     ######################################################################################
     # STEP 2:
     # ------------------------------- Fitting the model -----------------------------------
