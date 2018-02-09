@@ -134,3 +134,26 @@ def split_dictionary(evt_dictionary, split_size):
 
     return big_sample, small_sample
 
+
+def print_array_in_dictionary_stats(evt_dic, message='Event dictionary'):
+    """
+    Prints array shape and type of all dictionary entries
+    """
+    try:
+        print('\n:: {}'.format(message))
+        for key, array in evt_dic.iteritems():
+            if not isinstance(array, np.ndarray):
+                raise TypeError('The key {} is not a numpy ndarray ' \
+                        'but rather a {}!'.format(type(array)))
+            print('\n{}'.format(key))
+            print('type(array): {}'.format(type(array)))
+            print('array.shape: {}'.format(array.shape))
+
+    except AttributeError:
+        raise TypeError('The evt_dic variable provided is not a dictionary but ' \
+                'rather a {}!'.format(type(evt_dic)))
+
+
+    return
+
+
