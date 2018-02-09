@@ -140,7 +140,7 @@ def print_array_in_dictionary_stats(evt_dic, message='Event dictionary'):
     Prints array shape and type of all dictionary entries
     """
     try:
-        print('\n:: {}'.format(message))
+        print('\n\n{}\n:: {}'.format(50*'-',message))
         for key, array in evt_dic.iteritems():
             if not isinstance(array, np.ndarray):
                 raise TypeError('The key {} is not a numpy ndarray ' \
@@ -148,6 +148,7 @@ def print_array_in_dictionary_stats(evt_dic, message='Event dictionary'):
             print('\n{}'.format(key))
             print('type(array): {}'.format(type(array)))
             print('array.shape: {}'.format(array.shape))
+        print('{}'.format(50*'-'))
 
     except AttributeError:
         raise TypeError('The evt_dic variable provided is not a dictionary but ' \

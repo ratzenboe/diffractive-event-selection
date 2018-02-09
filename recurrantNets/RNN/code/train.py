@@ -23,9 +23,10 @@ from modules.logger                             import logger
 from modules.load_model                         import train_model
 from modules.data_preparation                   import get_data, save_data_dictionary, \
                                                        get_data_dictionary, preprocess, \
-                                                       fix_missing_values
+                                                       fix_missing_values, shape_data
 from modules.utils                              import print_dict, split_dictionary, \
-                                                       pause_for_input 
+                                                       pause_for_input, \
+                                                       print_array_in_dictionary_stats
 from modules.file_management                    import OutputManager
 
 def main():
@@ -100,14 +101,16 @@ def main():
                                   event_string      = event_string)
 
         print('\n:: saving data in {}'.format(data_outfile))
+
         evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
+        # saving the data as numpy record array
         save_data_dictionary(data_outfile, evt_dictionary)
 
-    print('\n\n:: Loading the data worked well')
-    for key, array in evt_dictionary.iteritems():
-        print('\n{}'.format(key))
-        print('type(array): {}'.format(type(array)))
-        print('array.shape: {}'.format(np.array(array.tolist()).shape))
+    # print('\n\n:: Loading the data worked well')
+    # for key, array in evt_dictionary.iteritems():
+    #     print('\n{}'.format(key))
+    #     print('type(array): {}'.format(type(array)))
+    #     print('array.shape: {}'.format(np.array(array.tolist()).shape))
 
     ######################################################################################
     # STEP 1:
@@ -127,6 +130,13 @@ def main():
         preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
         preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
 
+    print('\n:: Converting the data from numpy record arrays to standard numpy arrays...')
+    shape_data(evt_dic_train)
+    shape_data(evt_dic_test)
+
+    print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
+    print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
+    
 
     pause_for_input('\n\n:: The model will be trained anew '\
             'if this is not desired please hit enter', timeout=4)
