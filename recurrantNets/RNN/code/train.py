@@ -6,6 +6,7 @@ import time
 from select                                     import select
 import argparse 
 import ast 
+import copy
 
 import matplotlib
 matplotlib.use('agg')
@@ -15,12 +16,14 @@ sns.set()
 
 import numpy                                    as np
 
+from keras.models                               import load_model
+
 from sklearn.model_selection                    import train_test_split
 from sklearn.externals                          import joblib
 
 from modules.control                            import config_file_to_dict
 from modules.logger                             import logger
-from modules.load_model                         import train_model
+from modules.load_model_save                    import train_model
 from modules.data_preparation                   import get_data, save_data_dictionary, \
                                                        get_data_dictionary, preprocess, \
                                                        fix_missing_values, shape_data
@@ -28,6 +31,8 @@ from modules.utils                              import print_dict, split_diction
                                                        pause_for_input, \
                                                        print_array_in_dictionary_stats
 from modules.file_management                    import OutputManager
+from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAoutput, \
+                                                       plot_cut_efficiencies
 
 def main():
 
@@ -49,7 +54,6 @@ def main():
     # therefore we want to have a data structure where we have a dataframe for each  
     # of these 9 departments
     ######################################################################################    
-    print('\nfetching data...\n')
     # data is a dictionary which contains the 9 numpy arrays in form 
     # -> data['raw_track'].shape = (n_evts, n_parts, n_features)
     #    data['fmd'].shape = (n_evts, n_cells, n_features)
@@ -90,10 +94,12 @@ def main():
                 'or do not exist in the config files!')
 
     out_path = om.get_session_folder()
-    data_outfile = out_path + 'all_evts.npy'
     try:
-        evt_dictionary = get_data_dictionary(data_outfile)
-    except (IOError, TypeError):
+        evt_dic_train = get_data_dictionary(output_path + 'evt_dic_train.npy')
+        evt_dic_test = get_data_dictionary(output_path + 'evt_dic_test.npy')
+        print('\n:: Event dictionary loaded from file: {}'.format(data_outfile))
+    except (IOError, TypeError, ValueError):
+        print('\nfetching data...\n')
         evt_dictionary = get_data(branches_dic      = branches_dic, 
                                   max_entries_dic   = max_entries_dic, 
                                   path_dic          = path_dic, 
@@ -103,39 +109,35 @@ def main():
                                   cut_list_n_tracks = cut_list_n_tracks,
                                   event_string      = event_string)
 
-        print('\n:: saving data in {}'.format(data_outfile))
 
         evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
         # saving the data as numpy record array
-        save_data_dictionary(data_outfile, evt_dictionary)
 
-    # print('\n\n:: Loading the data worked well')
-    # for key, array in evt_dictionary.iteritems():
-    #     print('\n{}'.format(key))
-    #     print('type(array): {}'.format(type(array)))
-    #     print('array.shape: {}'.format(np.array(array.tolist()).shape))
+        ######################################################################################
+        # STEP 1:
+        # ------------------------------- Preprocessing --------------------------------------
+        ######################################################################################
+        print('\n:: Splitting data in training and test sample')
+        # output type is the same as input type!
+        evt_dic_train, evt_dic_test = split_dictionary(evt_dictionary, split_size=frac_test_sample)
+        del evt_dictionary
+        # evt_dic_train, evt_dic_test  = split_dictionary(evt_dic,
+        #                                                 split_size=run_params['frac_test_sample'])
+        # del evt_dic
+            
+        if do_standard_scale:
+            print('\n:: Standarad scaling...')
+            # returns a numpy array (due to fit_transform function)
+            preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
+            preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
 
-    ######################################################################################
-    # STEP 1:
-    # ------------------------------- Preprocessing --------------------------------------
-    ######################################################################################
-    print('\n:: Splitting data in training and test sample')
-    # output type is the same as input type!
-    evt_dic_train, evt_dic_test = split_dictionary(evt_dictionary, split_size=frac_test_sample)
-    del evt_dictionary
-    # evt_dic_train, evt_dic_test  = split_dictionary(evt_dic,
-    #                                                 split_size=run_params['frac_test_sample'])
-    # del evt_dic
-        
-    if do_standard_scale:
-        print('\n:: Standarad scaling...')
-        # returns a numpy array (due to fit_transform function)
-        preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
-        preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
+        print('\n:: Converting the data from numpy record arrays to standard numpy arrays...')
+        shape_data(evt_dic_train)
+        shape_data(evt_dic_test)
 
-    print('\n:: Converting the data from numpy record arrays to standard numpy arrays...')
-    shape_data(evt_dic_train)
-    shape_data(evt_dic_test)
+        print('\n:: Saving data in {}\n\n'.format(output_path+'evt_dic_train.npy'))
+        save_data_dictionary(output_path + 'evt_dic_train.npy', evt_dic_train)
+        save_data_dictionary(output_path + 'evt_dic_test.npy', evt_dic_test)
 
     print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
@@ -157,25 +159,42 @@ def main():
                         val_data    = frac_val_sample,
                         batch_size  = batch_size,
                         n_epochs    = n_epochs,
-                        rnn_layer   = rnn_layer)
- 
-    end_time_training = time.time()
+                        rnn_layer   = rnn_layer,
+                        out_path    = out_path)
 
-    # Save the model
-    joblib.dump(model, output_prefix + 'model_save.pkl')
+    end_time_training = time.time()
+    print('\n:: Finished training!')
+
+    # Get the best model
+    # model = load_model(out_path + 'weights_final.hdf5')
+
     ######################################################################################
     # STEP 3:
     # ----------------------------- Evaluating the model ---------------------------------
     ######################################################################################
-    model_evaluation(X_test, y_test, model)
+    print('\nEvaluating the model on the training sample...')
+    y_train_truth = evt_dic_train['target']
+    # to predict the labels we have to ged rid of the target:
+    evt_dic_train.pop('target')
+    y_train_score = model.predict(evt_dic_train)
+
+    num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, 
+                                                    out_path, label='train')
+
+    MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
+
+    plot_ROCcurve(y_train_truth, y_train_score, out_path, label='train')
+
+    del y_train_truth, y_train_score
+    del num_trueSignal, num_trueBackgr
+    del evt_dic_train
+
     ######################################################################################
     # ------------------------------------ EOF -------------------------------------------
     # -------------------- print some runtime information --------------------------------
     ######################################################################################
     end_time_main = time.time()
-    print('\n{}'.format(19*'-'))
-    print('- RUNTIME -')
-    print('{}'.format(19*'-'))
+    print('\n{p} RUNTIME {p}'.format(p=20*'-'))
     print('\nTotal runtime: {} seconds'.format(end_time_main - start_time_main))
     print('\nTraining time: {} seconds'.format(end_time_training - start_time_training))
     print('\n{}\n'.format(30*'-'))

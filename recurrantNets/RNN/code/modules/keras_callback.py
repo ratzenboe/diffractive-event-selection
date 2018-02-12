@@ -1,4 +1,7 @@
 import time
+import sys
+
+import numpy as np
 
 import matplotlib
 matplotlib.use('agg')
@@ -16,28 +19,16 @@ class callback_ROC(keras.callbacks.Callback):
     Custom callback class for Keras which calculates and plots ROC AUCs after each training epoch.
     """
     
-    def __init__(self, X_train, y_train, sample_weight_train=None, output_prefix=None, keras_models_prefix=None):
+    def __init__(self, X_train, y_train, output_prefix=None):
         self.best = 0
         self.wait = 0
         self.X_train = X_train
         self.y_train = y_train
 
-        if sample_weight_train is not None:
-            self.sample_weight_train = sample_weight_train
-        else:
-            self.sample_weight_train = np.ones((y_train.shape[0],))
-
         if output_prefix is not None:
             self.output_prefix = output_prefix
         else:
             print('Error: variable output_prefix was not passed ' \
-                  'to the Keras callback.')
-            sys.exit(1)
-
-        if keras_models_prefix is not None:
-            self.keras_models_prefix = keras_models_prefix
-        else:
-            print('Error: variable keras_models_prefix was not passed ' \
                   'to the Keras callback.')
             sys.exit(1)
 
@@ -63,8 +54,10 @@ class callback_ROC(keras.callbacks.Callback):
         
         if(epoch%self.interval_evaluate_trainAUC != 0):
 
-            y_pred_val = self.model.predict(self.validation_data[0])
-            roc_auc_val = roc_auc_score(self.validation_data[1], y_pred_val, sample_weight=self.validation_data[2])
+            y_pred_val = self.model.predict([self.validation_data[0], 
+                                             self.validation_data[1],
+                                             self.validation_data[2]])
+            roc_auc_val = roc_auc_score(self.validation_data[1], y_pred_val)
             self.aucs_val.append(roc_auc_val)
             self.aucs_train.append(0)
             
@@ -73,13 +66,20 @@ class callback_ROC(keras.callbacks.Callback):
             print("   VAL AUC: {:.3f} %".format( roc_auc_val * 100))    
             
         if(epoch%self.interval_evaluate_trainAUC == 0):
-            y_pred_val = self.model.predict(self.validation_data[0])
+            # print('\nvalidation_data shapes:')
+            # print('validation data shape: {}'.format(len(self.validation_data)))
+            # for data in self.validation_data:
+            #     print(data.shape)
+            y_pred_val = self.model.predict([self.validation_data[0], 
+                                             self.validation_data[1],
+                                             self.validation_data[2]])
+            # y_pred_val = self.model.predict(self.validation_data[0])
             
-            roc_auc_val = roc_auc_score(self.validation_data[1], y_pred_val, sample_weight=self.validation_data[2])
+            roc_auc_val = roc_auc_score(self.validation_data[3], y_pred_val)
             self.aucs_val.append(roc_auc_val)
 
             y_pred_train = self.model.predict(self.X_train)
-            roc_auc_train = roc_auc_score(self.y_train, y_pred_train, sample_weight=self.sample_weight_train) 
+            roc_auc_train = roc_auc_score(self.y_train, y_pred_train) 
             self.aucs_train.append(roc_auc_train)
         
             print("Epoch {} took {:.1f}s".format(epoch, time.time() - start_time)),
@@ -104,8 +104,8 @@ class callback_ROC(keras.callbacks.Callback):
         if current > self.best:
             self.best = current
             self.wait = 0
-            self.model.save(self.output_prefix + self.keras_models_prefix + 'model_{}_ROC_AUC{:.5f}.hdf5'.format(epoch,current),overwrite=True)
-            self.model.save(self.output_prefix + self.keras_models_prefix + 'weights_final.hdf5',overwrite=True)
+            self.model.save(self.output_prefix + 'model_{}_ROC_AUC{:.5f}.hdf5'.format(epoch,current),overwrite=True)
+            self.model.save(self.output_prefix + 'weights_final.hdf5',overwrite=True)
 
         else:
             if self.wait >= 10:             #patience

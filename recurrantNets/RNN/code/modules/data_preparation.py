@@ -423,8 +423,7 @@ def save_data_dictionary(outfile, all_evt_data):
         raise TypeError('The "outfile" variable is not a string ' \
                 'but rather a {}!.'.format(type(outfile)))
 
-    with open(outfile, 'wb') as handle:
-        pickle.dump(all_evt_data, handle)
+    np.save(outfile, all_evt_data)
 
     return 
 
@@ -444,17 +443,16 @@ def get_data_dictionary(infile):
     if not os.path.isfile(infile):
         raise IOError('File {} does not exist.'.format(infile))
 
-    with open(infile, 'rb') as handle:
-        evt_dic = pickle.load(handle)
+    evt_dic = np.load(infile)[()]
 
     if not isinstance(evt_dic, dict):
         raise TypeError('The element stored in {} is not a dictionary ' \
                          'but instead a {}'.format(infile, type(evt_dic)))
 
-    for key, array in evt_dic.iteritems():
-        if not isinstance(array, np.recarray):
-            raise TypeError('The element {} in the event dictionary is not a ' \
-                            'numpy records arreay but instead a {}'.format(key, type(array)))
+    # for key, array in evt_dic.iteritems():
+    #     if not isinstance(array, np.recarray):
+    #         raise TypeError('The element {} in the event dictionary is not a ' \
+    #                         'numpy records arreay but instead a {}'.format(key, type(array)))
 
     return evt_dic
 

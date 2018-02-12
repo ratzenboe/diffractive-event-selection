@@ -423,7 +423,15 @@ Int_t is_full_recon(CEPEventBuffer* cepevt)
         lv_trk_temp.SetVectM(trk->GetMCMomentum(), trk->GetMCMass());
         lv_trks_total += lv_trk_temp;
     }
-    if ( abs_val(lv_MCparticle.M() - lv_trks_total.M()) < 10e-5 ) {
+    if ( abs_val(lv_MCparticle.M() - lv_trks_total.M()) < 10e-3 ) {
+        std::cout << "CEP Particle: " << std::endl;
+        print_lv(lv_MCparticle);
+        std::cout << cepevt->GetnTracks() << " Particles: ";
+        if (cepevt->GetnTracks() > 2 ) std::cout << "           <------------- MORE THAN 2 TRACKS! ";
+        std::cout << "\n";
+        print_lv(lv_trks_total);
+        std::cout << "\n--------------------------------------------------------" << std::endl;
+
         return 1;
     } else return 0;
 }
@@ -433,3 +441,13 @@ double abs_val(double val)
     if (val > 0.) return val;
     else return -val;
 }
+
+void print_lv(TLorentzVector lv)
+{
+    std::cout << "px: " << lv.Px() << std::endl;
+    std::cout << "py: " << lv.Py() << std::endl;
+    std::cout << "pz: " << lv.Pz() << std::endl;
+    std::cout << "m:  " << lv.M() << std::endl;
+}
+
+
