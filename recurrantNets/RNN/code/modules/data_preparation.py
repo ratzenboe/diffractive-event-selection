@@ -1,9 +1,11 @@
 from __future__ import division
+from __future__ import unicode_literals
 
 import os
 import math
 import sys
 import warnings
+import pickle
 
 import numpy as np
 import pandas as pd
@@ -61,7 +63,7 @@ def pad_dataframe(df, max_entries):
                 'instances to {} entries! This may affect the performance. Please adjust ' \
                 'the maximum entries in the data-config file accordingly!'.format(
                     length, max_entries))
-        pause_for_input('A warning was issued, do you want to abort the program?', timeout=2)
+        # pause_for_input('A warning was issued, do you want to abort the program?', timeout=1)
         # max_entries-1 will give return a dataframe with length max_entries as the 
         # first entry is 0
         return df.loc[:max_entries-1]
@@ -147,6 +149,7 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
 
     all_events = []
     y_data = []
+    signal_evts = 0
     if len(list_of_events) == 0:
         warnings.warn('No entries found in input data!\nReturning the unprocessed input.')
         pause_for_input('A warning was issued, do you want to abort the program?', timeout=4)
@@ -183,7 +186,7 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
             
             if 106 and 1 in target_list:
                 y_data.append(1)
-                print('Signal event! Event number: {}'.format(evt_int))
+                signal_evts += 1
             else:
                 y_data.append(0)
 
@@ -222,6 +225,11 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
     all_events = np.array(all_events) 
     y_data = np.array(y_data)
 
+    ###############################################################################
+    # print signal information if available:
+    if len(y_data) != 0:
+        print('\n:: {} signal events found in data. ({:.4f}%)'.format(
+            signal_evts, signal_evts/len(list_of_events)))
 
     return all_events, y_data
 
@@ -318,6 +326,8 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
             list_of_events = data[evt_id_string][data[n_track_id]>0].values.tolist()
             list_of_events = map(int, list_of_events)
 
+        del data
+
     except (IOError, KeyError):
         raise NameError('The event data cannot be loaded! Either the path {} ' \
                 'does not exist or the column {} ' \
@@ -338,6 +348,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
                                             targets             = target_list,
                                             list_of_events      = list_of_events)
             
+        del data
         # if the y_data array has a size, then we add the 
         # target information to the evt_dictionary 
         if isinstance(y_data, list):
@@ -412,7 +423,10 @@ def save_data_dictionary(outfile, all_evt_data):
         raise TypeError('The "outfile" variable is not a string ' \
                 'but rather a {}!.'.format(type(outfile)))
 
-    np.save(outfile, all_evt_data)
+    with open(outfile, 'wb') as handle:
+        pickle.dump(all_evt_data, handle)
+
+    return 
 
 
 def get_data_dictionary(infile):
@@ -430,11 +444,18 @@ def get_data_dictionary(infile):
     if not os.path.isfile(infile):
         raise IOError('File {} does not exist.'.format(infile))
 
-    evt_dic = np.load(infile)[()]
+    with open(infile, 'rb') as handle:
+        evt_dic = pickle.load(handle)
+
     if not isinstance(evt_dic, dict):
-        raise TypeError('The element stored in {} is not a dictionary \
-                         but instead a {}'.format(infile, type(evt_dic)))
-    
+        raise TypeError('The element stored in {} is not a dictionary ' \
+                         'but instead a {}'.format(infile, type(evt_dic)))
+
+    for key, array in evt_dic.iteritems():
+        if not isinstance(array, np.recarray):
+            raise TypeError('The element {} in the event dictionary is not a ' \
+                            'numpy records arreay but instead a {}'.format(key, type(array)))
+
     return evt_dic
 
 
