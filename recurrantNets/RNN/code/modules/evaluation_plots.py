@@ -16,17 +16,13 @@ from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, \
     confusion_matrix, classification_report, precision_recall_curve, \
     average_precision_score
 
-from modules.utils import get_output_paths
-
-def plot_MVAoutput(y_truth, y_score, label='', nbins=100):
+def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
     """
     Plots the MVA output as histogram and returns the underlying
     distributions of the positive and the negative class.
     """
 
     print('Creating MVA output plot...')
-    
-    output_prefix = get_output_paths()[0]
     
     y_score_truePos = y_score[np.array(y_truth==1)]
     y_score_trueNeg = y_score[np.array(y_truth==0)]
@@ -60,24 +56,23 @@ def plot_MVAoutput(y_truth, y_score, label='', nbins=100):
     plt.ylabel('Entries', fontsize=18)
     plt.legend(fontsize=15)
     plt.tight_layout()
-    plt.savefig(output_prefix + 'MVAoutput_distr_' + label + '.png')
-    plt.savefig(output_prefix + 'MVAoutput_distr_' + label + '.pdf')
+    plt.savefig(out_path + 'MVAoutput_distr_' + label + '.png')
+    plt.savefig(out_path + 'MVAoutput_distr_' + label + '.pdf')
 
     plt.yscale('log')
-    plt.savefig(output_prefix + 'MVAoutput_distr_' + label + '_log.png')
-    plt.savefig(output_prefix + 'MVAoutput_distr_' + label + '_log.pdf')    
+    plt.savefig(out_path + 'MVAoutput_distr_' + label + '_log.png')
+    plt.savefig(out_path + 'MVAoutput_distr_' + label + '_log.pdf')    
     
     return n_truePos, n_trueNeg
 
 
-def plot_cut_efficiencies(num_signal, num_background):
+def plot_cut_efficiencies(num_signal, num_background, out_path):
     """
     Calculates signal and background efficiencies as well as significance for each value
     of MVA output and determines the optimal MVA cut as the maximum of the significance
     distribution. Returns the optimized MVA cut value.
     """
 
-    output_prefix = get_output_paths()[0]
     nbins = num_signal.shape[0]
     
     print('Creating cut efficiencies plot...')
@@ -134,20 +129,18 @@ def plot_cut_efficiencies(num_signal, num_background):
 
     plt.tight_layout()
 
-    plt.savefig(output_prefix + 'significance_vs_MVAcut.png')
-    plt.savefig(output_prefix + 'significance_vs_MVAcut.pdf')
+    plt.savefig(out_path + 'significance_vs_MVAcut.png')
+    plt.savefig(out_path + 'significance_vs_MVAcut.pdf')
 
     return MVAcut_opt
 
 
-def plot_ROCcurve(y_truth, y_score, sample_weight=None, label='', workingpoint=-1, pos_label=1):
+def plot_ROCcurve(y_truth, y_score, out_path, sample_weight=None, label='', workingpoint=-1, pos_label=1):
     """
     Plots the ROC curve and (if specified) the chosen working point.
     """
 
     print('Creating ROC curve plot...')
-
-    output_prefix = get_output_paths()[0]
 
     if sample_weight is None:
         print('  No sample weights are used for ROC calculation...')
@@ -176,21 +169,19 @@ def plot_ROCcurve(y_truth, y_score, sample_weight=None, label='', workingpoint=-
                  mew=2)
     
     plt.legend(loc=4, fontsize=15)
-    plt.savefig(output_prefix + 'roc_curve_' + label + '.png')
-    plt.savefig(output_prefix + 'roc_curve_' + label + '.pdf')
+    plt.savefig(out_path + 'roc_curve_' + label + '.png')
+    plt.savefig(out_path + 'roc_curve_' + label + '.pdf')
 
     return
 
     
-def plot_precision_recall_curve(y_truth, y_score, sample_weight=None, label='', workingpoint=-1):
+def plot_precision_recall_curve(y_truth, y_score, out_path, sample_weight=None, label='', workingpoint=-1):
     """
     Plots the precision-recall curve.
     """
 
     print('Creating precision-recall curve plot...')
 
-    output_prefix = get_output_paths()[0]
-    
     # if not defined, do not use sample weights
     if(sample_weight==None):
         sample_weight = np.ones(y_truth.shape[0])
@@ -228,12 +219,12 @@ def plot_precision_recall_curve(y_truth, y_score, sample_weight=None, label='', 
     plt.ylabel('Precision', fontsize=18)
     #plt.title('Precision-Recall Curve')
     plt.legend(loc="lower right", fontsize=15)
-    plt.savefig(output_prefix + 'precision_recall_' + label + '.png')
-    plt.savefig(output_prefix + 'precision_recall_' + label + '.pdf')
+    plt.savefig(out_path + 'precision_recall_' + label + '.png')
+    plt.savefig(out_path + 'precision_recall_' + label + '.pdf')
 
 
 def plot_confusion_matrix(cm, classes,
-                          input_elements,
+                          out_path,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues,
@@ -244,7 +235,6 @@ def plot_confusion_matrix(cm, classes,
     
     print('Generating confusion matrix...')
 
-    output_prefix, model_prefix = get_output_paths(input_elements)
     np.set_printoptions(precision=2)
 
     plt.figure()
@@ -275,22 +265,20 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
     
     if normalize:
-        outfile_name = output_prefix + model_prefix + 'confusion_matrix_normalized_' + label
+        outfile_name = out_path + 'confusion_matrix_normalized_' + label
         plt.savefig(outfile_name + '.png')
         plt.savefig(outfile_name + '.pdf')
     else:
-        outfile_name = output_prefix + model_prefix+ 'confusion_matrix_' + label
+        outfile_name = out_path + 'confusion_matrix_' + label
         plt.savefig(outfile_name + '.png')
         plt.savefig(outfile_name + '.pdf')
 
         
-def plot_metrics_history(hist):
+def plot_metrics_history(hist, out_path):
     """
     Plots the learning curves for all compiled metrics.
     """
 
-    output_prefix = get_output_paths()[0]
-    
     print('Create plots for metrics history...')
     
     plt.figure()
@@ -300,5 +288,5 @@ def plot_metrics_history(hist):
         plt.plot(hist.history[metric], label=metric)
 
     plt.legend()
-    plt.savefig(output_prefix + 'metrics_history.png')
-    plt.savefig(output_prefix + 'metrics_history.pdf')
+    plt.savefig(out_path + 'metrics_history.png')
+    plt.savefig(out_path + 'metrics_history.pdf')
