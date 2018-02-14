@@ -86,6 +86,8 @@ def main():
         frac_val_sample   = run_params['frac_val_sample']
         batch_size        = run_params['batch_size']
         n_epochs          = run_params['n_epochs']
+        dropout           = run_params['dropout']
+        class_weight      = run_params['class_weight']
         do_standard_scale = run_params['do_standard_scale']
         # ------------ model-parametrs -------------
         rnn_layer         = model_params['rnn']
@@ -97,7 +99,7 @@ def main():
     try:
         evt_dic_train = get_data_dictionary(output_path + 'evt_dic_train.npy')
         evt_dic_test = get_data_dictionary(output_path + 'evt_dic_test.npy')
-        print('\n:: Event dictionary loaded from file: {}'.format(data_outfile))
+        print('\n:: Event dictionary loaded from file: {}'.format(output_path + 'evt_dic_train/test.npy'))
     except (IOError, TypeError, ValueError):
         print('\nfetching data...\n')
         evt_dictionary = get_data(branches_dic      = branches_dic, 
@@ -160,7 +162,9 @@ def main():
                         batch_size  = batch_size,
                         n_epochs    = n_epochs,
                         rnn_layer   = rnn_layer,
-                        out_path    = out_path)
+                        out_path    = out_path,
+                        dropout     = dropout,
+                        class_weight = class_weight)
 
     end_time_training = time.time()
     print('\n:: Finished training!')
