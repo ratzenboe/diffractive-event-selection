@@ -234,8 +234,8 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
     return all_events, y_data
 
 
-def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list, n_track_id,
-             cut_list_n_tracks, event_string):
+def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list, 
+             cut_dic, event_string):
     """
     Args
         
@@ -264,15 +264,11 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
             The target may depend on numerous varibles stored in the TTree.
             This list captures these variables. 
         __________________________________________________________________________
-
-        n_track_id:
-            The branch name which stores the number of particles that are detected
-            in the TPC
-        __________________________________________________________________________
     
-        cut_list_n_tracks:
-            list of ints determining the number of possible tracks that will be
-            allowed in an event (default [2, 4, 6]) 
+        cut_dic:
+            dictionary of variables that will recieve a standard cut 
+            e.g. 'n_tracks': determining the number of possible tracks that will be
+            allowed in an event 
         __________________________________________________________________________
 
         event_string:
@@ -297,30 +293,17 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
     """
     evt_dictionary = {}
 
-    if not isinstance(cut_list_n_tracks, list) and cut_list_n_tracks is not None:
-        warnings.warn('The variable "cut_list_n_tracks" is not set properly!' \
-                'It has to be a list of integers or None, ' \
-                'but here is type {}.'.format(type(cut_list_n_tracks))) 
-
     # selection criterion regarding the number of tracks
     # we get a list of events (subset of events) that have the right number of
     # tracks (with 2,4 or 6 tracks) Only these events will be part 
     # of the final event dictionary
     try:
-        data = load_data(path_dic[event_string], branches=[n_track_id,evt_id_string])
-        n_evts_total = data.shape[0]
-        if isinstance(cut_list_n_tracks, list):
-            # array that only contains the indices of events with the right amount
-            # of tracks
-            list_of_events = data[evt_id_string][data[n_track_id].isin(
-                cut_list_n_tracks)].values.tolist()
-            # the integers in this list are long-ints -> convert them here to standard ints
-            list_of_events = map(int, list_of_events)
-            percentage_of_all = n_evts_total/len(list_of_events)
-            print(':: Processing {}/{} events ({:.2f}%) with the following number of ' \
-                    'tracks: {}'.format(
-                        len(list_of_events), n_evts_total, percentage_of_all, cut_list_n_tracks))
-        elif cut_list_n_tracks is not None:
+        branches_list = list(cut_dic.keys())
+        branches_list.append(event_string)
+        data = load_data(path_dic[event_string], branches=branches_list)
+        if isinstance(cut_dic, dict):
+            get_evt_id_list(data, cut_dic) 
+        elif cut_dic is None:
             # if the variable is not properly set in the config files then 
             # we take all events that have at least 1 track
             list_of_events = data[evt_id_string][data[n_track_id]>0].values.tolist()
@@ -642,4 +625,64 @@ def shape_data(evt_data):
     
 
     return evt_data
+
+
+
+def get_evt_id_list(data, cut_dic, event_id_string):
+    """
+    Args
+        data:
+            pandas dataframe containing the event column and additionally 
+            the columns where a cut will be applied (stored in the cut_dic)
+        ____________________________________________________________________
+
+        cut_dic:
+            dictionary where 
+                key = column in the data
+                value = a list of possible values or a function
+        ____________________________________________________________________
+
+        event_id_string:
+            string, column name of the event id
+    _________________________________________________________________________
+
+    Operation breakdown
+        
+        the dictionary is looped over and the event ids that correspond to
+        the individual cuts are written to a list
+    _________________________________________________________________________
+
+    Return
+        
+        list, event ids that fulfill the cut criteria
+
+    """
+    n_evts_total = data.shape[0]
+    # array that only contains the indices of events with the right amount
+    # of tracks
+    for key, value in cut_dic.iteritems():
+        if isinstance(value, list):
+            data = data.loc[data[key].isin(value)]
+        elif callable(value):
+            # if the value is a function(e.g. lambda x: x < 3.1415)
+            data = data[data[key].apply(value)]
+        else:
+            raise TypeError('The {} in cut_dic is not a supported ' \
+                    'type ({})'.format(key, type(value)))
+
+    list_of_events = data[evt_id_string].values.tolist()
+    if not isinstance(list_of_events):
+        raise TypeError('The event-id-list is not a of type list!')
+    # the integers in this list are long-ints -> convert them here to standard ints
+    list_of_events = map(int, list_of_events)
+
+    # print-out
+    percentage_of_all = n_evts_total/len(list_of_events)
+    print(':: Processing {}/{} events ({:.2f}%) with the following number of ' \
+            'tracks: {}'.format(
+                len(list_of_events), n_evts_total, percentage_of_all, cut_list_n_tracks))
+ 
+
+    return list_of_events
+
 
