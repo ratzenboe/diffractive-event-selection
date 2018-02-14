@@ -34,17 +34,27 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
 
     TFile* eventFile = new TFile((save_dir+"event_info"+file_addon_str).Data(), "RECREATE");
     TTree* eventTree = new TTree("event", "event level info");
-    Int_t evt_n_tracks, evt_n_raw_tracks_total, mc_process_type, evt_is_full_recon;
+    Int_t evt_n_tracks, evt_n_tracklets, evt_n_singles, evt_n_residuals, 
+          evt_n_tracks_total, evt_n_tracks_its_only,
+          mc_process_type, evt_is_full_recon,
+          evt_n_v0s;
     Double_t evt_tot_ad_mult, evt_tot_ad_time, evt_tot_ad_charge,
              evt_tot_fmd_mult,
              evt_tot_v0_mult, evt_tot_v0_time, evt_tot_v0_charge, evt_tot_v0_sig_width,
              evt_tot_emc_ampl, evt_tot_emc_time,
              evt_tot_phos_ampl, evt_tot_phos_time;
     eventTree->Branch("event_id", &event_nb);
+    // target
     eventTree->Branch("mc_process_type", &mc_process_type);
     eventTree->Branch("is_full_recon", &evt_is_full_recon);
+    // number of various tracks
     eventTree->Branch("n_tracks", &evt_n_tracks);
-    eventTree->Branch("n_raw_tracks", &evt_n_raw_tracks_total);
+    eventTree->Branch("n_tracklets", &evt_n_tracklets);
+    eventTree->Branch("n_singles", &evt_n_singles);
+    eventTree->Branch("n_tracks_total", &evt_n_tracks_total);
+    eventTree->Branch("n_residuals", &evt_n_residuals);
+    eventTree->Branch("n_tracks_its_only", &evt_n_tracks_its_only);
+    // detector sums
     eventTree->Branch("tot_ad_mult", &evt_tot_ad_mult);
     eventTree->Branch("tot_ad_time", &evt_tot_ad_time);
     eventTree->Branch("tot_ad_charge", &evt_tot_ad_charge);
@@ -57,6 +67,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     eventTree->Branch("tot_emc_time", &evt_tot_emc_time);
     eventTree->Branch("tot_phos_ampl", &evt_tot_phos_ampl);
     eventTree->Branch("tot_phos_time", &evt_tot_phos_time);
+    // number of v0s
+    eventTree->Branch("n_v0s", &evt_n_v0s);
 
     TFile* trackFile = new TFile((save_dir+"track_info"+file_addon_str).Data(), "RECREATE");
     TTree* trackTree = new TTree("track", "high level track info");
@@ -74,8 +86,18 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
              // Bayes 
              hlt_pid_bayes_status, 
              hlt_pid_bayes_proba_pion, hlt_pid_bayes_proba_kaon, hlt_pid_bayes_proba_proton;
+    // charge sign
+    Int_t hlt_charge_sign, 
+          hlt_n_its_cls, hlt_n_tpc_cls, hlt_n_trd_cls, hlt_n_tpc_shared_cls;
+    // low level track features
+    Double_t trackLength, globalChi2, pid_its_sig_tuned, pid_its_sig, pid_tpc_sig_tuned, 
+             pidHMPIDsig, pidTRDsig, pid_tof_sig_tuned, 
+             rawtrk_its_chi2, rawtrk_tpc_chi2;
+    Double_t track_xy, track_z, track_dz, track_dx, track_phiEMC, track_etaEMC, 
+             track_pEMC, track_ptEMC, rawtrk_eta;
     trackTree->Branch("event_id", &event_nb);
     trackTree->Branch("tof_bunch_crossing", &hlt_tof_bunch_crossing);
+
     trackTree->Branch("dca_vtx_z", &hlt_dca_vtx_z);
     trackTree->Branch("pt", &hlt_pt);
     trackTree->Branch("eta", &hlt_eta);
@@ -102,6 +124,35 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     trackTree->Branch("pid_bayes_proba_pion", &hlt_pid_bayes_proba_kaon);
     trackTree->Branch("pid_bayes_proba_kaon", &hlt_pid_bayes_proba_pion);
     trackTree->Branch("pid_bayes_proba_proton", &hlt_pid_bayes_proba_proton);
+    // new addons
+    trackTree->Branch("charge_sign", &hlt_charge_sign);            
+    trackTree->Branch("n_cls_its", &hlt_n_its_cls);
+    trackTree->Branch("n_cls_tpc", &hlt_n_tpc_cls);
+    trackTree->Branch("n_cls_trd", &hlt_n_trd_cls);
+    trackTree->Branch("n_shared_cls_tpc", &hlt_n_tpc_shared_cls);
+
+    // raw/low level track information
+    trackTree->Branch("track_length", &trackLength);
+    trackTree->Branch("global_chi2", &globalChi2);
+    trackTree->Branch("its_chi2", &rawtrk_its_chi2);
+    trackTree->Branch("tpc_chi2", &rawtrk_tpc_chi2);
+    trackTree->Branch("pid_its_signal_tuned", &pid_its_sig_tuned);
+    trackTree->Branch("pid_its_signal", &pid_its_sig);
+    trackTree->Branch("pid_hmpid_signal", &pidHMPIDsig);
+    trackTree->Branch("pid_trd_signal", &pidTRDsig);
+    trackTree->Branch("pid_tpc_signal_tuned", &pid_tpc_sig_tuned);
+    trackTree->Branch("pid_tof_signal_tuned", &pid_tof_sig_tuned);
+    trackTree->Branch("xy_impact", &track_xy);
+    trackTree->Branch("z_impact", &track_z);
+    trackTree->Branch("dx_tof_impact", &track_dx);
+    trackTree->Branch("dz_tof_impact", &track_dz);
+    trackTree->Branch("phi_on_emc", &track_phiEMC);
+    trackTree->Branch("eta_on_emc", &track_etaEMC);
+    trackTree->Branch("pt_on_emc", &track_ptEMC);
+    trackTree->Branch("p_on_emc", &track_pEMC);
+    trackTree->Branch("__test_eta", &rawtrk_eta);
+
+
 
     TFile* adFile = new TFile((save_dir+"ad_info"+file_addon_str).Data(), "RECREATE");
     TTree* adTree = new TTree("ad", "raw AD info");
@@ -125,32 +176,6 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     v0Tree->Branch("adc_charge", &v0_charge);
     v0Tree->Branch("time", &v0_time);
     v0Tree->Branch("signal_width", &v0_sigwidth);
-
-    TFile* rawTrackFile = new TFile((save_dir+"raw_track_info"+file_addon_str).Data(), "RECREATE");
-    TTree* rawTrackTree = new TTree("raw_track", "raw tracking info");
-    Double_t trackLength, globalChi2, pid_its_sig_tuned, pid_tpc_sig_tuned, pidHMPIDsig, 
-             pidTRDsig, pid_tof_sig_tuned;
-    Double_t track_xy, track_z, track_dz, track_dx, track_phiEMC, track_etaEMC, 
-             track_pEMC, track_ptEMC;
-    Double_t rawtrk_its_chi2, rawtrk_tpc_chi2;
-    rawTrackTree->Branch("event_id", &event_nb);
-    rawTrackTree->Branch("track_length", &trackLength);
-    rawTrackTree->Branch("global_chi2", &globalChi2);
-    rawTrackTree->Branch("its_chi2", &rawtrk_its_chi2);
-    rawTrackTree->Branch("tpc_chi2", &rawtrk_tpc_chi2);
-    rawTrackTree->Branch("pid_its_signal_tuned", &pid_its_sig_tuned);
-    rawTrackTree->Branch("pid_hmpid_signal", &pidHMPIDsig);
-    rawTrackTree->Branch("pid_trd_signal", &pidTRDsig);
-    rawTrackTree->Branch("pid_tpc_signal_tuned", &pid_tpc_sig_tuned);
-    rawTrackTree->Branch("pid_tof_signal_tuned", &pid_tof_sig_tuned);
-    rawTrackTree->Branch("xy_impact", &track_xy);
-    rawTrackTree->Branch("z_impact", &track_z);
-    rawTrackTree->Branch("dx_tof_impact", &track_dx);
-    rawTrackTree->Branch("dz_tof_impact", &track_dz);
-    rawTrackTree->Branch("phi_on_emc", &track_phiEMC);
-    rawTrackTree->Branch("eta_on_emc", &track_etaEMC);
-    rawTrackTree->Branch("pt_on_emc", &track_ptEMC);
-    rawTrackTree->Branch("p_on_emc", &track_pEMC);
 
     TFile* caloClusterFile = new TFile((save_dir+"calo_cluster_info"+file_addon_str).Data(), "RECREATE");
     TTree* caloClusterTree = new TTree("calo_cluster", "raw calo cluster info");
@@ -195,7 +220,11 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         
         // Event  
         evt_n_tracks = CEPEvts->GetnTracks();
-        evt_n_raw_tracks_total = CEPRawEvts->GetnTracksTotal();
+        evt_n_tracklets = CEPEvts->GetnTracklets(); 
+        evt_n_singles = CEPEvts->GetnSingles(); 
+        evt_n_residuals = CEPEvts->GetnResiduals();
+        evt_n_tracks_total = CEPEvts->GetnTracksTotal(); 
+        evt_n_tracks_its_only = CEPEvts->GetnITSpureTracks();
 
         evt_tot_ad_mult = CEPRawEvts->GetTotalADMult();
         evt_tot_ad_time = CEPRawEvts->GetTotalADTime();
@@ -215,12 +244,16 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
 
         evt_is_full_recon = is_full_recon(CEPEvts);
         mc_process_type = CEPEvts->GetMCProcessType();
+        
+        evt_n_v0s = CEPEvts->GetnV0();
 
         eventTree->Fill();
 
         // HL track info
         CEPTrackBuffer* trk = 0x0;
+        CEPRawTrackBuffer* rawTrack = 0x0;
         TVector3 v;
+        UInt_t hlt_kk(0);
         for (UInt_t kk(0); kk<CEPEvts->GetnTracks(); kk++){
             trk = CEPEvts->GetTrack(kk);
             if (!trk) break;
@@ -262,7 +295,48 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
             hlt_pid_bayes_proba_pion = trk->GetPIDBayesProbability(AliPID::kPion);
             hlt_pid_bayes_proba_kaon = trk->GetPIDBayesProbability(AliPID::kKaon);
             hlt_pid_bayes_proba_proton = trk->GetPIDBayesProbability(AliPID::kProton);
+            // charge sign
+            hlt_charge_sign = trk->GetChargeSign();
+            // clusters
+            hlt_n_its_cls = trk->GetITSncls();
+            hlt_n_tpc_cls = trk->GetTPCncls();
+            hlt_n_trd_cls = trk->GetTRDncls();
+            hlt_n_tpc_shared_cls = trk->GetTPCnclsS();
 
+            // now we get the low level features from the CEP-raw buffer
+            // the hl-track has the information of the index it is stored in
+            // we extract that information and use it to get the low-level features
+            // of the hl-track stroed in the CEPRawTrack-buffer
+            hlt_kk = trk->GetTrackindex();
+            rawTrack = CEPRawEvts->GetTrack(hlt_kk);
+            if (!rawTrack) break;
+            // put here all track info
+            trackLength = rawTrack->GetTrackLength();
+            globalChi2 = rawTrack->GetGlobalChi2();
+            rawtrk_its_chi2 = rawTrack->GetITSChi2();
+            rawtrk_tpc_chi2 = rawTrack->GetTPCChi2();
+
+            pid_its_sig_tuned = rawTrack->GetPIDITSsigTunedOnData();
+            pid_its_sig = rawTrack->GetPIDITSsig();
+
+            pidHMPIDsig = rawTrack->GetPIDHMPsig();
+            pidTRDsig = rawTrack->GetPIDTRDsig();
+
+            pid_tof_sig_tuned = rawTrack->GetPIDTOFsigTunedOnData();
+            pid_tpc_sig_tuned = rawTrack->GetPIDTPCsigTunedOnData();
+
+            track_xy = rawTrack->GetImpactXY();
+            track_z = rawTrack->GetImpactZ();
+
+            track_dx = rawTrack->GetTOFImpactDx();
+            track_dz = rawTrack->GetTOFImpactDz();
+
+            track_phiEMC = rawTrack->GetTrkPhiOnEMC();
+            track_etaEMC = rawTrack->GetTrkEtaOnEMC();
+            track_ptEMC = rawTrack->GetTrkPtOnEMC();
+            track_pEMC = rawTrack->GetTrkPOnEMC();
+
+            rawtrk_eta = rawTrack->GetEta(); 
             trackTree->Fill();
         }
         
@@ -335,7 +409,7 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
             track_ptEMC = rawTrack->GetTrkPtOnEMC();
             track_pEMC = rawTrack->GetTrkPOnEMC();
 
-            rawTrackTree->Fill();
+            trackTree->Fill();
         }
         // Calo Clusters 
         CEPRawCaloClusterTrack* rawCaloCluster = 0x0;
@@ -352,11 +426,6 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         }
 
     }
-    rawTrackFile->cd();
-    rawTrackTree->Write();
-    rawTrackFile->Close();
-    delete rawTrackFile;
-
     phosFile->cd();
     phosTree->Write();
     phosFile->Close();
@@ -424,14 +493,13 @@ Int_t is_full_recon(CEPEventBuffer* cepevt)
         lv_trks_total += lv_trk_temp;
     }
     if ( abs_val(lv_MCparticle.M() - lv_trks_total.M()) < 10e-3 ) {
-        std::cout << "CEP Particle: " << std::endl;
-        print_lv(lv_MCparticle);
-        std::cout << cepevt->GetnTracks() << " Particles: ";
-        if (cepevt->GetnTracks() > 2 ) std::cout << "           <------------- MORE THAN 2 TRACKS! ";
-        std::cout << "\n";
-        print_lv(lv_trks_total);
-        std::cout << "\n--------------------------------------------------------" << std::endl;
-
+        /* std::cout << "CEP Particle: " << std::endl; */
+        /* print_lv(lv_MCparticle); */
+        /* std::cout << cepevt->GetnTracks() << " Particles: "; */
+        /* if (cepevt->GetnTracks() > 2 ) std::cout << "           <------------- MORE THAN 2 TRACKS! "; */
+        /* std::cout << "\n"; */
+        /* print_lv(lv_trks_total); */
+        /* std::cout << "\n--------------------------------------------------------" << std::endl; */
         return 1;
     } else return 0;
 }
