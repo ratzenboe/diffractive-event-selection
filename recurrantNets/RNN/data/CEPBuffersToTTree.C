@@ -24,7 +24,10 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     TString save_dir("/media/hdd/train_files/");
     TString file_addon_str(TString::Itoa(file_addon, 10));
     if (file_addon == -1) file_addon_str = ".root";
-    else file_addon_str += ".root";
+    else {
+        file_addon_str.Insert(0, "_");
+        file_addon_str += ".root";
+    }
 
     CEPtree->SetBranchAddress("CEPRawEvents", &CEPRawEvts);
     CEPtree->SetBranchAddress("CEPEvents", &CEPEvts);
