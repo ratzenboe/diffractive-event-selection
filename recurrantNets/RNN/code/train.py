@@ -40,7 +40,7 @@ def main():
     ######################################################################################
     # STEP 0:
     # ----------------------------- fetching the data ------------------------------------
-    # we fetch the data from 9 different root files where detector data is saved
+    # we fetch the data from 8 different root files where detector data is saved
     #       - AD
     #       - FMD
     #       - V0
@@ -48,14 +48,13 @@ def main():
     #       - PHOS
     #       - Evt-level data
     #       - tracking data
-    #       - raw tracking data
     #       - calo cluster data
     # 
     # therefore we want to have a data structure where we have a dataframe for each  
-    # of these 9 departments
+    # of these 8 departments
     ######################################################################################    
     # data is a dictionary which contains the 9 numpy arrays in form 
-    # -> data['raw_track'].shape = (n_evts, n_parts, n_features)
+    # -> data['track'].shape = (n_evts, n_parts, n_features)
     #    data['fmd'].shape = (n_evts, n_cells, n_features)
     #    data['target'].shape = (n_evts, )
     #    etc. 
