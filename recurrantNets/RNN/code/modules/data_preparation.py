@@ -235,7 +235,7 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
 
 
 def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list, 
-             cut_dic, event_string):
+             cut_dic, event_string, save=False):
     """
     Args
         
@@ -274,6 +274,11 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
         event_string:
             string corresponding to the dictionary key of the event 
             (default 'event')
+        __________________________________________________________________________
+
+        save:
+            bool, if the read out dataframe should be saved after reading it
+            from the ttree (default: False)
     ______________________________________________________________________________
 
     Operation breakdown
@@ -322,6 +327,11 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
         print('\n{} Loading {} data {}'.format(10*'-', key, 10*'-'))
 
         data = load_data(path_dic[key], branches=list_of_features)
+
+        if save is True:
+            data.to_pickle(path_dic[key]+'_pandas.pkl')
+            pause_for_input('We just saved {} in {}. The program may be ' \
+                    'exited'.format(key, path_dic[key]), timeout=5)
 
         evt_dictionary[key], y_data = event_grouping(
                                             inp_data            = data, 
