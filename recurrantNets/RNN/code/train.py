@@ -36,6 +36,15 @@ from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAou
 
 def main():
 
+    if (sys.version_info > (3, 0)):
+        load_pandas = True
+        save_pandas = False
+    else:
+        # for python 2.7 we can load the data from root_numpy
+        # in python 3+ we have to load it from a pickeled pandas file
+        load_pandas = False
+        save_pandas = True
+
     start_time_main = time.time()
     ######################################################################################
     # STEP 0:
@@ -96,9 +105,8 @@ def main():
 
     out_path = om.get_session_folder()
     try:
-        evt_dic_train = get_data_dictionary(output_path + 'evt_dic_train.npy')
-        evt_dic_test = get_data_dictionary(output_path + 'evt_dic_test.npy')
-        print('\n:: Event dictionary loaded from file: {}'.format(output_path + 'evt_dic_train/test.npy'))
+        evt_dictionary = get_data_dictionary(output_path + 'evt_dic.pkl')
+        print('\n:: Event dictionary loaded from file: {}'.format(output_path + 'evt_dic.pkl'))
     except (IOError, TypeError, ValueError):
         print('\nfetching data...\n')
         evt_dictionary = get_data(branches_dic      = branches_dic, 
@@ -108,37 +116,36 @@ def main():
                                   target_list       = target_list,
                                   n_track_id        = n_track_id,
                                   cut_list_n_tracks = cut_list_n_tracks,
-                                  event_string      = event_string)
+                                  event_string      = event_string,
+                                  save              = save_pandas,
+                                  load              = load_pandas)
 
 
         evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
+        save_data_dictionary(output_path + 'evt_dic.pkl', evt_dic_train)
         # saving the data as numpy record array
 
-        ######################################################################################
-        # STEP 1:
-        # ------------------------------- Preprocessing --------------------------------------
-        ######################################################################################
-        print('\n:: Splitting data in training and test sample')
-        # output type is the same as input type!
-        evt_dic_train, evt_dic_test = split_dictionary(evt_dictionary, split_size=frac_test_sample)
-        del evt_dictionary
-        # evt_dic_train, evt_dic_test  = split_dictionary(evt_dic,
-        #                                                 split_size=run_params['frac_test_sample'])
-        # del evt_dic
-            
-        if do_standard_scale:
-            print('\n:: Standarad scaling...')
-            # returns a numpy array (due to fit_transform function)
-            preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
-            preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
+    ######################################################################################
+    # STEP 1:
+    # ------------------------------- Preprocessing --------------------------------------
+    ######################################################################################
+    print('\n:: Splitting data in training and test sample')
+    # output type is the same as input type!
+    evt_dic_train, evt_dic_test = split_dictionary(evt_dictionary, split_size=frac_test_sample)
+    del evt_dictionary
+    # evt_dic_train, evt_dic_test  = split_dictionary(evt_dic,
+    #                                                 split_size=run_params['frac_test_sample'])
+    # del evt_dic
+        
+    if do_standard_scale:
+        print('\n:: Standarad scaling...')
+        # returns a numpy array (due to fit_transform function)
+        preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
+        preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
 
-        print('\n:: Converting the data from numpy record arrays to standard numpy arrays...')
-        shape_data(evt_dic_train)
-        shape_data(evt_dic_test)
-
-        print('\n:: Saving data in {}\n\n'.format(output_path+'evt_dic_train.npy'))
-        save_data_dictionary(output_path + 'evt_dic_train.npy', evt_dic_train)
-        save_data_dictionary(output_path + 'evt_dic_test.npy', evt_dic_test)
+    print('\n:: Converting the data from numpy record arrays to standard numpy arrays...')
+    shape_data(evt_dic_train)
+    shape_data(evt_dic_test)
 
     print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
