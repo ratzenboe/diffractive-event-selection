@@ -330,8 +330,6 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
 
         if save is True:
             data.to_pickle(path_dic[key]+'_pandas.pkl')
-            pause_for_input('We just saved {} in {}. The program may be ' \
-                    'exited'.format(key, path_dic[key]), timeout=5)
 
         evt_dictionary[key], y_data = event_grouping(
                                             inp_data            = data, 
@@ -348,6 +346,10 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
             y_data = np.array(y_data)
         if y_data.size is not 0:
             evt_dictionary['target'] = y_data
+
+    if save is True:
+        pause_for_input('We just saved the data in {}. The program may be ' \
+                'exited'.format(path_dic[key]), timeout=5)
 
     return evt_dictionary
 
