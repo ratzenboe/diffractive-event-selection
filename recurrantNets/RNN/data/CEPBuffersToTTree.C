@@ -37,7 +37,7 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     Int_t evt_n_tracks, evt_n_tracklets, evt_n_singles, evt_n_residuals, 
           evt_n_tracks_total, evt_n_tracks_its_only,
           mc_process_type, evt_is_full_recon,
-          evt_n_v0s;
+          evt_n_v0s, evt_charge_sum;
     Double_t evt_tot_ad_mult, evt_tot_ad_time, evt_tot_ad_charge,
              evt_tot_fmd_mult,
              evt_tot_v0_mult, evt_tot_v0_time, evt_tot_v0_charge, evt_tot_v0_sig_width,
@@ -69,6 +69,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     eventTree->Branch("tot_phos_time", &evt_tot_phos_time);
     // number of v0s
     eventTree->Branch("n_v0s", &evt_n_v0s);
+    // charge sum, e.g. 2 pi+ = 2, for 2 pi- = -2 and for pi+pi- = 0
+    eventTree->Branch("charge_sum", &evt_charge_sum);
 
     TFile* trackFile = new TFile((save_dir+"track_info"+file_addon_str).Data(), "RECREATE");
     TTree* trackTree = new TTree("track", "high level track info");
@@ -218,37 +220,9 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         } else if (ii%1000 == 0) std::cout << ii << " events read" << std::endl;
         event_nb = ii;
         
-        // Event  
-        evt_n_tracks = CEPEvts->GetnTracks();
-        evt_n_tracklets = CEPEvts->GetnTracklets(); 
-        evt_n_singles = CEPEvts->GetnSingles(); 
-        evt_n_residuals = CEPEvts->GetnResiduals();
-        evt_n_tracks_total = CEPEvts->GetnTracksTotal(); 
-        evt_n_tracks_its_only = CEPEvts->GetnITSpureTracks();
-
-        evt_tot_ad_mult = CEPRawEvts->GetTotalADMult();
-        evt_tot_ad_time = CEPRawEvts->GetTotalADTime();
-        evt_tot_ad_charge = CEPRawEvts->GetTotalADCharge();
-
-        evt_tot_fmd_mult = CEPRawEvts->GetTotalFMDMult();
-
-        evt_tot_v0_mult = CEPRawEvts->GetTotalV0Mult();
-        evt_tot_v0_time = CEPRawEvts->GetTotalV0Time();
-        evt_tot_v0_charge = CEPRawEvts->GetTotalV0Charge();
-        evt_tot_v0_sig_width = CEPRawEvts->GetTotalV0SigWidth();
-       
-        evt_tot_emc_ampl = CEPRawEvts->GetTotalEMCAmplitude();
-        evt_tot_emc_time = CEPRawEvts->GetTotalEMCTime();
-        evt_tot_phos_ampl = CEPRawEvts->GetTotalPHOSAmplitude();
-        evt_tot_phos_time = CEPRawEvts->GetTotalPHOSTime();
-
-        evt_is_full_recon = is_full_recon(CEPEvts);
-        mc_process_type = CEPEvts->GetMCProcessType();
+        // initialize charge_sum with 0 for every new event
+        evt_charge_sum = 0;
         
-        evt_n_v0s = CEPEvts->GetnV0();
-
-        eventTree->Fill();
-
         // HL track info
         CEPTrackBuffer* trk = 0x0;
         CEPRawTrackBuffer* rawTrack = 0x0;
@@ -297,6 +271,7 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
             hlt_pid_bayes_proba_proton = trk->GetPIDBayesProbability(AliPID::kProton);
             // charge sign
             hlt_charge_sign = trk->GetChargeSign();
+            evt_charge_sum += hlt_charge_sign;
             // clusters
             hlt_n_its_cls = trk->GetITSncls();
             hlt_n_tpc_cls = trk->GetTPCncls();
@@ -339,6 +314,39 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
             rawtrk_eta = rawTrack->GetEta(); 
             trackTree->Fill();
         }
+        // Event  
+        // event info contains charge sum, hence we have to first loop
+        // over the tracks to gain this information
+        evt_n_tracks = CEPEvts->GetnTracks();
+        evt_n_tracklets = CEPEvts->GetnTracklets(); 
+        evt_n_singles = CEPEvts->GetnSingles(); 
+        evt_n_residuals = CEPEvts->GetnResiduals();
+        evt_n_tracks_total = CEPEvts->GetnTracksTotal(); 
+        evt_n_tracks_its_only = CEPEvts->GetnITSpureTracks();
+
+        evt_tot_ad_mult = CEPRawEvts->GetTotalADMult();
+        evt_tot_ad_time = CEPRawEvts->GetTotalADTime();
+        evt_tot_ad_charge = CEPRawEvts->GetTotalADCharge();
+
+        evt_tot_fmd_mult = CEPRawEvts->GetTotalFMDMult();
+
+        evt_tot_v0_mult = CEPRawEvts->GetTotalV0Mult();
+        evt_tot_v0_time = CEPRawEvts->GetTotalV0Time();
+        evt_tot_v0_charge = CEPRawEvts->GetTotalV0Charge();
+        evt_tot_v0_sig_width = CEPRawEvts->GetTotalV0SigWidth();
+       
+        evt_tot_emc_ampl = CEPRawEvts->GetTotalEMCAmplitude();
+        evt_tot_emc_time = CEPRawEvts->GetTotalEMCTime();
+        evt_tot_phos_ampl = CEPRawEvts->GetTotalPHOSAmplitude();
+        evt_tot_phos_time = CEPRawEvts->GetTotalPHOSTime();
+
+        evt_is_full_recon = is_full_recon(CEPEvts);
+        mc_process_type = CEPEvts->GetMCProcessType();
+        
+        evt_n_v0s = CEPEvts->GetnV0();
+
+        eventTree->Fill();
+
         
         // AD
         ad = CEPRawEvts->GetRawADBuffer();
