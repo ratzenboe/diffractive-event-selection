@@ -9,9 +9,12 @@ import pickle
 
 import numpy as np
 import pandas as pd
-import root_numpy
+import pickle
 
 from modules.utils import pause_for_input
+
+if (sys.version_info == (2, 7)):
+    import root_numpy
 
 def pad_dataframe(df, max_entries):
     """
@@ -418,7 +421,11 @@ def save_data_dictionary(outfile, all_evt_data):
         raise TypeError('The "outfile" variable is not a string ' \
                 'but rather a {}!.'.format(type(outfile)))
 
-    np.save(outfile, all_evt_data)
+    if not outfile.endswith('.pkl'):
+        outfile.append('.pkl')
+
+    with open(PIK, "wb") as f:
+        pickle.dump(all_evt_data, f)
 
     return 
 
@@ -438,16 +445,17 @@ def get_data_dictionary(infile):
     if not os.path.isfile(infile):
         raise IOError('File {} does not exist.'.format(infile))
 
-    evt_dic = np.load(infile)[()]
+    with open(infile, "rb") as f:
+        evt_dic = pickle.load(f)
 
     if not isinstance(evt_dic, dict):
         raise TypeError('The element stored in {} is not a dictionary ' \
                          'but instead a {}'.format(infile, type(evt_dic)))
 
-    # for key, array in evt_dic.iteritems():
-    #     if not isinstance(array, np.recarray):
-    #         raise TypeError('The element {} in the event dictionary is not a ' \
-    #                         'numpy records arreay but instead a {}'.format(key, type(array)))
+    for key, array in evt_dic.iteritems():
+        if not isinstance(array, np.recarray):
+            raise TypeError('The element {} in the event dictionary is not a ' \
+                            'numpy records arreay but instead a {}'.format(key, type(array)))
 
     return evt_dic
 
