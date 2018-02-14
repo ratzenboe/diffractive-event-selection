@@ -299,10 +299,10 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
     # of the final event dictionary
     try:
         branches_list = list(cut_dic.keys())
-        branches_list.append(event_string)
+        branches_list.append(evt_id_string)
         data = load_data(path_dic[event_string], branches=branches_list)
         if isinstance(cut_dic, dict):
-            get_evt_id_list(data, cut_dic) 
+            get_evt_id_list(data, cut_dic, evt_id_string) 
         elif cut_dic is None:
             # if the variable is not properly set in the config files then 
             # we take all events that have at least 1 track
@@ -670,7 +670,7 @@ def get_evt_id_list(data, cut_dic, event_id_string):
             raise TypeError('The {} in cut_dic is not a supported ' \
                     'type ({})'.format(key, type(value)))
 
-    list_of_events = data[evt_id_string].values.tolist()
+    list_of_events = data[event_id_string].values.tolist()
     if not isinstance(list_of_events):
         raise TypeError('The event-id-list is not a of type list!')
     # the integers in this list are long-ints -> convert them here to standard ints
