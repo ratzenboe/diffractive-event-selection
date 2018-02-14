@@ -17,8 +17,10 @@ while true; do
     case $yn in
         [Nn]* ) break;;
             * ) cd ${CEPDIR}/runners
-                aliroot -q -b ${CEPDIR}/runners/runCEPAna_PYTHIA.C\(\"local\",\"test\"\)
-                mv ${CEPDIR}/runners/AnalysisResults.root /media/hdd/train_files/raw_trees_from_grid/.
+                read -p "   Enter: " NEVTS
+                NEVTS=${NEVTS:-50000}
+                aliroot -q -b ${CEPDIR}/runners/runCEPAna_PYTHIA.C\(\"local\",\"test\",true,true,$(NEVTS)\)
+                mv ${CEPDIR}/runners/AnalysisResults.root /media/hdd/train_files/raw_trees_from_grid/AnalysisResults_$(date +%F-%H-%M).root
                 cd ${CURRENTPATH}
                 break;;
     esac
@@ -31,7 +33,7 @@ if [ ${#array[@]} -eq 0 ]; then
     echo
     exit
 fi
-
+COUNTER=0
 while true; do
     echo
     read -p "   Do you wish to transform the raw file buffer to a linear tree? ([y]/n)" yn
@@ -39,6 +41,9 @@ while true; do
         [Nn]* ) break;;
             * ) for file in "${array[@]}"; do 
                     aliroot -q -b '/home/ratzenboe/Documents/ML_master_thesis/ML-repo/recurrantNets/RNN/data/CEPBuffersToTTree.C("'$file'")'
+                    # the next line will hopefully work but it is not tested yet, therefore we still use the line above
+                    # aliroot -q -b '/home/ratzenboe/Documents/ML_master_thesis/ML-repo/recurrantNets/RNN/data/CEPBuffersToTTree.C("'$file'", '$COUNTER')'
+                    COUNTER=$[$COUNTER +1]
                 done
                 break;;
     esac
