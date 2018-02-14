@@ -299,6 +299,11 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
                          .... }
 
     """
+    if save and load:
+        warnings.warn('The variables save and load are both True!' \
+                'We cannot load and save the data same data. We revert to an automatic ' \
+                'setting with: save = False, load = True.'
+
     evt_dictionary = {}
 
     # selection criterion regarding the number of tracks
@@ -329,7 +334,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
         # list_of_features.remove(data_params['evt_id'])
         print('\n{} Loading {} data {}'.format(10*'-', key, 10*'-'))
 
-        data = load_data(path_dic[key], branches=list_of_features)
+        data = load_data(path_dic[key], branches=list_of_features, load)
 
         if save is True:
             data.to_pickle(path_dic[key]+'_pandas.pkl')
@@ -358,7 +363,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
 
 
 
-def load_data(filename, branches=None, selection=None):
+def load_data(filename, branches=None, load=False, selection=None):
     """
     Args
         filename:
@@ -373,6 +378,10 @@ def load_data(filename, branches=None, selection=None):
 
         selection:
             Some pre-selective cuts on the variables in the TTree. E.g. "time>0."
+        __________________________________________________________________________
+
+        load:
+            bool, load file from filename + '_pandas.pkl' (hard-coded)
     ______________________________________________________________________________
 
     Operation breakdown
@@ -386,6 +395,17 @@ def load_data(filename, branches=None, selection=None):
         Pandas dataframe containing the TTree
 
     """
+
+    if load:
+        filename_pickle = filename +'_pandas.pkl'
+        if not os.path.exists(filename_pickle):
+            warnings.warn('File {} does not exist. ' \
+                    'Loading the data from the root file'.format(filename))
+        else:
+            data = pd.read_pickle(filename_pickle)
+            return data
+
+
     if not os.path.exists(filename):
         raise IOError('File {} does not exist.'.format(filename))
 
@@ -395,6 +415,7 @@ def load_data(filename, branches=None, selection=None):
     data = data.astype(float)
 
     return data
+
 
 
 def save_data_dictionary(outfile, all_evt_data):
