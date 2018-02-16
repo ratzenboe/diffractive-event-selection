@@ -11,33 +11,38 @@ if [ -z "${ALICE_PHYSICS}" ]; then
     exit
 fi
 
-files_array=(/home/ratzenboe/Documents/CEP_ALICE/runners/files*.txt)
+files_array=(/home/ratzenboe/Documents/CEP_ALICE/runners/files_*.txt)
+echo "   Processing these files $files_array"
 while true; do
     echo
     read -p "   Do you wish to create the raw files? ([y]/n)" yn
     case $yn in
         [Nn]* ) break;;
             * ) cd ${CEPDIR}/runners
+                # as we create the the raw files we have to move all
+                # current files out of the directroy because we dont want 
+                # duplicates to occur
+                mv /media/hdd/train_files/raw_trees_from_grid/AnalysisResults*.root /media/hdd/train_files/raw_trees_from_grid/old_files/.
                 read -p "   How may events: " NEVTS
                 NEVTS=${NEVTS:-500000}
                 echo "   Creating $NEVTS events..."
                 # looping through all files with files*.txt
-                for file in "${files_array}"; do
+                for file in "${files_array[@]}"; do
                     echo "   Using events in $file"
                     # the next line is possible as we are in the 
                     # right directory
                     mv $file files.txt
                     aliroot -q -b ${CEPDIR}/runners/runCEPAna_PYTHIA.C\(\"local\",\"test\",true,true,$NEVTS\)
+                    mv ${CEPDIR}/runners/AnalysisResults.root /media/hdd/train_files/raw_trees_from_grid/AnalysisResults_$(date +%F-%H-%M).root
                     mv files.txt $file
                 done
-
-                mv ${CEPDIR}/runners/AnalysisResults.root /media/hdd/train_files/raw_trees_from_grid/AnalysisResults_$(date +%F-%H-%M).root
+                # in the next step we have to be in the current path
                 cd ${CURRENTPATH}
                 break;;
     esac
 done
 
-array=(/media/hdd/train_files/raw_trees_from_grid/*.root)
+array=(/media/hdd/train_files/raw_trees_from_grid/AnalysisResults*.root)
 if [ ${#array[@]} -eq 0 ]; then
     echo
     echo "   Please move the raw files to /media/hdd/train_files/raw_trees_from_grid/"
