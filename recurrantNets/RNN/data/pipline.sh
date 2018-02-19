@@ -15,10 +15,9 @@ files_array=(/home/ratzenboe/Documents/CEP_ALICE/runners/files_*.txt)
 echo "   Processing these files $files_array"
 while true; do
     echo
-    read -p "   Do you wish to create the raw files? ([y]/n)" yn
+    read -p "   Do you wish to create the raw files? (y/[n])" yn
     case $yn in
-        [Nn]* ) break;;
-            * ) cd ${CEPDIR}/runners
+        [Yy]* ) cd ${CEPDIR}/runners
                 # as we create the the raw files we have to move all
                 # current files out of the directroy because we dont want 
                 # duplicates to occur
@@ -39,6 +38,7 @@ while true; do
                 # in the next step we have to be in the current path
                 cd ${CURRENTPATH}
                 break;;
+            * ) break;;
     esac
 done
 
@@ -49,6 +49,17 @@ if [ ${#array[@]} -eq 0 ]; then
     echo
     exit
 fi
+# as there are other files in directory the string below gets written to the array
+# therefore if the first element in the array is this string we do not have any raw
+# files in the directory
+if [ "${array[0]}" == "/media/hdd/train_files/raw_trees_from_grid/AnalysisResults*.root" ]; then
+    echo
+    echo "   Please move the raw files to /media/hdd/train_files/raw_trees_from_grid/"
+    echo
+    exit
+fi
+
+
 COUNTER=0
 while true; do
     echo
@@ -59,6 +70,7 @@ while true; do
                     # aliroot -q -b '/home/ratzenboe/Documents/ML_master_thesis/ML-repo/recurrantNets/RNN/data/CEPBuffersToTTree.C("'$file'")'
                     # the next line will hopefully work but it is not tested yet, therefore we still use the line above
                     aliroot -q -b '/home/ratzenboe/Documents/ML_master_thesis/ML-repo/recurrantNets/RNN/data/CEPBuffersToTTree.C("'$file'", '$COUNTER')'
+                    echo $file
                     COUNTER=$[$COUNTER +1]
                     mv $file /media/hdd/train_files/raw_trees_from_grid/old_files/.
                 done
