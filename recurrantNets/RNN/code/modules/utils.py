@@ -13,26 +13,26 @@ import pandas as pd
 
 def print_number(y, name, **kwargs):
 
-    print'Dimensions of {} vector y: {}'.format(name, y.shape)
+    print('Dimensions of {} vector y: {}'.format(name, y.shape))
 
     for key in kwargs.keys():
         item = kwargs[key]
-        print'Number of {}: {} ({:.2f} percent)'.format(key, y[y==item].shape[0], 
-                                                   y[y==item].shape[0]*100/y.shape[0])
+        print('Number of {}: {} ({:.2f} percent)'.format(key, y[y==item].shape[0], 
+                                                   y[y==item].shape[0]*100/y.shape[0]))
     
     return
 
 
 def pause_for_input(message, timeout=5):
     print(message)
-    print'      (Program paused for {} seconds. Hit Enter to abort the program.)'.format(timeout)
+    print('      (Program paused for {} seconds. Hit Enter to abort the program.)'.format(timeout))
     rlist = select([sys.stdin], [], [], timeout)[0]
 
     if rlist:
-        print'Input received. Exit the program...'
+        print('Input received. Exit the program...')
         sys.exit()
     else:
-        print'No input received. Continue running the program...'
+        print('No input received. Continue running the program...')
     
     return
 
@@ -60,10 +60,10 @@ def print_dict(dictionary, headline=None):
     """
 
     if headline:
-        print'\n{}'.format(headline)
+        print('\n{}'.format(headline))
             
     for item in dictionary:
-        print'  {:25}: {}'.format(item, dictionary[item])
+        print('  {:25}: {}'.format(item, dictionary[item]))
 
     return
 
