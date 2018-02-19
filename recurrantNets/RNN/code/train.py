@@ -25,7 +25,7 @@ from sklearn.externals                          import joblib
 
 from modules.control                            import config_file_to_dict
 from modules.logger                             import logger
-from modules.load_model_save                    import train_model
+from modules.load_model                         import train_model
 from modules.data_preparation                   import get_data, save_data_dictionary, \
                                                        get_data_dictionary, preprocess, \
                                                        fix_missing_values, shape_data, \
@@ -47,6 +47,10 @@ def main():
         # in python 3+ we have to load it from a pickeled pandas file
         load_pandas = False
         save_pandas = True
+
+    print('\n\n:: Running mode \n::    load_pandas: {} \n::    save_pandas: {}'.format(
+        load_pandas, save_pandas))
+    pause_for_input('You may review the load and save state of the program.', timeout=15)
 
     start_time_main = time.time()
     ######################################################################################
@@ -167,7 +171,7 @@ def main():
             evt_dictionary[key] = np.array(evt_dictionary[key]) 
 
         evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
-        save_data_dictionary(output_path + 'evt_dic.pkl', evt_dic_train)
+        save_data_dictionary(output_path + 'evt_dic.pkl', evt_dictionary)
         # saving the data as numpy record array
 
     ######################################################################################
