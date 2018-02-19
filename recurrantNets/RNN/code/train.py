@@ -8,6 +8,8 @@ import argparse
 import ast 
 import copy
 
+import fnmatch
+
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot                        as plt
@@ -26,7 +28,8 @@ from modules.logger                             import logger
 from modules.load_model_save                    import train_model
 from modules.data_preparation                   import get_data, save_data_dictionary, \
                                                        get_data_dictionary, preprocess, \
-                                                       fix_missing_values, shape_data
+                                                       fix_missing_values, shape_data, \
+                                                       unpack_and_order_data_path
 from modules.utils                              import print_dict, split_dictionary, \
                                                        pause_for_input, \
                                                        print_array_in_dictionary_stats
@@ -85,8 +88,7 @@ def main():
         std_scale_dic     = data_params['std_scale']
         target_list       = data_params['target']
         evt_id_string     = data_params['evt_id']
-        n_track_id        = data_params['n_track_id']
-        cut_list_n_tracks = data_params['cut_list_n_tracks']
+        cut_dic           = data_params['cut_dic']
         event_string      = data_params['event_string']
         missing_vals_dic  = data_params['missing_values']
         # ------------ run-parameters --------------
@@ -108,18 +110,61 @@ def main():
         evt_dictionary = get_data_dictionary(output_path + 'evt_dic.pkl')
         print('\n:: Event dictionary loaded from file: {}'.format(output_path + 'evt_dic.pkl'))
     except (IOError, TypeError, ValueError):
-        print('\nfetching data...\n')
-        evt_dictionary = get_data(branches_dic      = branches_dic, 
-                                  max_entries_dic   = max_entries_dic, 
-                                  path_dic          = path_dic, 
-                                  evt_id_string     = evt_id_string, 
-                                  target_list       = target_list,
-                                  n_track_id        = n_track_id,
-                                  cut_list_n_tracks = cut_list_n_tracks,
-                                  event_string      = event_string,
-                                  save              = save_pandas,
-                                  load              = load_pandas)
+        # first we have to check the path variables which can refer to multiple paths
+        # -> we loop though all paths and add the each event dictionary to a global one
+        all_paths_dic, num_paths = unpack_and_order_data_path(path_dic)
+        # create final event dictionary, target is always in it
+        # the rest in added a few lines below
+        evt_dictionary = {'target': []}
+        # fill the (final) evt_dictionary with the correct keys
+        # and empty arrays
+        for key in path_dic.keys():
+            evt_dictionary[key] = []
 
+        temp_path_dic = {}
+        for i in range(num_paths):
+            # change path_dic to file-path i
+            try:
+                for key in path_dic.keys():
+                    # all_paths_dic[key][i] access the path list key (e.g. event)
+                    # and takes the i'th position (=i'th path) out and writes is to
+                    # the temporary path dictionary: temp_path_dic which is passed to the 
+                    # function
+                    temp_path_dic[key] = all_paths_dic[key][i]
+
+                print_dict(temp_path_dic)
+
+            except KeyError:
+                raise KeyError('The dictionary "path_dic" and "all_paths_dic" ' \
+                    'contain a different set of keys!')
+
+
+            print('\nfetching data...\n')
+            tmp_evt_dictionary = get_data(branches_dic      = branches_dic, 
+                                          max_entries_dic   = max_entries_dic, 
+                                          path_dic          = temp_path_dic, 
+                                          evt_id_string     = evt_id_string, 
+                                          target_list       = target_list,
+                                          cut_dic           = cut_dic,
+                                          event_string      = event_string,
+                                          save              = save_pandas,
+                                          load              = load_pandas)
+
+            print('type(target): {}'.format(type(tmp_evt_dictionary['target'])))
+            # check if the keys are the same
+            if set(tmp_evt_dictionary.keys()) != set(evt_dictionary.keys()):
+                raise KeyError('The temporary event-dictionary is not compatible ' \
+                        'to the global one:\n tmp_evt_dic.keys(): {} \n evt_dic.keys(): {}'.format(
+                            set(tmp_evt_dictionary.keys()), set(evt_dictionary.keys())))
+
+            for key in tmp_evt_dictionary.keys():
+                evt_dictionary[key] += tmp_evt_dictionary[key]
+            
+            del tmp_evt_dictionary
+        # we loop over the entries and transform the list of record arrays into
+        # a numpy record array
+        for key in evt_dictionary.keys():
+            evt_dictionary[key] = np.array(evt_dictionary[key]) 
 
         evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
         save_data_dictionary(output_path + 'evt_dic.pkl', evt_dic_train)
