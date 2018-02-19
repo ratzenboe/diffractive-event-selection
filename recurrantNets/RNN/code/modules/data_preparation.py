@@ -229,8 +229,8 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
     ###############################################################################
     # print signal information if available:
     if len(y_data) != 0:
-        print('\n:: {} signal events found in data. ({:.4f}%)'.format(
-            signal_evts, signal_evts/len(list_of_events)))
+        print('\n:: {} signal events found in data. ({:.3f}%)'.format(
+            signal_evts, signal_evts/len(list_of_events)*100.))
     ###############################################################################
 
     return all_events, y_data
@@ -345,7 +345,8 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
         data = load_data(path_dic[key], branches=list_of_features, treename=key, load=load)
 
         if save is True:
-            data.to_pickle(path_dic[key]+'_pandas.pkl')
+            # [:-5] removes .root from the string
+            data.to_pickle(path_dic[key][:-5]+'_pandas.pkl')
 
         evt_dictionary[key], y_data = event_grouping(
                                             inp_data            = data, 
@@ -357,16 +358,17 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
             
         # if the y_data array has a size, then we add the 
         # target information to the evt_dictionary 
-        if isinstance(y_data, list):
-            y_data = np.array(y_data)
-        if y_data.size is not 0:
+        if not isinstance(y_data, list):
+            raise TypeError('The variable "y_data" is not a list but rather ' \
+                    'a {}.'.format(type(y_data)))
+        if y_data:
             evt_dictionary['target'] = y_data
 
         del data, list_of_features
 
     if save is True:
         pause_for_input('We just saved the data in {}. The program may be ' \
-                'exited'.format(path_dic[key]), timeout=5)
+                'exited'.format(path_dic[key][:-5]+'_pandas.pkl'), timeout=2)
 
     return evt_dictionary
 
@@ -406,7 +408,7 @@ def load_data(filename, treename=None, branches=None, load=False, selection=None
     """
 
     if load:
-        filename_pickle = filename +'_pandas.pkl'
+        filename_pickle = filename[:-5] +'_pandas.pkl'
         if not os.path.exists(filename_pickle):
             warnings.warn('File {} does not exist. ' \
                     'Loading the data from the root file'.format(filename))
