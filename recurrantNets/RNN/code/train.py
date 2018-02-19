@@ -113,7 +113,7 @@ def main():
     try:
         evt_dictionary = get_data_dictionary(output_path + 'evt_dic.pkl')
         print('\n:: Event dictionary loaded from file: {}'.format(output_path + 'evt_dic.pkl'))
-    except (IOError, TypeError, ValueError):
+    except (OSError, IOError, TypeError, ValueError):
         # first we have to check the path variables which can refer to multiple paths
         # -> we loop though all paths and add the each event dictionary to a global one
         all_paths_dic, num_paths = unpack_and_order_data_path(path_dic)
