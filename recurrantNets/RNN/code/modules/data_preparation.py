@@ -6,15 +6,16 @@ import math
 import sys
 import warnings
 import pickle
+import fnmatch
 
 import numpy as np
 import pandas as pd
 import pickle
 
-from modules.utils import pause_for_input
+import root_numpy
 
-if (sys.version_info == (2, 7)):
-    import root_numpy
+from modules.utils import pause_for_input, print_dict
+
 
 def pad_dataframe(df, max_entries):
     """
@@ -224,21 +225,19 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
         # contain information)
         all_events.append(evt_filled_up_dataframe.to_records(index=False))
 
-    # this is neccessary (see above)
-    all_events = np.array(all_events) 
-    y_data = np.array(y_data)
 
     ###############################################################################
     # print signal information if available:
     if len(y_data) != 0:
         print('\n:: {} signal events found in data. ({:.4f}%)'.format(
             signal_evts, signal_evts/len(list_of_events)))
+    ###############################################################################
 
     return all_events, y_data
 
 
 def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list, 
-             cut_dic, event_string, save=False):
+             cut_dic, event_string, save=False, load=True):
     """
     Args
         
@@ -294,18 +293,21 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
     Return
 
         The event dictionary in the form:
-            - evt_dic = {event:  np-array(n_evts, n_features), 
-                         tracks: np-array(n_evts, n_particles, n_features),
+            - evt_dic = {event:  list of record arrays(n_evts, n_features), 
+                         tracks: list of record arrays(n_evts, n_particles, n_features),
                          .... }
+        We return lists of records arrays in order to cope with multiple files
+        if the events are spread out over multiple files the event dicitionary has
+        to be extendable; this is done by just returning list in the dict which can 
+        easily be extended
 
     """
     if save and load:
         warnings.warn('The variables save and load are both True!' \
                 'We cannot load and save the data same data. We revert to an automatic ' \
-                'setting with: save = False, load = True.'
+                'setting with: save = False, load = True.')
 
     evt_dictionary = {}
-
     # selection criterion regarding the number of tracks
     # we get a list of events (subset of events) that have the right number of
     # tracks (with 2,4 or 6 tracks) Only these events will be part 
@@ -313,9 +315,9 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
     try:
         branches_list = list(cut_dic.keys())
         branches_list.append(evt_id_string)
-        data = load_data(path_dic[event_string], branches=branches_list)
+        data = load_data(path_dic[event_string], branches=branches_list, treename=event_string)
         if isinstance(cut_dic, dict):
-            get_evt_id_list(data, cut_dic, evt_id_string) 
+            list_of_events = get_evt_id_list(data, cut_dic, evt_id_string) 
         elif cut_dic is None:
             # if the variable is not properly set in the config files then 
             # we take all events that have at least 1 track
@@ -326,15 +328,21 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
 
     except (IOError, KeyError):
         raise NameError('The event data cannot be loaded! Either the path {} ' \
-                'does not exist or the column {} ' \
+                'does not exist or the column in the cut-dictionary' \
                 'does not exist in the data.\nCheck the config file for any' \
-                'name errors!'.format(path_dic[event_string], n_track_id))
+                'name errors!'.format(path_dic[event_string]))
 
-    for key, list_of_features in branches_dic.iteritems():
+    # we always loop by extracting the keys, this way we can loop in pyhton 2&3
+    for key in branches_dic.keys():
+        list_of_features = branches_dic[key]
+        if not isinstance(list_of_features, list):
+            raise TypeError('The variable "braches_dic" does not contain a list ' \
+                    'but rather a {}'.format(type(list_of_features)))
         # list_of_features.remove(data_params['evt_id'])
+
         print('\n{} Loading {} data {}'.format(10*'-', key, 10*'-'))
 
-        data = load_data(path_dic[key], branches=list_of_features, load)
+        data = load_data(path_dic[key], branches=list_of_features, treename=key, load=load)
 
         if save is True:
             data.to_pickle(path_dic[key]+'_pandas.pkl')
@@ -347,13 +355,14 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
                                             targets             = target_list,
                                             list_of_events      = list_of_events)
             
-        del data
         # if the y_data array has a size, then we add the 
         # target information to the evt_dictionary 
         if isinstance(y_data, list):
             y_data = np.array(y_data)
         if y_data.size is not 0:
             evt_dictionary['target'] = y_data
+
+        del data, list_of_features
 
     if save is True:
         pause_for_input('We just saved the data in {}. The program may be ' \
@@ -363,7 +372,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
 
 
 
-def load_data(filename, branches=None, load=False, selection=None):
+def load_data(filename, treename=None, branches=None, load=False, selection=None):
     """
     Args
         filename:
@@ -411,6 +420,7 @@ def load_data(filename, branches=None, load=False, selection=None):
 
     data = pd.DataFrame(root_numpy.root2array(filename, 
                                               branches = branches,
+                                              treename = treename,
                                               selection = selection))
     data = data.astype(float)
 
@@ -473,10 +483,10 @@ def get_data_dictionary(infile):
         raise TypeError('The element stored in {} is not a dictionary ' \
                          'but instead a {}'.format(infile, type(evt_dic)))
 
-    for key, array in evt_dic.iteritems():
-        if not isinstance(array, np.recarray):
-            raise TypeError('The element {} in the event dictionary is not a ' \
-                            'numpy records arreay but instead a {}'.format(key, type(array)))
+    for key in evt_dic.keys():
+        if not isinstance(evt_dic[key], np.recarray):
+            raise TypeError('The element {} in the event dictionary is not a numpy ' \
+                    'records arreay but instead a {}'.format(key, type(evt_dic[key])))
 
     return evt_dic
 
@@ -523,7 +533,8 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
         # std_scale looks like:
         #   {'event': ['a', 'b',...], 'track': [...], ...}
         scaling_attr = {}
-        for key, columns in std_scale_dic.iteritems():
+        for key in std_scale_dic.keys():
+            columns = std_scale_dic[key]
             # we have to fit new scaling attributes
             scaling_attr[key] = {}
             for col in columns:
@@ -559,8 +570,10 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
         # load previously fitted attributes
         scaling_attr = np.load(load_save_file).item()
 
-        for key, values_dic in scaling_attr.iteritems():
-            for key_inner, values_inner in values_dic.iteritems():
+        for key in scaling_attr.keys():
+            values_dic = scaling_attr[key]
+            for key_inner in values_dic.keys():
+                values_inner = values_dic[key_inner]
                 try: 
                     evt_dic[key][key_inner][np.where(
                         evt_dic[key][key_inner] != -999.0)] -= values_inner['mean']
@@ -605,8 +618,10 @@ def fix_missing_values(event_data, missing_vals_dic):
     """
     try:
         print('Fixing missing values in feature:')
-        for key, values_dic in missing_vals_dic.iteritems():
-            for key_inner, values_inner in values_dic.iteritems():
+        for key in missing_vals_dic.keys():
+            values_dic = missing_vals_dic[key]
+            for key_inner in values_dic.keys():
+                values_inner = values_dic[key_inner]
                 # key_inner is the feature (e.g. tof_bunch_crossing)
                 # values_inner is the missing value, e.g. -100
                 print('\n:: {} (from {})...'.format(key_inner, key))
@@ -701,7 +716,8 @@ def get_evt_id_list(data, cut_dic, event_id_string):
     n_evts_total = data.shape[0]
     # array that only contains the indices of events with the right amount
     # of tracks
-    for key, value in cut_dic.iteritems():
+    for key in cut_dic.keys():
+        value = cut_dic[key]
         if isinstance(value, list):
             data = data.loc[data[key].isin(value)]
         elif callable(value):
@@ -712,7 +728,7 @@ def get_evt_id_list(data, cut_dic, event_id_string):
                     'type ({})'.format(key, type(value)))
 
     list_of_events = data[event_id_string].values.tolist()
-    if not isinstance(list_of_events):
+    if not isinstance(list_of_events, list):
         raise TypeError('The event-id-list is not a of type list!')
     # the integers in this list are long-ints -> convert them here to standard ints
     list_of_events = map(int, list_of_events)
@@ -720,10 +736,73 @@ def get_evt_id_list(data, cut_dic, event_id_string):
     # print-out
     percentage_of_all = n_evts_total/len(list_of_events)
     print(':: Processing {}/{} events ({:.2f}%) with the following number of ' \
-            'tracks: {}'.format(
-                len(list_of_events), n_evts_total, percentage_of_all, cut_list_n_tracks))
- 
+            'cuts:\n'.format(
+                len(list_of_events), n_evts_total, percentage_of_all))
+    print_dict(cut_dic)
 
     return list_of_events
+
+
+def unpack_and_order_data_path(path_dic):
+    """
+    Args
+        path_dic:
+            dictionary, with values that point either to a file or a directory;
+    _____________________________________________________________________________
+
+    Operations breakdown
+        
+        if the path is a directory the function loops through it and writes out
+        all files; the files are then ordered and the file numbers are extracted;
+        if the file numbers have the right ordering and the right number compared
+        to the other "feature"(e.g. event, track, ad,...) paths the path dictionary 
+        is returned contraining now a list of paths
+    _____________________________________________________________________________
+
+    Return
+
+        dictionary:
+            keys   = "feature"(e.g. event, track, ad,...)
+            values = list of paths 
+        _________________________________________________________________________
+
+        int, number of different paths
+
+    """
+    out_path_dic = {}
+    # to check if the lenghts correspond
+    list_of_path_ints = []
+    for key in path_dic.keys():
+        path_list = []
+        if os.path.isfile(path_dic[key]):
+            path_list.append(path_dic[key])
+            out_path_dic[key] = path_list
+        else:
+            for filename in os.listdir(path_dic[key]):
+                # CHECK: #0
+                # take only root files which contain
+                # the key word (are saved this way)
+                if fnmatch.fnmatch(filename, key+'*.root'):
+                    path_list.append(path_dic[key]+filename)
+                    path_list.sort()
+                    out_path_dic[key] = path_list
+            # CHECK: #1
+            # check if the ints are in both files in the same order with the next method
+            int_list = [int(''.join(list(filter(
+                str.isdigit, path_string)))) for path_string in path_list]
+            list_of_path_ints.append(int_list)
+
+
+    # checks how often the first element is in the list & if it occurs as often
+    # as are entries in the list then all elements are the same
+    if list_of_path_ints:
+        if list_of_path_ints.count(list_of_path_ints[0]) != len(list_of_path_ints):
+            print('\nThere is no correspondance between the files ' \
+                    'provided (elements are not the same)!')
+            sys.exit(1)
+
+    n_diff_paths = len(list_of_path_ints[0])
+
+    return out_path_dic, n_diff_paths
 
 
