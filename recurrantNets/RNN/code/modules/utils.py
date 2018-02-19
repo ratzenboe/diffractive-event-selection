@@ -15,7 +15,8 @@ def print_number(y, name, **kwargs):
 
     print'Dimensions of {} vector y: {}'.format(name, y.shape)
 
-    for key, item in kwargs.iteritems():
+    for key in kwargs.keys():
+        item = kwargs[key]
         print'Number of {}: {} ({:.2f} percent)'.format(key, y[y==item].shape[0], 
                                                    y[y==item].shape[0]*100/y.shape[0])
     
@@ -121,7 +122,8 @@ def split_dictionary(evt_dictionary, split_size):
     idx = np.arange(n_evts)
     np.random.shuffle(idx)
 
-    for key, value in evt_dictionary.iteritems():
+    for key in evt_dictionary.keys():
+        value = evt_dictionary[key]
         if value.shape[0] != n_evts:
             raise ValueError('The {} level data does not agree with the ' \
                     'rest. It has stored {} events in contrast to the expected {}!'.format(
@@ -141,7 +143,8 @@ def print_array_in_dictionary_stats(evt_dic, message='Event dictionary'):
     """
     try:
         print('\n\n{}\n:: {}'.format(50*'-',message))
-        for key, array in evt_dic.iteritems():
+        for key in evt_dic.keys():
+            array = evt_dic[key]
             if not isinstance(array, np.ndarray):
                 raise TypeError('The key {} is not a numpy ndarray ' \
                         'but rather a {}!'.format(type(array)))
