@@ -393,35 +393,6 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
 
             phosTree->Fill();
         }
-        // Tracks 
-        CEPRawTrackBuffer* rawTrack = 0x0;
-        for (UInt_t kk(0); kk<CEPRawEvts->GetnTracksTotal(); kk++){
-            rawTrack = CEPRawEvts->GetTrack(kk);
-            if (!rawTrack) break;
-            // put here all track info
-            trackLength = rawTrack->GetTrackLength();
-            globalChi2 = rawTrack->GetGlobalChi2();
-            rawtrk_its_chi2 = rawTrack->GetITSChi2();
-            rawtrk_tpc_chi2 = rawTrack->GetTPCChi2();
-
-            pid_its_sig_tuned = rawTrack->GetPIDITSsigTunedOnData();
-            pidHMPIDsig = rawTrack->GetPIDHMPsig();
-            pidTRDsig = rawTrack->GetPIDTRDsig();
-            pid_tof_sig_tuned = rawTrack->GetPIDTOFsigTunedOnData();
-            pid_tpc_sig_tuned = rawTrack->GetPIDTPCsigTunedOnData();
-
-            track_xy = rawTrack->GetImpactXY();
-            track_z = rawTrack->GetImpactZ();
-            track_dx = rawTrack->GetTOFImpactDx();
-            track_dz = rawTrack->GetTOFImpactDz();
-
-            track_phiEMC = rawTrack->GetTrkPhiOnEMC();
-            track_etaEMC = rawTrack->GetTrkEtaOnEMC();
-            track_ptEMC = rawTrack->GetTrkPtOnEMC();
-            track_pEMC = rawTrack->GetTrkPOnEMC();
-
-            trackTree->Fill();
-        }
         // Calo Clusters 
         CEPRawCaloClusterTrack* rawCaloCluster = 0x0;
         for (UInt_t kk(0); kk<CEPRawEvts->GetnCaloClusterTotal(); kk++){
