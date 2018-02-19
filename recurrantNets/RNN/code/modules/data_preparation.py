@@ -12,7 +12,9 @@ import numpy as np
 import pandas as pd
 import pickle
 
-import root_numpy
+# only for python 3
+# uncomment for python 2
+# import root_numpy
 
 from modules.utils import pause_for_input, print_dict
 
@@ -312,25 +314,26 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
     # we get a list of events (subset of events) that have the right number of
     # tracks (with 2,4 or 6 tracks) Only these events will be part 
     # of the final event dictionary
-    try:
-        branches_list = list(cut_dic.keys())
-        branches_list.append(evt_id_string)
-        data = load_data(path_dic[event_string], branches=branches_list, treename=event_string)
-        if isinstance(cut_dic, dict):
-            list_of_events = get_evt_id_list(data, cut_dic, evt_id_string) 
-        elif cut_dic is None:
-            # if the variable is not properly set in the config files then 
-            # we take all events that have at least 1 track
-            list_of_events = data[evt_id_string][data[n_track_id]>0].values.tolist()
-            list_of_events = map(int, list_of_events)
+    if save:
+        try:
+            branches_list = list(cut_dic.keys())
+            branches_list.append(evt_id_string)
+            data = load_data(path_dic[event_string], branches=branches_list, treename=event_string)
+            if isinstance(cut_dic, dict):
+                list_of_events = get_evt_id_list(data, cut_dic, evt_id_string) 
+            elif cut_dic is None:
+                # if the variable is not properly set in the config files then 
+                # we take all events that have at least 1 track
+                list_of_events = data[evt_id_string][data[n_track_id]>0].values.tolist()
+                list_of_events = map(int, list_of_events)
 
-        del data
+            del data
 
-    except (IOError, KeyError):
-        raise NameError('The event data cannot be loaded! Either the path {} ' \
-                'does not exist or the column in the cut-dictionary' \
-                'does not exist in the data.\nCheck the config file for any' \
-                'name errors!'.format(path_dic[event_string]))
+        except (IOError, KeyError):
+            raise NameError('The event data cannot be loaded! Either the path {} ' \
+                    'does not exist or the column in the cut-dictionary' \
+                    'does not exist in the data.\nCheck the config file for any' \
+                    'name errors!'.format(path_dic[event_string]))
 
     # we always loop by extracting the keys, this way we can loop in pyhton 2&3
     for key in branches_dic.keys():
@@ -410,8 +413,12 @@ def load_data(filename, treename=None, branches=None, load=False, selection=None
     if load:
         filename_pickle = filename[:-5] +'_pandas.pkl'
         if not os.path.exists(filename_pickle):
-            warnings.warn('File {} does not exist. ' \
-                    'Loading the data from the root file'.format(filename))
+            if (sys.version_info > (3, 0)):
+                raise IOError('File {} does not exist ' \
+                        'Loading the data from the root file'.format(filename))
+            else:
+                warnings.warn('File {} does not exist. ' \
+                        'Loading the data from the root file'.format(filename))
         else:
             data = pd.read_pickle(filename_pickle)
             return data
@@ -420,13 +427,13 @@ def load_data(filename, treename=None, branches=None, load=False, selection=None
     if not os.path.exists(filename):
         raise IOError('File {} does not exist.'.format(filename))
 
-    data = pd.DataFrame(root_numpy.root2array(filename, 
-                                              branches = branches,
-                                              treename = treename,
-                                              selection = selection))
-    data = data.astype(float)
+    # data = pd.DataFrame(root_numpy.root2array(filename, 
+    #                                           branches = branches,
+    #                                           treename = treename,
+    #                                           selection = selection))
+    # data = data.astype(float)
 
-    return data
+    # return data
 
 
 
