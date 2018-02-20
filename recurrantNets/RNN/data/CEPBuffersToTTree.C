@@ -126,8 +126,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     trackTree->Branch("pid_tof_proba_kaon", &hlt_pid_tof_proba_kaon);
     trackTree->Branch("pid_tof_proba_proton", &hlt_pid_tof_proba_proton);
     trackTree->Branch("pid_bayes_status", &hlt_pid_bayes_status);
-    trackTree->Branch("pid_bayes_proba_pion", &hlt_pid_bayes_proba_kaon);
-    trackTree->Branch("pid_bayes_proba_kaon", &hlt_pid_bayes_proba_pion);
+    trackTree->Branch("pid_bayes_proba_kaon", &hlt_pid_bayes_proba_kaon);
+    trackTree->Branch("pid_bayes_proba_pion", &hlt_pid_bayes_proba_pion);
     trackTree->Branch("pid_bayes_proba_proton", &hlt_pid_bayes_proba_proton);
     // new addons
     trackTree->Branch("charge_sign", &hlt_charge_sign);            
@@ -214,10 +214,12 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     CEPRawCaloBuffer* phos  = 0x0;
     
     std::cout << CEPtree->GetEntries() << " events in the file: " << filename << std::endl;
-    for (UInt_t ii(0); ii<CEPtree->GetEntries(); ii++){
+    for (UInt_t ii(0); ii<CEPtree->GetEntries(); ii++)
+    {
         CEPtree->GetEntry(ii);
         if (!CEPEvts) std::cout << "Event number " << ii << " cannot be found!" << std::endl;
-        if (ii==0){
+        if (ii==0)
+        {
             std::cout << "Nb tracks in CEPEvts: " << CEPEvts->GetnTracks() << std::endl;
             std::cout << "Nb tracks in CEPRawEvts: " << CEPRawEvts->GetnTracksTotal() << std::endl;
         } else if (ii%1000 == 0) std::cout << ii << " events read" << std::endl;
@@ -231,7 +233,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         CEPRawTrackBuffer* rawTrack = 0x0;
         TVector3 v;
         UInt_t hlt_kk(0);
-        for (UInt_t kk(0); kk<CEPEvts->GetnTracks(); kk++){
+        for (UInt_t kk(0); kk<CEPEvts->GetnTracks(); kk++)
+        {
             trk = CEPEvts->GetTrack(kk);
             if (!trk) break;
             // put here all track info
@@ -353,7 +356,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         
         // AD
         ad = CEPRawEvts->GetRawADBuffer();
-        for (UInt_t kk(0); kk<ad->GetNCells(); kk++){
+        for (UInt_t kk(0); kk<ad->GetNCells(); kk++)
+        {
             AD_mult = ad->GetADMultiplicity(kk); 
             AD_time = ad->GetADTime(kk);
             AD_charge = ad->GetADCharge(kk);
@@ -362,14 +366,16 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         }
         // FMD
         fmd = CEPRawEvts->GetRawFMDBuffer();
-        for (UInt_t kk(0); kk<fmd->GetFMDnCells(); kk++){
+        for (UInt_t kk(0); kk<fmd->GetFMDnCells(); kk++)
+        {
             FMD_mult = fmd->GetFMDCellMultiplicity(kk);
 
             fmdTree->Fill();
         }
         // V0 
         v0 = CEPRawEvts->GetRawV0Buffer();
-        for (UInt_t kk(0); kk<v0->GetNCells(); kk++){
+        for (UInt_t kk(0); kk<v0->GetNCells(); kk++)
+        {
             v0_mult = v0->GetV0Multiplicity(kk);
             v0_time = v0->GetV0Time(kk);
             v0_charge = v0->GetV0Charge(kk);
@@ -379,7 +385,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         }
         // EMCAL
         emcal = CEPRawEvts->GetRawEMCalBuffer();
-        for (UInt_t kk(0); kk<emcal->GetNCells(); kk++){
+        for (UInt_t kk(0); kk<emcal->GetNCells(); kk++)
+        {
             emcal_amplidude = emcal->GetCaloCellAmplitude(kk);
             emcal_time =  emcal->GetCaloCellTime(kk);
 
@@ -387,7 +394,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         }
         // PHOS
         phos = CEPRawEvts->GetRawPHOSBuffer();
-        for (UInt_t kk(0); kk<phos->GetNCells(); kk++){
+        for (UInt_t kk(0); kk<phos->GetNCells(); kk++)
+        {
             phos_amplidude = phos->GetCaloCellAmplitude(kk);
             phos_amplidude =  phos->GetCaloCellTime(kk);
 
@@ -395,7 +403,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         }
         // Calo Clusters 
         CEPRawCaloClusterTrack* rawCaloCluster = 0x0;
-        for (UInt_t kk(0); kk<CEPRawEvts->GetnCaloClusterTotal(); kk++){
+        for (UInt_t kk(0); kk<CEPRawEvts->GetnCaloClusterTotal(); kk++)
+        {
             rawCaloCluster = CEPRawEvts->GetCaloClusterTrack(kk);
             if (!rawCaloCluster) break;
             // put here all track info
