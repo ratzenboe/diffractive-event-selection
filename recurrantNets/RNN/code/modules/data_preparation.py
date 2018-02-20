@@ -151,7 +151,7 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
                 'list but instead is a {}!'.format(type(list_of_events)))
 
     # remove event id from the list of features
-    list_of_features = filter(lambda x: x != evt_id_string, list_of_features)
+    list_of_features = list(filter(lambda x: x != evt_id_string, list_of_features))
 
     all_events = []
     y_data = []
@@ -171,13 +171,15 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
         # the dataframe has some arbitraty indices because we just slice some
         # instances out of it: we fix the index here
         evt_dataframe = evt_dataframe.reset_index(drop=True)
+        # check if the dataframe contains any values
+        if evt_dataframe.empty:
+            evt_dataframe = pd.DataFrame([])
+            warnings.warn('The event {} has no information stored!'.format(evt_int))
+            pause_for_input('A warning was issued, do you want to abort the program?', timeout=4)
 
         ###########################################################################
         # we are already finished getting the dataframe however we have to
         # extract the target values:
-        if evt_dataframe.empty:
-            evt_dataframe = pd.DataFrame([])
-            warnings.warn('The event {} has no information stored!'.format(evt_int))
         # the target is only present in the event column
         target_list = []
         if set(targets) <= set(list_of_features):
@@ -344,12 +346,21 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
         # list_of_features.remove(data_params['evt_id'])
 
         print('\n{} Loading {} data {}'.format(10*'-', key, 10*'-'))
+        if load:
+            list_of_events = (pd.read_pickle(
+                path_dic[key][:-5]+'list_of_events.pkl')).values.tolist()
+            # flatten the list (it is loaded as such [[2], [8], ...]
+            list_of_events = [y for x in list_of_events for y in x]
 
         data = load_data(path_dic[key], branches=list_of_features, treename=key, load=load)
 
         if save is True:
             # [:-5] removes .root from the string
-            data.to_pickle(path_dic[key][:-5]+'_pandas.pkl')
+            data.to_pickle(path_dic[key][:-5]+'_data_pandas.pkl')
+            df_list_of_events = pd.DataFrame(list_of_events)
+            df_list_of_events.to_pickle(path_dic[key][:-5]+'list_of_events.pkl')
+            del df_list_of_events
+
 
         evt_dictionary[key], y_data = event_grouping(
                                             inp_data            = data, 
@@ -420,6 +431,7 @@ def load_data(filename, treename=None, branches=None, load=False, selection=None
                 warnings.warn('File {} does not exist. ' \
                         'Loading the data from the root file'.format(filename))
         else:
+            print('::  fetching data from {}'.format(filename_pickle))
             data = pd.read_pickle(filename_pickle)
             return data
 
@@ -464,7 +476,7 @@ def save_data_dictionary(outfile, all_evt_data):
     if not outfile.endswith('.pkl'):
         outfile.append('.pkl')
 
-    with open(PIK, "wb") as f:
+    with open(outfile, "wb") as f:
         pickle.dump(all_evt_data, f)
 
     return 
