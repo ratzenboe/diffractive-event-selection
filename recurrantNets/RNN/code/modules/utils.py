@@ -151,7 +151,14 @@ def print_array_in_dictionary_stats(evt_dic, message='Event dictionary'):
             print('\n{}'.format(key))
             print('type(array): {}'.format(type(array)))
             print('array.shape: {}'.format(array.shape))
+            if key == 'target':
+                all_evts = evt_dic[key].shape[0]
+                sig_evts = evt_dic[key][evt_dic[key] == 1].shape[0]
+                sig_bg_percentage = sig_evts/all_evts*100.
+                print('{}/{} signal events ({:.3f}%)'.format(
+                    sig_evts, all_evts, sig_bg_percentage))
         print('{}'.format(50*'-'))
+
 
     except AttributeError:
         raise TypeError('The evt_dic variable provided is not a dictionary but ' \
