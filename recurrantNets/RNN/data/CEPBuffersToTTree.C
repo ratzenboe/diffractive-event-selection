@@ -90,7 +90,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
              hlt_pid_tof_proba_pion, hlt_pid_tof_proba_kaon, hlt_pid_tof_proba_proton,
              // Bayes 
              hlt_pid_bayes_status, 
-             hlt_pid_bayes_proba_pion, hlt_pid_bayes_proba_kaon, hlt_pid_bayes_proba_proton;
+             hlt_pid_bayes_proba_pion, hlt_pid_bayes_proba_kaon, hlt_pid_bayes_proba_proton,
+             hlt_pid_bayes_proba_electron, hlt_pid_bayes_proba_muon;
     // charge sign
     Int_t hlt_charge_sign, 
           hlt_n_its_cls, hlt_n_tpc_cls, hlt_n_trd_cls, hlt_n_tpc_shared_cls;
@@ -126,6 +127,9 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     trackTree->Branch("pid_tof_proba_kaon", &hlt_pid_tof_proba_kaon);
     trackTree->Branch("pid_tof_proba_proton", &hlt_pid_tof_proba_proton);
     trackTree->Branch("pid_bayes_status", &hlt_pid_bayes_status);
+
+    trackTree->Branch("pid_bayes_proba_electron", &hlt_pid_bayes_proba_electron);
+    trackTree->Branch("pid_bayes_proba_muon", &hlt_pid_bayes_proba_muon);
     trackTree->Branch("pid_bayes_proba_kaon", &hlt_pid_bayes_proba_kaon);
     trackTree->Branch("pid_bayes_proba_pion", &hlt_pid_bayes_proba_pion);
     trackTree->Branch("pid_bayes_proba_proton", &hlt_pid_bayes_proba_proton);
@@ -275,6 +279,9 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
             hlt_pid_bayes_proba_pion = trk->GetPIDBayesProbability(AliPID::kPion);
             hlt_pid_bayes_proba_kaon = trk->GetPIDBayesProbability(AliPID::kKaon);
             hlt_pid_bayes_proba_proton = trk->GetPIDBayesProbability(AliPID::kProton);
+
+            hlt_pid_bayes_proba_electron = trk->GetPIDBayesProbability(AliPID::kElectron);
+            hlt_pid_bayes_proba_muon = trk->GetPIDBayesProbability(AliPID::kMuon);
             // charge sign
             hlt_charge_sign = trk->GetChargeSign();
             evt_charge_sum += hlt_charge_sign;
