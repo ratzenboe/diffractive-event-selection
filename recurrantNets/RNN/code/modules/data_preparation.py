@@ -505,7 +505,7 @@ def get_data_dictionary(infile):
                          'but instead a {}'.format(infile, type(evt_dic)))
 
     for key in evt_dic.keys():
-        if not isinstance(evt_dic[key], np.recarray):
+        if not isinstance(evt_dic[key], np.ndarray):
             raise TypeError('The element {} in the event dictionary is not a numpy ' \
                     'records arreay but instead a {}'.format(key, type(evt_dic[key])))
 
