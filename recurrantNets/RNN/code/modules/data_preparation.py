@@ -348,7 +348,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
         print('\n{} Loading {} data {}'.format(10*'-', key, 10*'-'))
         if load:
             list_of_events = (pd.read_pickle(
-                path_dic[key][:-5]+'list_of_events.pkl')).values.tolist()
+                path_dic[key][:-5]+'_list_of_events.pkl')).values.tolist()
             # flatten the list (it is loaded as such [[2], [8], ...]
             list_of_events = [y for x in list_of_events for y in x]
 
@@ -358,7 +358,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
             # [:-5] removes .root from the string
             data.to_pickle(path_dic[key][:-5]+'_data_pandas.pkl')
             df_list_of_events = pd.DataFrame(list_of_events)
-            df_list_of_events.to_pickle(path_dic[key][:-5]+'list_of_events.pkl')
+            df_list_of_events.to_pickle(path_dic[key][:-5]+'_list_of_events.pkl')
             del df_list_of_events
 
 
