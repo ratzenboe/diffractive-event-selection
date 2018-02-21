@@ -16,13 +16,85 @@ from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, \
     confusion_matrix, classification_report, precision_recall_curve, \
     average_precision_score
 
+
+def plot_all_features(evt_dic, branches_dic, outpath, post_fix=''):
+    """
+    Plot all features of the event dictionary comparing fully reconstructed events
+    with background (feed-down) events
+    """
+    target_array = evt_dic['target']
+    index_sig = np.where(target_array == 1)
+    index_bg  = np.where(target_array == 0)
+
+    for key in branches_dic.keys():
+        if key == 'target':
+            continue
+        for list_val in branches_dic[key]:
+            x_sig = np.array(evt_dic[key][index_sig][list_val].ravel())
+            x_bg  = np.array(evt_dic[key][index_bg][list_val].ravel())
+            print('::   Creating the feature plot for {} in {}.'.format(list_val, key))
+            plot_feature(x_sig, x_bg, outpath, label=key+'_'+list_val+post_fix)
+
+
+
+
+def plot_feature(x_sig, x_bg, out_path, label='', nbins=100):
+    """
+    Plots the features comparing signal and background as histogram 
+    """
+
+    x_total = np.concatenate([x_sig, x_bg])
+    
+    plt.figure()
+
+    n_total, bins_total, patches_total = \
+        plt.hist(x_total,
+                 bins=nbins,
+                 range=(x_total.min(), x_total.max()),
+                 alpha=.25,
+                 color='black',
+                 label='signal+backgr.')
+    
+    n_trueNeg, bins_trueNeg, patches_trueNeg = \
+        plt.hist(x_bg,
+                 bins=nbins,
+                 range=(x_total.min(), x_total.max()),
+                 alpha=0.5,
+                 color='#dd0000',
+                 label='background')
+    
+    n_truePos, bins_truePos, patches_truePos = \
+        plt.hist(x_sig,
+                 bins=nbins,
+                 range=(x_total.min(), x_total.max()),
+                 alpha=0.5,
+                 color='green',
+                 label='signal')
+    
+    # plt.title('Put title here')
+    plt.xlim(-0.05, 1.05)
+    plt.xlabel(label, fontsize=18)
+    plt.ylabel('Entries', fontsize=18)
+    plt.legend(fontsize=15)
+    plt.tight_layout()
+    plt.savefig(out_path + 'feature_' + label + '.png')
+    plt.savefig(out_path + 'feature_' + label + '.pdf')
+
+    plt.yscale('log')
+    plt.savefig(out_path + 'feature_' + label + '_log.png')
+    plt.savefig(out_path + 'feature_' + label + '_log.pdf')    
+    
+    return n_truePos, n_trueNeg
+
+
+
 def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
     """
     Plots the MVA output as histogram and returns the underlying
     distributions of the positive and the negative class.
     """
 
-    print('Creating MVA output plot...')
+    print('::   Creating MVA output plot...')
     
     y_score_truePos = y_score[np.array(y_truth==1)]
     y_score_trueNeg = y_score[np.array(y_truth==0)]

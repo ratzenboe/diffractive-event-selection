@@ -168,3 +168,61 @@ def print_array_in_dictionary_stats(evt_dic, message='Event dictionary'):
     return
 
 
+def get_subsample(evt_dic, n_samples_signal, bg_sig_ratio=1.):
+    """
+    Args
+        evt_dic:
+            the event-dictionary containing the data
+        _____________________________________________________________
+
+        n_samples_signal:
+            int, number of signal samples 
+        ______________________________________________________________
+
+        bg_sig_ratio:
+            float, desired ratio of background to signal which should 
+            be in the data
+    __________________________________________________________________
+
+    Operation breakdown
+        
+        a subsample of the event dictionary is selected and returned
+    __________________________________________________________________
+
+    Return
+
+        a smaller event dictionary
+
+    """
+    target_array = evt_dic['target']
+    # np.where outputs a tuple, with 0 we get the numpy array
+    index_sig = np.where(target_array == 1)[0]
+    index_bg  = np.where(target_array == 0)[0]
+    np.random.shuffle(index_sig)
+    np.random.shuffle(index_bg)
+
+    if n_samples_signal >= index_sig.shape[0]:
+        warnings.warn('n_samples_signal is greater than the actual number of ' \
+                'signal samples in the data. Proceeding with the full number of ' \
+                'signal samples')
+        n_samples_signal = -1
+
+    n_samples_bg = int(n_samples*bg_sig_ratio)
+    if n_samples_bg >= index_bg.shape[0]:
+        warnings.warn('n_samples_bg is greater than the actual number of ' \
+                'background samples in the data. Proceeding with the full number of ' \
+                'background samples')
+        n_samples_bg = -1
+
+    index_tot = np.concatenate([index_sig[:n_samples_signal], index_bg[:n_samples_bg]])
+    np.random.shuffle(index_tot)
+
+    evt_dic_subset = {}
+
+    for key in evt_dic.keys():
+        evt_dic_subset[key] = evt_dic[key][index_tot]
+
+
+    return evt_dic_subset
+
+        
