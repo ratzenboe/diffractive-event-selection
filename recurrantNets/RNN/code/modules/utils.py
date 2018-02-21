@@ -207,7 +207,7 @@ def get_subsample(evt_dic, n_samples_signal, bg_sig_ratio=1.):
                 'signal samples')
         n_samples_signal = -1
 
-    n_samples_bg = int(n_samples*bg_sig_ratio)
+    n_samples_bg = int(n_samples_signal*bg_sig_ratio)
     if n_samples_bg >= index_bg.shape[0]:
         warnings.warn('n_samples_bg is greater than the actual number of ' \
                 'background samples in the data. Proceeding with the full number of ' \
