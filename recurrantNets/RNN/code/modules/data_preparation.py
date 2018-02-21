@@ -433,6 +433,7 @@ def load_data(filename, treename=None, branches=None, load=False, selection=None
         else:
             print('::  fetching data from {}'.format(filename_pickle))
             data = pd.read_pickle(filename_pickle)
+            data = data.loc[:,branches]
             return data
 
 

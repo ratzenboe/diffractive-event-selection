@@ -5,7 +5,7 @@ import numpy as np
 import copy
 
 import keras
-from keras.models import Model
+from keras.models import Model, Sequential
 from keras.layers.core import Activation, Dense, Dropout
 from keras.layers import Masking, LSTM, GRU, Input, BatchNormalization
 
@@ -56,10 +56,10 @@ def train_model(data, run_mode_user, val_data=0.2,
         raise TypeError('The data is not provided in a dictionary ' \
                 'format but rather is of type {}'.format(type(data)))
 
-    for key, value in data.iteritems():
-        if not isinstance(value, np.ndarray):
+    for key in data.keys():
+        if not isinstance(data[key], np.ndarray):
             raise TypeError('The key {} of the "data"-dictionary ' \
-                    'is not of type numpy ndarrays but rather {}'.format(key, type(value)))
+                    'is not of type numpy ndarrays but rather {}'.format(key, type(data[key])))
 
     if not isinstance(run_mode_user, str):
         raise TypeError('The variable "run_mode_user" is not a string type ' \
@@ -70,10 +70,11 @@ def train_model(data, run_mode_user, val_data=0.2,
                 'nor a float but instead {}'.format(type(val_data)))
 
     if isinstance(val_data, dict):
-        for key, value in data.iteritems():
-            if not isinstance(value, np.ndarray):
+        for key in data.keys():
+            if not isinstance(data[key], np.ndarray):
                 raise TypeError('The key {} of the "value"-dictionary ' \
-                        'is not of type numpy ndarrays but rather {}'.format(key, type(value)))
+                        'is not of type numpy ndarrays but rather {}'.format(
+                            key, type(data[key])))
 
     if not isinstance(rnn_layer, str):
         raise TypeError('The variable "rnn_layer" is not a string type ' \
@@ -106,7 +107,7 @@ def train_model(data, run_mode_user, val_data=0.2,
         combined_rnn.add(Dropout(dropout))
         combined_rnn.add(Dense(1, activation='softmax'))
         # compile
-        combined_rnn.compile('adam', 'sparse_categorical_crossentropy')
+        combined_rnn.compile('adam', 'binary_crossentropy')
 
         print(combined_rnn.summary())
         try:
@@ -118,6 +119,51 @@ def train_model(data, run_mode_user, val_data=0.2,
             print('Training ended early.')
 
         return combined_rnn
+
+    elif 'NN' in run_mode_user:
+        try:
+            X_event_train     = data['event']
+            y_train           = data['target']
+        except KeyError:
+            raise KeyError('The data-dictionary provided does not contain' \
+                    'all necessary keys for the selected run-mode (run_mode_user)')
+
+        model = Sequential()
+                
+        model.add(Dense(100,
+            input_dim = X_event_train.shape[-1],
+            activation = 'relu',
+            kernel_initializer = 'glorot_normal'))
+        for i in range(0,4):
+            model.add(Dense(100,
+                activation = 'relu',
+                kernel_initializer = 'glorot_normal'))
+
+        model.add(Dense(1, 
+            activation = 'sigmoid',
+            kernel_initializer = 'glorot_normal'))
+
+        model.compile(loss ='binary_crossentropy',
+                optimizer = 'adam',
+                metrics=['accuracy'])
+
+        print(model.summary())
+        try:
+            model.fit(X_event_train,
+                      y_train,  
+                      epochs = n_epochs, 
+                      batch_size = batch_size,
+                      validation_split = val_data)
+                      # validation_data = (y_train[:10], y_train[:10]) )
+                      # class_weight = class_weight)
+                      # ,callbacks = [callback_ROC(train_data_dic, 
+                      #                           output_targets, 
+                      #                           output_prefix=out_path)])
+
+        except KeyboardInterrupt:
+            print('Training ended early.')
+
+        return model
 
     elif 'Grid' in run_mode_user:
         try:
@@ -174,13 +220,13 @@ def train_model(data, run_mode_user, val_data=0.2,
         input_list = [track_input, event_input]
         # ------ Build the model ---------
         # RNNs feeding into the event level layer
-        track_mask     = Masking(mask_value=float(-999), name='track_masking')(track_input)
+        track_mask = Masking(mask_value=float(-999), name='track_masking')(track_input)
         # event needs no masking
         try:
             track_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_track, 
                 name='track_rnn'))(track_mask)
-            track_batch_norm = BatchNormalization(name='track_batch_norm')(track_rnn)
-            track_dropout = Dropout(dropout, name='track_dropout')(track_batch_norm)
+            # track_batch_norm = BatchNormalization(name='track_batch_norm')(track_rnn)
+            # track_dropout = Dropout(dropout, name='track_dropout')(track_batch_norm)
 
         except AttributeError:
             raise AttributeError('{} is not a valid Keras layer!'.format(rnn_layer))
@@ -190,7 +236,8 @@ def train_model(data, run_mode_user, val_data=0.2,
 
         # output_list = [aux_output_track]
 
-        concatenate_list = [track_dropout, event_input]
+        concatenate_list = [track_rnn, event_input]
+        # concatenate_list = [track_dropout, event_input]
         val_data_list = None
 
         if isinstance(val_data, dict):
@@ -283,15 +330,14 @@ def train_model(data, run_mode_user, val_data=0.2,
         x = keras.layers.concatenate(concatenate_list)
 
         x = Dense(64, activation='relu')(x)
-        x = BatchNormalization()(x)
         x = Dropout(dropout)(x)
-        x = BatchNormalization()(x)
+        # x = BatchNormalization()(x)
         x = Dense(64, activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Dropout(dropout)(x)
+        # x = Dropout(dropout)(x)
         x = Dense(64, activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Dropout(dropout)(x)
+        # x = Dropout(dropout)(x)
         main_output = Dense(1, activation='softmax', name='main_output')(x)
         # output_list.insert(0,main_output)
         model = Model(inputs=input_list, outputs=main_output)
@@ -306,7 +352,8 @@ def train_model(data, run_mode_user, val_data=0.2,
         #     output_targets.append(y_train)
 
 
-        model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
+        model.compile(optimizer='adam', loss='binary_crossentropy')
+        # model.compile(optimizer='adam', loss='MSE')
         print(model.summary())
         try:
             model.fit(train_data_dic,

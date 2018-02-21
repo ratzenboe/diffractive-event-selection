@@ -17,6 +17,7 @@ import seaborn                                  as sns
 sns.set()
 
 import numpy                                    as np
+import pandas                                   as pd
 
 from keras.models                               import load_model
 
@@ -31,11 +32,12 @@ from modules.data_preparation                   import get_data, save_data_dicti
                                                        fix_missing_values, shape_data, \
                                                        unpack_and_order_data_path
 from modules.utils                              import print_dict, split_dictionary, \
-                                                       pause_for_input, \
-                                                       print_array_in_dictionary_stats
+                                                       pause_for_input, get_subsample, \
+                                                       print_array_in_dictionary_stats, \
+                                                       remove_field_name
 from modules.file_management                    import OutputManager
 from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAoutput, \
-                                                       plot_cut_efficiencies
+                                                       plot_cut_efficiencies, plot_all_features
 
 def main():
 
@@ -50,7 +52,7 @@ def main():
 
     print('\n\n:: Running mode \n::    load_pandas: {} \n::    save_pandas: {}'.format(
         load_pandas, save_pandas))
-    pause_for_input('You may review the load and save state of the program.', timeout=15)
+    pause_for_input('You may review the load and save state of the program.', timeout=3)
 
     start_time_main = time.time()
     ######################################################################################
@@ -113,7 +115,8 @@ def main():
     try:
         evt_dictionary = get_data_dictionary(output_path + 'evt_dic.pkl')
         print('\n:: Event dictionary loaded from file: {}'.format(output_path + 'evt_dic.pkl'))
-    except (OSError, IOError, TypeError, ValueError):
+    except(OSError, IOError, TypeError, ValueError):
+        pause_for_input('::   The data will be read from the root files...', timeout=5)
         # first we have to check the path variables which can refer to multiple paths
         # -> we loop though all paths and add the each event dictionary to a global one
         all_paths_dic, num_paths = unpack_and_order_data_path(path_dic)
@@ -165,15 +168,31 @@ def main():
                 evt_dictionary[key] += tmp_evt_dictionary[key]
             
             del tmp_evt_dictionary
+
         # we loop over the entries and transform the list of record arrays into
         # a numpy record array
         for key in evt_dictionary.keys():
             evt_dictionary[key] = np.array(evt_dictionary[key]) 
 
         evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
+        
+        # saveing the record array only works in python 3
+        if (sys.version_info < (3, 0)):
+            pause_for_input('The following lines are written as python 3 code ' \
+                    'however currently python 2 is in use! Proceed at own risk!', timeout=10)
         save_data_dictionary(output_path + 'evt_dic.pkl', evt_dictionary)
         # saving the data as numpy record array
 
+    # we remove a feature if it is in the cut_dic and contains no further info 
+    for key in evt_dictionary.keys():
+        if key == 'target':
+            continue
+        for key_name in cut_dic.keys():
+            if len(cut_dic[key_name]) == 1:
+                evt_dictionary[key] = remove_field_name(evt_dictionary[key], key_name)
+        
+    print('\n::  Plotting the features...')
+    # plot_all_features(evt_dictionary, std_scale_dic, out_path)
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
@@ -185,29 +204,46 @@ def main():
     # evt_dic_train, evt_dic_test  = split_dictionary(evt_dic,
     #                                                 split_size=run_params['frac_test_sample'])
     # del evt_dic
-        
-    if do_standard_scale:
-        print('\n:: Standarad scaling...')
-        # returns a numpy array (due to fit_transform function)
-        preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
-        preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
 
-    print('\n:: Converting the data from numpy record arrays to standard numpy arrays...')
+    # generates a subsample of the original event dictionary containing
+    # 10 signal-samples and 10-bg samples
+    evt_dic_train = get_subsample(evt_dic_train, 1000)
+    evt_dic_test = get_subsample(evt_dic_test, 100)
+        
+    print('\n::  Standarad scaling...')
+    # returns a numpy array (due to fit_transform function)
+    preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
+    preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
+
+    print('\n::  Plotting the standard scaled features...')
+    plot_all_features(evt_dic_train, std_scale_dic, out_path, post_fix='_std_scaled')
+ 
+    print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
     shape_data(evt_dic_train)
     shape_data(evt_dic_test)
 
+    if 'NN' in run_mode_user:
+        # to process the tracks as a linear NN we reshape the track data
+        evt_dic_train['track'] = np.reshape(evt_dic_train['track'], 
+                (evt_dic_train['track'].shape[0], 
+                    evt_dic_train['track'].shape[1]*evt_dic_train['track'].shape[2]))
+        evt_dic_test['track'] = np.reshape(evt_dic_test['track'], 
+                (evt_dic_test['track'].shape[0], 
+                    evt_dic_test['track'].shape[1]*evt_dic_test['track'].shape[2]))
+
     print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
-    
 
     pause_for_input('\n\n:: The model will be trained anew '\
-            'if this is not desired please hit enter', timeout=1)
+            'if this is not desired please hit enter', timeout=5)
     ######################################################################################
     # STEP 2:
     # ------------------------------- Fitting the model -----------------------------------
     ######################################################################################
     # if we want cross validation (in most cases we do) we can in turn easily evaluate the
     # models by passing which metrics should be looked into
+    
+
     start_time_training = time.time()
 
     print('\nFitting the model...')
@@ -233,8 +269,11 @@ def main():
     ######################################################################################
     print('\nEvaluating the model on the training sample...')
     y_train_truth = evt_dic_train['target']
+    print('y_train_truth: {}'.format(y_train_truth))
     # to predict the labels we have to ged rid of the target:
     evt_dic_train.pop('target')
+    # remove next line
+    evt_dic_train.pop('event')
     y_train_score = model.predict(evt_dic_train)
 
     num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, 
