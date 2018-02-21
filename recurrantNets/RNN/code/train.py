@@ -207,15 +207,15 @@ def main():
 
     # generates a subsample of the original event dictionary containing
     # 10 signal-samples and 10-bg samples
-    evt_dic_train = get_subsample(evt_dic_train, 1000)
-    evt_dic_test = get_subsample(evt_dic_test, 100)
+    # evt_dic_train = get_subsample(evt_dic_train, 1000)
+    # evt_dic_test = get_subsample(evt_dic_test, 100)
         
     print('\n::  Standarad scaling...')
     # returns a numpy array (due to fit_transform function)
     preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
     preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
 
-    print('\n::  Plotting the standard scaled features...')
+    # print('\n::  Plotting the standard scaled features...')
     # plot_all_features(evt_dic_train, std_scale_dic, out_path, post_fix='_std_scaled')
  
     print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
@@ -269,22 +269,31 @@ def main():
     ######################################################################################
     print('\nEvaluating the model on the training sample...')
     y_train_truth = evt_dic_train['target']
-    print('::   y_train_truth: {}\n::   type(y_train_truth): {}'.format(
-        y_train_truth, type(y_train_truth)))
     # to predict the labels we have to ged rid of the target:
     evt_dic_train.pop('target')
     y_train_score = model.predict(evt_dic_train)
-
     num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, 
                                                     out_path, label='train')
-
     MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
-
     plot_ROCcurve(y_train_truth, y_train_score, out_path, label='train')
 
     del y_train_truth, y_train_score
     del num_trueSignal, num_trueBackgr
     del evt_dic_train
+
+    print('\n::  Evaluating the model on the test sample...')
+    y_test_truth = evt_dic_test['target']
+    # to predict the labels we have to ged rid of the target:
+    evt_dic_test.pop('target')
+    y_test_score = model.predict(evt_dic_test)
+    num_trueSignal, num_trueBackgr = plot_MVAoutput(y_test_truth, y_test_score, 
+                                                    out_path, label='test')
+    MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
+    plot_ROCcurve(y_test_truth, y_test_score, out_path, label='test')
+
+    del y_test_truth, y_test_score
+    del num_trueSignal, num_trueBackgr
+    del evt_dic_test
 
     ######################################################################################
     # ------------------------------------ EOF -------------------------------------------

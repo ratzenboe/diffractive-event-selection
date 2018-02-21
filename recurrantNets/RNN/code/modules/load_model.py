@@ -170,8 +170,8 @@ def train_model(data, run_mode_user, val_data=0.2,
             X_track_train     = data['track']
             X_event_train     = data['event']
             y_train           = data['target']
-            train_data_dic    = copy.deepcopy(data)
-            train_data_dic.pop('target')
+            train_data = data.copy() 
+            train_data.pop('target')
 
         except KeyError:
             raise KeyError('The data-dictionary provided does not contain' \
@@ -179,52 +179,25 @@ def train_model(data, run_mode_user, val_data=0.2,
 
         # the data for the RNNs are of shape (n_evts, n_timesteps=n_particles, n_features) 
         # the masking layer however is only intersted in (n_timesteps, n_features)
-        TRACK_SHAPE = X_track_train.shape[1:]
+        TRACK_SHAPE      = X_track_train.shape[1:]
         N_FEATURES_track = TRACK_SHAPE[-1]
 
         # this following data is of shape (n_evts, n_features)
         # the network is fed with n_features
         EVENT_SHAPE = (X_event_train.shape[-1],)
-        if 'Full' in run_mode_user:
-            try:
-                X_emcal_train        = data['emcal']
-                X_phos_train         = data['phos']
-                X_calo_cluster_train = data['calo_cluster']
-                X_ad_train           = data['ad']
-                X_fmd_train          = data['fmd']
-                X_v0_train           = data['v0']
-            except KeyError:
-                raise KeyError('The data-dictionary provided does not contain' \
-                        'all necessary keys for the selected run-mode ' \
-                        '(run_mode_user = {})'.format(run_mode_user))
-
-            EMCAL_SHAPE = X_emcal_train.shape[1:]
-            N_FEATURES_emcal = EMCAL_SHAPE[-1]
-
-            PHOS_SHAPE = X_phos_train.shape[1:]
-            N_FEATURES_phos = PHOS_SHAPE[-1]
-
-            CALO_CLUSTER_SHAPE = X_calo_cluster_train.shape[1:]
-            N_FEATURES_calo_cluster = CALO_CLUSTER_SHAPE[-1]
-
-            AD_SHAPE = (X_ad_train.shape[-1],)
-            FMD_SHAPE = (X_fmd_train.shape[-1],)
-            V0_SHAPE = (X_v0_train.shape[-1],)
-         
-
 
         # inputs network
-        track_input     = Input(shape=TRACK_SHAPE, dtype='float32', name='track')
-        event_input     = Input(shape=EVENT_SHAPE, dtype='float32', name='event')
+        track_input = Input(shape=TRACK_SHAPE, name='track')
+        event_input = Input(shape=EVENT_SHAPE, name='event')
 
         input_list = [track_input, event_input]
         # ------ Build the model ---------
         # RNNs feeding into the event level layer
-        track_mask = Masking(mask_value=float(-999), name='track_masking')(track_input)
+        # track_mask = Masking(mask_value=float(-999), name='track_masking')(track_input)
         # event needs no masking
         try:
             track_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_track, 
-                name='track_rnn'))(track_mask)
+                name='track_rnn'))(track_input)
             # track_batch_norm = BatchNormalization(name='track_batch_norm')(track_rnn)
             # track_dropout = Dropout(dropout, name='track_dropout')(track_batch_norm)
 
@@ -237,109 +210,22 @@ def train_model(data, run_mode_user, val_data=0.2,
         # output_list = [aux_output_track]
 
         concatenate_list = [track_rnn, event_input]
-        # concatenate_list = [track_dropout, event_input]
-        val_data_list = None
-
-        if isinstance(val_data, dict):
-            try: 
-                val_data_list = [val_data['track'], val_data['event']]
-            except KeyError:
-                warnings.warn('The provided valiation dictionary does not contain ' \
-                        'all necessary columns!\nConsequently 20% of the training data ' \
-                        'are now used to fit the model!')
-                val_data_list = None
-                val_data = 0.2
-                pass
-
-
-        if 'Full' in run_mode_user:
-            # here we now add additional channels to the network
-            emcal_input = Input(shape=EMCAL_SHAPE, dtype='float32', name='emcal')
-            phos_input = Input(shape=PHOS_SHAPE, dtype='float32', name='phos')
-            calo_cluster_input = Input(shape=CALO_CLUSTER_SHAPE, dtype='float32', 
-                    name='calo_cluster')
-            ad_input = Input(shape=AD_SHAPE, dtype='float32', name='ad')
-            fmd_input = Input(shape=FMD_SHAPE, dtype='float32', name='fmd')
-            v0_input = Input(shape=V0_SHAPE, dtype='float32', name='v0') 
-
-            full_input_list = [emcal_input, phos_input, calo_cluster_input, ad_input,
-                    fmd_input, v0_input]
-
-            # ------ Build the model ---------
-            # RNNs
-            emcal_masking = Masking(mask_value=float(-999), name='emcal_masking')(emcal_input)
-            phos_masking  = Masking(mask_value=float(-999), name='phos_masking')(phos_input)
-            calo_cluster_masking = Masking(mask_value=float(-999), 
-                    name='calo_cluster_masking')(calo_cluster_input)
-            try:
-                emcal_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_emcal, 
-                    name='emcal_rnn'))(emcal_masking)
-                emcal_dropout = Dropout(dropout, name='emcal_dropout')(emcal_rnn)
-
-                phos_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_phos, 
-                    name='phos_rnn'))(phos_masking)
-                phos_dropout = Dropout(dropout, name='phos_dropout')(phos_rnn)
-
-                calo_cluster_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_calo_cluster, 
-                    name='calo_cluster_rnn'))(calo_cluster_masking)
-                calo_cluster_dropout = Dropout(dropout, 
-                        name='calo_cluster_dropout')(calo_cluster_rnn)
-
-            except AttributeError:
-                raise AttributeError('{} is not a valid Keras layers!'.format(rnn_layer))
-
- 
-            # NNs feeding into the event-level net
-            dense_ad = Dense(16, activation='relu')(ad_input)
-            ad_output = Dense(1, activation='softmax')(dense_ad)
-
-            dense_fmd = Dense(64, activation='relu')(fmd_input)
-            fmd_output = Dense(1, activation='softmax')(dense_fmd)
-
-            dense_v0 = Dense(16, activation='relu')(v0_input)
-            v0_output = Dense(1, activation='softmax')(dense_v0)
-
-            # merge the output of these layers into one layer
-            # and append an auxilliary output
-            merge_full = keras.layers.concatenate([emcal_dropout, phos_dropout, 
-                calo_cluster_dropout, ad_output, fmd_output, v0_output])
-            aux_output_full = Dense(1, activation='softmax', 
-                    name='aux_output_full')(merge_full)
-
-            concatenate_list.append(merge_full)
-
-            # extend the input and output list
-            # output_list.append(aux_output_full)
-            input_list.extend(full_input_list)
-            if isinstance(val_data, dict):
-                try: 
-                    full_val_data_list = [val_data['emcal'], val_data['phos'], 
-                            val_data['calo_cluster'], val_data['ad'], val_data['fmd'], 
-                            val_data['v0']]
-                except KeyError:
-                    warnings.warn('The provided valiation dictionary does not contain ' \
-                            'all necessary columns!\nConsequently 20% of the training data ' \
-                            'are now used to fit the model!')
-                    val_data_list = None
-                    val_data = 0.2
-                    pass
-
-
-
         # stack the layers on top of a fully connected DNN
         x = keras.layers.concatenate(concatenate_list)
-
-        x = Dense(64, activation='relu')(x)
-        x = Dropout(dropout)(x)
+        x = Dense(100, activation='relu', kernel_initializer = 'glorot_normal')(x)
+        # x = Dropout(dropout)(x)
         # x = BatchNormalization()(x)
-        x = Dense(64, activation='relu')(x)
-        x = BatchNormalization()(x)
+        x = Dense(100, activation='relu', kernel_initializer = 'glorot_normal')(x)
+        # x = BatchNormalization()(x)
         # x = Dropout(dropout)(x)
-        x = Dense(64, activation='relu')(x)
-        x = BatchNormalization()(x)
+        x = Dense(100, activation='relu', kernel_initializer = 'glorot_normal')(x)
+        x = Dense(100, activation='relu', kernel_initializer = 'glorot_normal')(x)
+        # x = BatchNormalization()(x)
         # x = Dropout(dropout)(x)
-        main_output = Dense(1, activation='softmax', name='main_output')(x)
-        # output_list.insert(0,main_output)
+        main_output = Dense(1, 
+                            activation='sigmoid', 
+                            name='main_output', 
+                            kernel_initializer = 'glorot_normal')(x)
         model = Model(inputs=input_list, outputs=main_output)
   
         # the main output has the full weight (main output is the first element
@@ -351,18 +237,15 @@ def train_model(data, run_mode_user, val_data=0.2,
         #     # the target is always the same
         #     output_targets.append(y_train)
 
-
-        model.compile(optimizer='adam', loss='binary_crossentropy')
-        # model.compile(optimizer='adam', loss='MSE')
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
         print(model.summary())
         try:
-            model.fit(train_data_dic,
+            model.fit(train_data,
                       y_train,  
                       epochs = n_epochs, 
                       batch_size = batch_size,
-                      validation_data = val_data_list,
-                      validation_split = val_data,
-                      class_weight = class_weight)
+                      validation_split = val_data)
+                      # class_weight = class_weight)
                       # ,callbacks = [callback_ROC(train_data_dic, 
                       #                           output_targets, 
                       #                           output_prefix=out_path)])
