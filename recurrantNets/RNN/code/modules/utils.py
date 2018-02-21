@@ -225,4 +225,16 @@ def get_subsample(evt_dic, n_samples_signal, bg_sig_ratio=1.):
 
     return evt_dic_subset
 
+
+def remove_field_name(np_recarray, name):
+    """
+    Remove the column "name" from the record array np_recarray
+    """
+    names = list(np_recarray.dtype.names)
+    if name in names:
+        names.remove(name)
+    new_recarray = np_recarray[names]
+
+    return new_recarray
         
+
