@@ -38,12 +38,17 @@ def plot_all_features(evt_dic, branches_dic, outpath, post_fix=''):
 
 
 
-def plot_feature(x_sig, x_bg, out_path, label='', nbins=100):
+def plot_feature(x_sig, x_bg, out_path, label=''):
     """
     Plots the features comparing signal and background as histogram 
     """
-
     x_total = np.concatenate([x_sig, x_bg])
+    n_unique = np.unique(x_total).shape[0]
+
+    if n_unique < 30:
+        nbins = n_unique*3
+    else:
+        nbins = 100
     
     plt.figure()
 
@@ -72,7 +77,7 @@ def plot_feature(x_sig, x_bg, out_path, label='', nbins=100):
                  label='signal')
     
     # plt.title('Put title here')
-    plt.xlim(-0.05, 1.05)
+    # plt.xlim(-0.05, 1.05)
     plt.xlabel(label, fontsize=18)
     plt.ylabel('Entries', fontsize=18)
     plt.legend(fontsize=15)
