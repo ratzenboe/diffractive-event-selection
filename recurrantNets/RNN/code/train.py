@@ -227,10 +227,13 @@ def main():
     shape_data(evt_dic_test)
 
     if 'NN' in run_mode_user:
-        evt_dic_train = {'target': evt_dic_train['target']}
-        evt_dic_test  = {'target': evt_dic_test['target']}
-        evt_dic_train['feature_matrix'] = flatten_dictionary(evt_dic_train)
-        evt_dic_test['feature_matrix']  = flatten_dictionary(evt_dic_test)
+        tmp_evt_dic_train = {'target': evt_dic_train['target']}
+        tmp_evt_dic_test  = {'target': evt_dic_test['target']}
+        tmp_evt_dic_train['feature_matrix'] = flatten_dictionary(evt_dic_train)
+        tmp_evt_dic_test['feature_matrix']  = flatten_dictionary(evt_dic_test)
+        del evt_dic_train, evt_dic_test
+        evt_dic_train = tmp_evt_dic_train
+        evt_dic_test  = tmp_evt_dic_test
 
     print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
