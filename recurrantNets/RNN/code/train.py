@@ -99,15 +99,19 @@ def main():
         missing_vals_dic  = data_params['missing_values']
         # ------------ run-parameters --------------
         frac_test_sample  = run_params['frac_test_sample']
-        frac_val_sample   = run_params['frac_val_sample']
-        batch_size        = run_params['batch_size']
-        n_epochs          = run_params['n_epochs']
-        dropout           = run_params['dropout']
-        class_weight      = run_params['class_weight']
         do_standard_scale = run_params['do_standard_scale']
         # ------------ model-parametrs -------------
         rnn_layer         = model_params['rnn']
-    except KeyError:
+        frac_val_sample   = model_params['frac_val_sample']
+        batch_size        = model_params['batch_size']
+        n_epochs          = model_params['n_epochs']
+        dropout           = model_params['dropout']
+        class_weight      = model_params['class_weight']
+        prelu             = model_params['prelu']
+        n_layers          = model_params['n_layers']
+        layer_nodes       = model_params['layer_nodes']
+        batch_norm        = model_params['batch_norm']
+     except KeyError:
         raise KeyError('The variable names in the main either have a typo ' \
                 'or do not exist in the config files!')
 
@@ -257,6 +261,8 @@ def main():
                         dropout     = dropout,
                         class_weight = class_weight)
 
+    # save model
+    self.model.save(out_path + 'weights_final.hdf5', overwrite=True)
     end_time_training = time.time()
     print('\n:: Finished training!')
 
