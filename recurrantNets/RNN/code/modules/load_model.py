@@ -8,12 +8,14 @@ import keras
 from keras.models import Model, Sequential
 from keras.layers.core import Activation, Dense, Dropout
 from keras.layers import Masking, LSTM, GRU, Input, BatchNormalization
+from keras.layers.advanced_activations import PReLU
 
 from modules.keras_callback import callback_ROC
 
 def train_model(data, run_mode_user, val_data=0.2, 
                 batch_size=64, n_epochs=50, rnn_layer='LSTM', 
-                out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.}):
+                out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
+                n_layers=5, layer_nodes=100, batch_norm=False, activation='relu'):
     """
     Args 
         data:
@@ -38,6 +40,7 @@ def train_model(data, run_mode_user, val_data=0.2,
 
         n_epochs:
             integer, number of training epochs
+        ___________________________________________________________
 
         rnn_layer:
             string that is evaluated as a keras layer
@@ -198,8 +201,10 @@ def train_model(data, run_mode_user, val_data=0.2,
         try:
             track_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_track, 
                 name='track_rnn'))(track_input)
-            # track_batch_norm = BatchNormalization(name='track_batch_norm')(track_rnn)
-            # track_dropout = Dropout(dropout, name='track_dropout')(track_batch_norm)
+            if batch_norm:
+                track_rnn = BatchNormalization(name='track_batch_norm')(track_rnn)
+            if dropout > 0.0:
+                track_rnn = Dropout(dropout, name='track_dropout')(track_batch_norm)
 
         except AttributeError:
             raise AttributeError('{} is not a valid Keras layer!'.format(rnn_layer))
@@ -212,19 +217,22 @@ def train_model(data, run_mode_user, val_data=0.2,
         concatenate_list = [track_rnn, event_input]
         # stack the layers on top of a fully connected DNN
         x = keras.layers.concatenate(concatenate_list)
-        x = Dense(100, activation='relu', kernel_initializer = 'glorot_normal')(x)
-        # x = Dropout(dropout)(x)
-        # x = BatchNormalization()(x)
-        x = Dense(100, activation='relu', kernel_initializer = 'glorot_normal')(x)
-        # x = BatchNormalization()(x)
-        # x = Dropout(dropout)(x)
-        x = Dense(100, activation='relu', kernel_initializer = 'glorot_normal')(x)
-        x = Dense(100, activation='relu', kernel_initializer = 'glorot_normal')(x)
-        # x = BatchNormalization()(x)
-        # x = Dropout(dropout)(x)
+        for i in range(0,n_layers):
+            if activation = 'PReLU':
+                x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
+                x = PReLU()(x)
+            else:
+                x = Dense(layer_nodes, 
+                          activation         = activation, 
+                          kernel_initializer = 'glorot_normal')(x)
+            if batch_norm:
+                x = BatchNormalization()(x)
+            if dropout > 0.0:
+                x = Dropout(dropout)(x)
+
         main_output = Dense(1, 
-                            activation='sigmoid', 
-                            name='main_output', 
+                            activation = 'sigmoid', 
+                            name = 'main_output', 
                             kernel_initializer = 'glorot_normal')(x)
         model = Model(inputs=input_list, outputs=main_output)
   
@@ -246,8 +254,8 @@ def train_model(data, run_mode_user, val_data=0.2,
                       batch_size = batch_size,
                       validation_split = val_data)
                       # class_weight = class_weight)
-                      # ,callbacks = [callback_ROC(train_data_dic, 
-                      #                           output_targets, 
+                      # ,callbacks = [callback_ROC(train_data, 
+                      #                           y_train, 
                       #                           output_prefix=out_path)])
 
         except KeyboardInterrupt:
