@@ -259,7 +259,11 @@ def main():
                         rnn_layer   = rnn_layer,
                         out_path    = out_path,
                         dropout     = dropout,
-                        class_weight = class_weight)
+                        class_weight = class_weight,
+                        n_layers    = n_layers,
+                        layer_nodes = layer_nodes, 
+                        batch_norm  = batch_norm,
+                        activation  = activation)
 
     # save model
     self.model.save(out_path + 'weights_final.hdf5', overwrite=True)
