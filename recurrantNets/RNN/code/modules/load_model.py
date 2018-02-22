@@ -125,7 +125,7 @@ def train_model(data, run_mode_user, val_data=0.2,
 
     elif 'NN' in run_mode_user:
         try:
-            X_event_train     = data['event']
+            X_train           = data['feature_matrix']
             y_train           = data['target']
         except KeyError:
             raise KeyError('The data-dictionary provided does not contain' \
@@ -134,7 +134,7 @@ def train_model(data, run_mode_user, val_data=0.2,
         model = Sequential()
                 
         model.add(Dense(100,
-            input_dim = X_event_train.shape[-1],
+            input_dim = X_train.shape[-1],
             activation = 'relu',
             kernel_initializer = 'glorot_normal'))
         for i in range(0,4):
@@ -152,7 +152,7 @@ def train_model(data, run_mode_user, val_data=0.2,
 
         print(model.summary())
         try:
-            model.fit(X_event_train,
+            model.fit(X_train,
                       y_train,  
                       epochs = n_epochs, 
                       batch_size = batch_size,
