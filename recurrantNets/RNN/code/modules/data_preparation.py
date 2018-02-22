@@ -742,9 +742,15 @@ def get_evt_id_list(data, cut_dic, event_id_string):
         value = cut_dic[key]
         if isinstance(value, list):
             data = data.loc[data[key].isin(value)]
-        elif callable(value):
+        elif isinstance(value, int) or isinstance(value, float):
             # if the value is a function(e.g. lambda x: x < 3.1415)
-            data = data[data[key].apply(value)]
+            data = data[data[key].apply(lambda x: x == value)]
+        elif isinstance(value, tuple):
+            if len(value) == 2:
+                # sort the tuple as the values may not be in the right order 
+                # becomes a list but we do not care 
+                value = sorted(value)
+                data = data[data[key].apply(lambda x: x > value[0] and x < value[1])]
         else:
             raise TypeError('The {} in cut_dic is not a supported ' \
                     'type ({})'.format(key, type(value)))
