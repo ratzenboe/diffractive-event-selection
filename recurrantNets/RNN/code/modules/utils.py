@@ -263,3 +263,6 @@ def flatten_dictionary(evt_dic):
         arr_lst.append(evt_dic[key])
 
     concat_arr = np.concatenate(arr_lst, axis=1)
+
+    return concat_arr
+
