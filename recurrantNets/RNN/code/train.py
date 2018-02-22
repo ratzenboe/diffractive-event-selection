@@ -281,7 +281,10 @@ def main():
     y_train_truth = evt_dic_train['target']
     # to predict the labels we have to ged rid of the target:
     evt_dic_train.pop('target')
-    y_train_score = model.predict(evt_dic_train)
+    if 'NN' in run_mode_user:
+        y_train_score = model.predict(evt_dic_train['feature_matrix'])
+    else:
+        y_train_score = model.predict(evt_dic_train)
     num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, 
                                                     out_path, label='train')
     MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
