@@ -97,21 +97,22 @@ def main():
         cut_dic           = data_params['cut_dic']
         event_string      = data_params['event_string']
         missing_vals_dic  = data_params['missing_values']
+        remove_features   = data_params['remove_features']
         # ------------ run-parameters --------------
         frac_test_sample  = run_params['frac_test_sample']
+        frac_val_sample   = run_params['frac_val_sample']
         do_standard_scale = run_params['do_standard_scale']
         # ------------ model-parametrs -------------
         rnn_layer         = model_params['rnn']
-        frac_val_sample   = model_params['frac_val_sample']
         batch_size        = model_params['batch_size']
         n_epochs          = model_params['n_epochs']
         dropout           = model_params['dropout']
         class_weight      = model_params['class_weight']
-        prelu             = model_params['prelu']
+        activation        = model_params['activation']
         n_layers          = model_params['n_layers']
         layer_nodes       = model_params['layer_nodes']
         batch_norm        = model_params['batch_norm']
-     except KeyError:
+    except KeyError:
         raise KeyError('The variable names in the main either have a typo ' \
                 'or do not exist in the config files!')
 
@@ -191,9 +192,8 @@ def main():
     for key in evt_dictionary.keys():
         if key == 'target':
             continue
-        for key_name in cut_dic.keys():
-            if len(cut_dic[key_name]) == 1:
-                evt_dictionary[key] = remove_field_name(evt_dictionary[key], key_name)
+        for feature_name in remove_features:
+            evt_dictionary[key] = remove_field_name(evt_dictionary[key], feature_name)
         
     print('\n::  Plotting the features...')
     # plot_all_features(evt_dictionary, std_scale_dic, out_path)
@@ -266,7 +266,7 @@ def main():
                         activation  = activation)
 
     # save model
-    self.model.save(out_path + 'weights_final.hdf5', overwrite=True)
+    model.save(out_path + 'weights_final.hdf5', overwrite=True)
     end_time_training = time.time()
     print('\n:: Finished training!')
 
