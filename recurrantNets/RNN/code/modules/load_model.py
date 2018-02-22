@@ -125,8 +125,10 @@ def train_model(data, run_mode_user, val_data=0.2,
 
     elif 'NN' in run_mode_user:
         try:
-            X_train           = data['feature_matrix']
-            y_train           = data['target']
+            X_train = data['feature_matrix']
+            y_train = data['target']
+            train_data = data.copy() 
+            train_data.pop('target')
         except KeyError:
             raise KeyError('The data-dictionary provided does not contain' \
                     'all necessary keys for the selected run-mode (run_mode_user)')
@@ -152,7 +154,7 @@ def train_model(data, run_mode_user, val_data=0.2,
 
         print(model.summary())
         try:
-            model.fit(X_train,
+            model.fit(train_data,
                       y_train,  
                       epochs = n_epochs, 
                       batch_size = batch_size,
