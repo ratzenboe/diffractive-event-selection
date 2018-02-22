@@ -34,7 +34,7 @@ from modules.data_preparation                   import get_data, save_data_dicti
 from modules.utils                              import print_dict, split_dictionary, \
                                                        pause_for_input, get_subsample, \
                                                        print_array_in_dictionary_stats, \
-                                                       remove_field_name
+                                                       remove_field_name, flatten_dictionary
 from modules.file_management                    import OutputManager
 from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAoutput, \
                                                        plot_cut_efficiencies, plot_all_features
