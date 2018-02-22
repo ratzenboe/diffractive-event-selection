@@ -141,7 +141,7 @@ def print_array_in_dictionary_stats(evt_dic, message='Event dictionary'):
     """
     Prints array shape and type of all dictionary entries
     """
-    if isinstanc(evt_dic, dict):
+    if isinstance(evt_dic, dict):
         try:
             print('\n\n{}\n:: {}'.format(50*'-',message))
             for key in evt_dic.keys():
@@ -262,4 +262,4 @@ def flatten_dictionary(evt_dic):
                         evt_dic[key].shape[1]*evt_dic[key].shape[2]))
         arr_lst.append(evt_dic[key])
 
-    concat_arr = np.concatenate(arr_list, axis=1)
+    concat_arr = np.concatenate(arr_lst, axis=1)
