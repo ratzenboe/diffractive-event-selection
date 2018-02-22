@@ -188,7 +188,7 @@ def main():
         save_data_dictionary(output_path + 'evt_dic.pkl', evt_dictionary)
         # saving the data as numpy record array
 
-    # we remove a feature if it is in the cut_dic and contains no further info 
+    # remove a feature if it is in the cut_dic and contains no further info 
     for key in evt_dictionary.keys():
         if key == 'target':
             continue

@@ -141,29 +141,39 @@ def print_array_in_dictionary_stats(evt_dic, message='Event dictionary'):
     """
     Prints array shape and type of all dictionary entries
     """
-    try:
+    if isinstanc(evt_dic, dict):
+        try:
+            print('\n\n{}\n:: {}'.format(50*'-',message))
+            for key in evt_dic.keys():
+                array = evt_dic[key]
+                if not isinstance(array, np.ndarray):
+                    raise TypeError('The key {} is not a numpy ndarray ' \
+                            'but rather a {}!'.format(type(array)))
+                print('\n{}'.format(key))
+                print('type(array): {}'.format(type(array)))
+                print('array.shape: {}'.format(array.shape))
+                if key == 'target':
+                    all_evts = evt_dic[key].shape[0]
+                    sig_evts = evt_dic[key][evt_dic[key] == 1].shape[0]
+                    sig_bg_percentage = sig_evts/all_evts*100.
+                    print('{}/{} signal events ({:.3f}%)'.format(
+                        sig_evts, all_evts, sig_bg_percentage))
+            print('{}'.format(50*'-'))
+
+
+        except AttributeError:
+            raise TypeError('The evt_dic variable provided is not a dictionary but ' \
+                    'rather a {}!'.format(type(evt_dic)))
+
+    elif isinstance(evt_dic, np.ndarray):
         print('\n\n{}\n:: {}'.format(50*'-',message))
-        for key in evt_dic.keys():
-            array = evt_dic[key]
-            if not isinstance(array, np.ndarray):
-                raise TypeError('The key {} is not a numpy ndarray ' \
-                        'but rather a {}!'.format(type(array)))
-            print('\n{}'.format(key))
-            print('type(array): {}'.format(type(array)))
-            print('array.shape: {}'.format(array.shape))
-            if key == 'target':
-                all_evts = evt_dic[key].shape[0]
-                sig_evts = evt_dic[key][evt_dic[key] == 1].shape[0]
-                sig_bg_percentage = sig_evts/all_evts*100.
-                print('{}/{} signal events ({:.3f}%)'.format(
-                    sig_evts, all_evts, sig_bg_percentage))
+        print('type(array): {}'.format(type(evt_dic)))
+        print('array.shape: {}'.format(evt_dic.shape))
         print('{}'.format(50*'-'))
 
-
-    except AttributeError:
-        raise TypeError('The evt_dic variable provided is not a dictionary but ' \
-                'rather a {}!'.format(type(evt_dic)))
-
+    else:
+        raise TypeError('The variable "evt_dic" is neither a dictionary nor a ' \
+                'numpy.ndarray but rather a {}.'.format(type(evt_dic)))
 
     return
 
@@ -238,3 +248,18 @@ def remove_field_name(np_recarray, name):
     return new_recarray
         
 
+def flatten_dictionary(evt_dic):
+    """
+    Returns one numpy array that is made up from all entries in the event dictionary
+    """
+    # write the arrays in a list
+    arr_lst = []
+    for key in evt_dic.keys():
+        if key == 'target':
+            continue
+        if len(evt_dic[key].shape) == 3:
+            evt_dic[key] = np.reshape(evt_dic[key], (evt_dic[key].shape[0], 
+                        evt_dic[key].shape[1]*evt_dic[key].shape[2]))
+        arr_lst.append(evt_dic[key])
+
+    concat_arr = np.concatenate(arr_list, axis=1)
