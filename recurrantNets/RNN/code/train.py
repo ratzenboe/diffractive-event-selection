@@ -195,7 +195,7 @@ def main():
         for feature_name in remove_features:
             evt_dictionary[key] = remove_field_name(evt_dictionary[key], feature_name)
         
-    print('\n::  Plotting the features...')
+    # print('\n::  Plotting the features...')
     # plot_all_features(evt_dictionary, std_scale_dic, out_path)
     ######################################################################################
     # STEP 1:
@@ -226,14 +226,11 @@ def main():
     shape_data(evt_dic_train)
     shape_data(evt_dic_test)
 
-    # if 'NN' in run_mode_user:
-    #     # to process the tracks as a linear NN we reshape the track data
-    #     evt_dic_train['track'] = np.reshape(evt_dic_train['track'], 
-    #             (evt_dic_train['track'].shape[0], 
-    #                 evt_dic_train['track'].shape[1]*evt_dic_train['track'].shape[2]))
-    #     evt_dic_test['track'] = np.reshape(evt_dic_test['track'], 
-    #             (evt_dic_test['track'].shape[0], 
-    #                 evt_dic_test['track'].shape[1]*evt_dic_test['track'].shape[2]))
+    if 'NN' in run_mode_user:
+        evt_dic_train = {'target': evt_dic_train['target']}
+        evt_dic_test  = {'target': evt_dic_test['target']}
+        evt_dic_train['feature_matrix'] = flatten_dictionary(evt_dic_train)
+        evt_dic_test['feature_matrix']  = flatten_dictionary(evt_dic_test)
 
     print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
