@@ -218,7 +218,7 @@ def train_model(data, run_mode_user, val_data=0.2,
         # stack the layers on top of a fully connected DNN
         x = keras.layers.concatenate(concatenate_list)
         for i in range(0,n_layers):
-            if activation = 'PReLU':
+            if activation == 'PReLU':
                 x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
                 x = PReLU()(x)
             else:
