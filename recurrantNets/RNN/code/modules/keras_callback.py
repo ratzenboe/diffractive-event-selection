@@ -55,9 +55,8 @@ class callback_ROC(keras.callbacks.Callback):
         if(epoch%self.interval_evaluate_trainAUC != 0):
 
             y_pred_val = self.model.predict([self.validation_data[0], 
-                                             self.validation_data[1],
-                                             self.validation_data[2]])
-            roc_auc_val = roc_auc_score(self.validation_data[1], y_pred_val)
+                                             self.validation_data[1]])
+            roc_auc_val = roc_auc_score(self.validation_data[2], y_pred_val)
             self.aucs_val.append(roc_auc_val)
             self.aucs_train.append(0)
             
@@ -71,11 +70,10 @@ class callback_ROC(keras.callbacks.Callback):
             # for data in self.validation_data:
             #     print(data.shape)
             y_pred_val = self.model.predict([self.validation_data[0], 
-                                             self.validation_data[1],
-                                             self.validation_data[2]])
+                                             self.validation_data[1]])
             # y_pred_val = self.model.predict(self.validation_data[0])
             
-            roc_auc_val = roc_auc_score(self.validation_data[3], y_pred_val)
+            roc_auc_val = roc_auc_score(self.validation_data[2], y_pred_val)
             self.aucs_val.append(roc_auc_val)
 
             y_pred_train = self.model.predict(self.X_train)
