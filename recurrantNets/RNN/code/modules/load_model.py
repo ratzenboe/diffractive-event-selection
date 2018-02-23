@@ -15,7 +15,7 @@ from modules.keras_callback import callback_ROC
 def train_model(data, run_mode_user, val_data=0.2, 
                 batch_size=64, n_epochs=50, rnn_layer='LSTM', 
                 out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
-                n_layers=5, layer_nodes=100, batch_norm=False, activation='relu'):
+                n_layers=3, layer_nodes=100, batch_norm=False, activation='relu'):
     """
     Args 
         data:
@@ -133,25 +133,36 @@ def train_model(data, run_mode_user, val_data=0.2,
             raise KeyError('The data-dictionary provided does not contain' \
                     'all necessary keys for the selected run-mode (run_mode_user)')
 
-        model = Sequential()
+        input_train = Input(shape=(X_train.shape[-1],), name='feature_matrix')
+        if activation == 'PReLU':
+             x = Dense(layer_nodes, kernel_initializer='glorot_normal')(input_train)
+             x = PReLU()(x)
+        else:
+             x = Dense(layer_nodes, 
+                      activation = activation, 
+                      kernel_initializer = 'glorot_normal')(input_train)
+
+        for i in range(0,n_layers-1):
+           if activation == 'PReLU':
+               x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
+               x = PReLU()(x)
+           else:
+               x = Dense(layer_nodes, 
+                         activation         = activation, 
+                         kernel_initializer = 'glorot_normal')(x)
+           if batch_norm:
+               x = BatchNormalization()(x)
+           if dropout > 0.0:
+                x = Dropout(dropout)(x)
+
+        main_output = Dense(1, 
+                            activation = 'sigmoid', 
+                            name = 'main_output', 
+                            kernel_initializer = 'glorot_normal')(x)
+        model = Model(inputs=input_train, outputs=main_output)
+  
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
                 
-        model.add(Dense(100,
-            input_dim = X_train.shape[-1],
-            activation = 'relu',
-            kernel_initializer = 'glorot_normal'))
-        for i in range(0,4):
-            model.add(Dense(100,
-                activation = 'relu',
-                kernel_initializer = 'glorot_normal'))
-
-        model.add(Dense(1, 
-            activation = 'sigmoid',
-            kernel_initializer = 'glorot_normal'))
-
-        model.compile(loss ='binary_crossentropy',
-                optimizer = 'adam',
-                metrics=['accuracy'])
-
         print(model.summary())
         try:
             model.fit(train_data,
