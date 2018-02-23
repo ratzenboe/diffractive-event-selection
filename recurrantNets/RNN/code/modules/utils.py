@@ -248,21 +248,51 @@ def remove_field_name(np_recarray, name):
     return new_recarray
         
 
-def flatten_dictionary(evt_dic):
+def flatten_dictionary(evt_dic, feature_labels_dic=None):
     """
-    Returns one numpy array that is made up from all entries in the event dictionary
+    Args
+        evt_dic:
+            the event dictionary
+        ___________________________________________________________
+
+        feature_labels_dic:
+            dictionary containing the feature labels
+    _______________________________________________________________
+
+    Operation breakdown
+
+        flatten recursive tracks into a single 1D array
+    _______________________________________________________________
+
+    Return
+
+        1: One numpy array that is made up from all entries 
+           in the event dictionary
+        2: If provided, a flattened feature label list  
     """
     # write the arrays in a list
     arr_lst = []
+    labels = []
     for key in evt_dic.keys():
         if key == 'target':
             continue
+        if feature_labels_dic is not None and len(evt_dic[key].shape) == 2:
+            labels.append(feature_labels_dic[key])
         if len(evt_dic[key].shape) == 3:
             evt_dic[key] = np.reshape(evt_dic[key], (evt_dic[key].shape[0], 
                         evt_dic[key].shape[1]*evt_dic[key].shape[2]))
+
+            # evt_dic[key].shape[1] = number of particles
+            # here we add an index to each particle feature
+            if feature_labels_dic is not None:
+                for i in range(1,evt_dic[key].shape[1]+1):
+                    target_str = str(i)
+                    new_lst = [idx_lst + target_str for idx_lst in feature_labels_dic[key]]
+                    labels.append(new_lst)
+
         arr_lst.append(evt_dic[key])
 
     concat_arr = np.concatenate(arr_lst, axis=1)
 
-    return concat_arr
+    return concat_arr, labels
 
