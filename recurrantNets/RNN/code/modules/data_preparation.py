@@ -680,15 +680,20 @@ def shape_data(evt_data):
 
     Return
 
-        the event dicitonary containing standard numpy arrays ready for the model
+        1: the event dicitonary containing standard numpy arrays ready for the model
+        2: a dictionary containing a list of the feature names 
+           (which get lost by conversion to numpy arrays)
 
     """
     # convert to standard numpy array
+    col_names_dic = {}
     try:
         for key in evt_data.keys():
             if not isinstance(evt_data[key], np.ndarray):
                 raise TypeError('The key {} does not hold a numpy ndarray' \
                         'but rather a {}!'.format(type(evt_data[key])))
+            # first save the column names in a dictionary
+            col_names_dic[key] = list(evt_data[key].dtype.names)
             evt_data[key] = np.array(evt_data[key].tolist())
 
             # remove unnecessary dimensions
@@ -697,12 +702,13 @@ def shape_data(evt_data):
                 if evt_data[key].shape[1] == 1:
                     evt_data[key] = np.squeeze(evt_data[key], axis=1)
 
+        
     except AttributeError:
         raise TypeError('The variable "evt_data" is not a dictionary but ' \
                 'instead a {}!'.format(type(evt_data)))
     
 
-    return evt_data
+    return evt_data, col_names_dic
 
 
 
