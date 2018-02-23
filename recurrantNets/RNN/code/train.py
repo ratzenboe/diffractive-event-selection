@@ -192,6 +192,11 @@ def main():
     for key in evt_dictionary.keys():
         if key == 'target':
             continue
+        # if the loaded data contains features that are no longer in the list of 
+        # desired features (in the config files) we add them to the remove_features-list
+        remove_features.extend(list(set(evt_dictionary[key].dtype.names) - set(branches_dic[key])))
+        # remove possible duplicate entries
+        remove_features = list(set(remove_features))
         for feature_name in remove_features:
             evt_dictionary[key] = remove_field_name(evt_dictionary[key], feature_name)
         
@@ -223,14 +228,14 @@ def main():
     # plot_all_features(evt_dic_train, std_scale_dic, out_path, post_fix='_std_scaled')
  
     print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
-    shape_data(evt_dic_train)
+    evt_dic_train, feature_names_dic = shape_data(evt_dic_train)
     shape_data(evt_dic_test)
 
     if 'NN' in run_mode_user:
         tmp_evt_dic_train = {'target': evt_dic_train['target']}
         tmp_evt_dic_test  = {'target': evt_dic_test['target']}
-        tmp_evt_dic_train['feature_matrix'] = flatten_dictionary(evt_dic_train)
-        tmp_evt_dic_test['feature_matrix']  = flatten_dictionary(evt_dic_test)
+        tmp_evt_dic_train['feature_matrix'], labels_lst = flatten_dictionary(evt_dic_train)
+        tmp_evt_dic_test['feature_matrix']  = flatten_dictionary(evt_dic_test)[0]
         del evt_dic_train, evt_dic_test
         evt_dic_train = tmp_evt_dic_train
         evt_dic_test  = tmp_evt_dic_test

@@ -277,18 +277,19 @@ def flatten_dictionary(evt_dic, feature_labels_dic=None):
         if key == 'target':
             continue
         if feature_labels_dic is not None and len(evt_dic[key].shape) == 2:
-            labels.append(feature_labels_dic[key])
+            labels.extend(feature_labels_dic[key])
         if len(evt_dic[key].shape) == 3:
-            evt_dic[key] = np.reshape(evt_dic[key], (evt_dic[key].shape[0], 
-                        evt_dic[key].shape[1]*evt_dic[key].shape[2]))
+            n_evts = evt_dic[key].shape[0]
+            n_particles = evt_dic[key].shape[1]
+            n_features = evt_dic[key].shape[2]
+            evt_dic[key] = np.reshape(evt_dic[key], (n_evts, n_particles*n_features))
 
-            # evt_dic[key].shape[1] = number of particles
             # here we add an index to each particle feature
             if feature_labels_dic is not None:
-                for i in range(1,evt_dic[key].shape[1]+1):
+                for i in range(1,n_particles+1):
                     target_str = str(i)
                     new_lst = [idx_lst + target_str for idx_lst in feature_labels_dic[key]]
-                    labels.append(new_lst)
+                    labels.extend(new_lst)
 
         arr_lst.append(evt_dic[key])
 
