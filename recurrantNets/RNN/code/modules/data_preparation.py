@@ -686,16 +686,18 @@ def shape_data(evt_data):
 
     """
     # convert to standard numpy array
-    col_names_dic = {}
+    feature_names_dic = {}
     try:
         for key in evt_data.keys():
             if not isinstance(evt_data[key], np.ndarray):
                 raise TypeError('The key {} does not hold a numpy ndarray' \
                         'but rather a {}!'.format(type(evt_data[key])))
-            # first save the column names in a dictionary
-            col_names_dic[key] = list(evt_data[key].dtype.names)
-            evt_data[key] = np.array(evt_data[key].tolist())
 
+            # first save the column names in a dictionary
+            if key != 'target':
+                feature_names_dic[key] = list(evt_data[key].dtype.names)
+
+            evt_data[key] = np.array(evt_data[key].tolist())
             # remove unnecessary dimensions
             # only if dimenstions are greater than 1
             if len(evt_data[key].shape) >= 2:
@@ -708,7 +710,7 @@ def shape_data(evt_data):
                 'instead a {}!'.format(type(evt_data)))
     
 
-    return evt_data, col_names_dic
+    return evt_data, feature_names_dic
 
 
 
