@@ -199,7 +199,8 @@ def main():
         remove_features = list(set(remove_features))
         for feature_name in remove_features:
             evt_dictionary[key] = remove_field_name(evt_dictionary[key], feature_name)
-        
+        print('Features left in {}: {}'.format(key, list(evt_dictionary[key].dtype.names)))
+     
     # print('\n::  Plotting the features...')
     # plot_all_features(evt_dictionary, std_scale_dic, out_path)
     ######################################################################################
@@ -271,7 +272,7 @@ def main():
                         activation  = activation)
 
     # save model
-    model.save(out_path + 'weights_final.hdf5', overwrite=True)
+    model.save(out_path + 'weights_final.h5', overwrite=True)
     end_time_training = time.time()
     print('\n:: Finished training!')
 
@@ -301,7 +302,7 @@ def main():
     # to predict the labels we have to ged rid of the target:
     evt_dic_test.pop('target')
     y_test_score = model.predict(evt_dic_test)
-    y_test_score = model.predict(evt_dic_test)
+    print('y_test_score: {}'.format(y_test_score))
     num_trueSignal, num_trueBackgr = plot_MVAoutput(y_test_truth, y_test_score, 
                                                     out_path, label='test')
     MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
