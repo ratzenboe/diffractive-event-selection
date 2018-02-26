@@ -209,11 +209,10 @@ def main():
     ######################################################################################
     print('\n:: Splitting data in training and test sample')
     # output type is the same as input type!
-    evt_dic_train, evt_dic_test = split_dictionary(evt_dictionary, split_size=frac_test_sample)
+    evt_dic, evt_dic_val = split_dictionary(evt_dictionary, split_size=frac_val_sample)
     del evt_dictionary
-    # evt_dic_train, evt_dic_test  = split_dictionary(evt_dic,
-    #                                                 split_size=run_params['frac_test_sample'])
-    # del evt_dic
+    evt_dic_train, evt_dic_test  = split_dictionary(evt_dic, split_size=frac_test_sample)
+    del evt_dic
 
     # generates a subsample of the original event dictionary containing
     # 10 signal-samples and 10-bg samples
@@ -223,6 +222,7 @@ def main():
     print('\n::  Standarad scaling...')
     # returns a numpy array (due to fit_transform function)
     preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
+    preprocess(evt_dic_val,   std_scale_dic, out_path, load_fitted_attributes=True)
     preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
 
     # print('\n::  Plotting the standard scaled features...')
@@ -230,16 +230,13 @@ def main():
  
     print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
     evt_dic_train, feature_names_dic = shape_data(evt_dic_train)
+    shape_data(evt_dic_val)
     shape_data(evt_dic_test)
 
-    if 'NN' in run_mode_user:
-        tmp_evt_dic_train = {'target': evt_dic_train['target']}
-        tmp_evt_dic_test  = {'target': evt_dic_test['target']}
-        tmp_evt_dic_train['feature_matrix'], labels_lst = flatten_dictionary(evt_dic_train)
-        tmp_evt_dic_test['feature_matrix']  = flatten_dictionary(evt_dic_test)[0]
-        del evt_dic_train, evt_dic_test
-        evt_dic_train = tmp_evt_dic_train
-        evt_dic_test  = tmp_evt_dic_test
+    evt_dic_train, evt_dic_val, evt_dic_test = special_preprocessing(run_mode_user, 
+                                                                     evt_dic_train,
+                                                                     evt_dic_val,
+                                                                     evt_dic_test)
 
     print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
@@ -256,10 +253,14 @@ def main():
 
     start_time_training = time.time()
 
+    y_val_data = evt_dic_val['target']
+    # to predict the labels we have to ged rid of the target:
+    evt_dic_val.pop('target')
+    X_val_data = evt_dic_val
     print('\nFitting the model...')
     model = train_model(evt_dic_train,
                         run_mode_user, 
-                        val_data    = frac_val_sample,
+                        val_data    = (X_val_data, y_val_data),
                         batch_size  = batch_size,
                         n_epochs    = n_epochs,
                         rnn_layer   = rnn_layer,
@@ -278,14 +279,12 @@ def main():
 
     # Get the best model
     # model = load_model(out_path + 'weights_final.hdf5')
-
     ######################################################################################
     # STEP 3:
     # ----------------------------- Evaluating the model ---------------------------------
     ######################################################################################
     print('\nEvaluating the model on the training sample...')
     y_train_truth = evt_dic_train['target']
-    # to predict the labels we have to ged rid of the target:
     evt_dic_train.pop('target')
     y_train_score = model.predict(evt_dic_train)
     num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, 
@@ -302,7 +301,10 @@ def main():
     # to predict the labels we have to ged rid of the target:
     evt_dic_test.pop('target')
     y_test_score = model.predict(evt_dic_test)
-    print('y_test_score: {}'.format(y_test_score))
+    for idx in range(y_test_score.shape[0]):
+        if y_test_score[idx] > 0.00001: 
+            print('y_test_score: {}     target = {}'.format(y_test_score[idx], y_test_truth[idx]))
+
     num_trueSignal, num_trueBackgr = plot_MVAoutput(y_test_truth, y_test_score, 
                                                     out_path, label='test')
     MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
