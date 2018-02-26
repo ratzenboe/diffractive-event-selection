@@ -9,6 +9,7 @@ from keras.models import Model, Sequential
 from keras.layers.core import Activation, Dense, Dropout
 from keras.layers import Masking, LSTM, GRU, Input, BatchNormalization
 from keras.layers.advanced_activations import PReLU
+from keras.callbacks import ModelCheckpoint
 
 from modules.keras_callback import callback_ROC
 
