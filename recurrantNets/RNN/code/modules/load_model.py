@@ -12,7 +12,7 @@ from keras.layers.advanced_activations import PReLU
 
 from modules.keras_callback import callback_ROC
 
-def train_model(data, run_mode_user, val_data=0.2, 
+def train_model(data, run_mode_user, val_data,
                 batch_size=64, n_epochs=50, rnn_layer='LSTM', 
                 out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
                 n_layers=3, layer_nodes=100, batch_norm=False, activation='relu'):
@@ -27,10 +27,7 @@ def train_model(data, run_mode_user, val_data=0.2,
         ___________________________________________________________
 
         val_data:
-            either another data dictonary 
-            or a floating value between 0 and 1 determining the 
-            validation data size (second may be better as we do 
-            not train only once but for multiple epochs)
+            tuple = (X_val_data, y_val_data)
         ___________________________________________________________
 
         batch_size:
@@ -68,16 +65,9 @@ def train_model(data, run_mode_user, val_data=0.2,
         raise TypeError('The variable "run_mode_user" is not a string type ' \
                 'but instead {}'.format(type(run_mode_user)))
 
-    if not isinstance(val_data, float) and not isinstance(val_data, dict):
-        raise TypeError('The variable "val_data" is neither a dictionary ' \
-                'nor a float but instead {}'.format(type(val_data)))
-
-    if isinstance(val_data, dict):
-        for key in data.keys():
-            if not isinstance(data[key], np.ndarray):
-                raise TypeError('The key {} of the "value"-dictionary ' \
-                        'is not of type numpy ndarrays but rather {}'.format(
-                            key, type(data[key])))
+    if not isinstance(val_data, tuple):
+        raise TypeError('The variable "val_data" is not a data tuple ' \
+                'but instead {}'.format(type(val_data)))
 
     if not isinstance(rnn_layer, str):
         raise TypeError('The variable "rnn_layer" is not a string type ' \
@@ -115,7 +105,7 @@ def train_model(data, run_mode_user, val_data=0.2,
         print(combined_rnn.summary())
         try:
             combined_rnn.fit(X_particles_train, y_train, 
-                             validation_data = (val_data['tracks'], val_data['target']),
+                             validation_data = val_data,
                              batch_size = batch_size,
                              epochs = n_epochs)
         except KeyboardInterrupt:
@@ -169,8 +159,7 @@ def train_model(data, run_mode_user, val_data=0.2,
                       y_train,  
                       epochs = n_epochs, 
                       batch_size = batch_size,
-                      validation_split = val_data)
-                      # validation_data = (y_train[:10], y_train[:10]) )
+                      validation_data = val_data)
                       # class_weight = class_weight)
                       # ,callbacks = [callback_ROC(train_data_dic, 
                       #                           output_targets, 
@@ -265,7 +254,7 @@ def train_model(data, run_mode_user, val_data=0.2,
                       y_train,  
                       epochs = n_epochs, 
                       batch_size = batch_size,
-                      validation_split = val_data)
+                      validation_data = val_data)
                       # class_weight = class_weight)
                       # ,callbacks = [callback_ROC(train_data, 
                       #                           y_train, 
@@ -276,7 +265,81 @@ def train_model(data, run_mode_user, val_data=0.2,
 
         return model
 
+
+    elif 'anomaly' in run_mode_user:
+        train_autoencoder(data, val_data, batch_size, n_epochs, out_path, dropout, 
+                          n_layers, batch_norm, activation)
+
     else:
         raise NameError('ERROR: Unrecognized model {}'.format(run_mode_user))
+
+def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'output/', 
+                      dropout=0.2, n_layers=[14,7,7,14], batch_norm=False, activation='relu'):
+    """
+    Autoencoder for anomaly detection
+    """
+    if not isinstance(n_layers, list):
+        raise TypeError('The variable "n_layers" is not a list but rather ' \
+                'of type {}.'.format(type(n_layers)))
+    try:
+        # we use an autoencoder thus the target is the 
+        # X_train itself
+        X_train = data['feature_matrix']
+        y_train = data['target']    # is the same as 'feature_matrix'
+        train_data = data.copy() 
+        train_data.pop('target')
+
+    except KeyError:
+        raise KeyError('The data-dictionary provided does not contain' \
+                'all necessary keys for the selected run-mode (run_mode_user)')
+
+    input_train = Input(shape=(X_train.shape[-1],), name='feature_matrix')
+    if activation == 'PReLU':
+        x = Dense(n_layers[0], kernel_initializer='glorot_normal')(input_train)
+        x = PReLU()(x)
+    else:
+         x = Dense(n_layers[0], 
+                  activation = activation, 
+                  kernel_initializer = 'glorot_normal')(input_train)
+
+    for layer_nodes in n_layers[1:]:
+        if activation == 'PReLU':
+            x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
+            x = PReLU()(x)
+        else:
+            x = Dense(layer_nodes, 
+                      activation         = activation, 
+                      kernel_initializer = 'glorot_normal')(x)
+        if batch_norm:
+            x = BatchNormalization()(x)
+        if dropout > 0.0:
+            x = Dropout(dropout)(x)
+
+    main_output = Dense(X_train.shape[-1],
+                        activation = 'sigmoid', 
+                        name = 'main_output', 
+                        kernel_initializer = 'glorot_normal')(x)
+    model = Model(inputs=input_train, outputs=main_output)
+
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+            
+    print(model.summary())
+    try:
+        checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
+                                       verbose=0,
+                                       save_best_only=True)
+        model.fit(train_data,
+                  y_train,  
+                  epochs = n_epochs, 
+                  batch_size = batch_size,
+                  validation_data = (X_val_data, y_val_data),
+                  callbacks = checkpointer)
+                  # ,callbacks = [callback_ROC(train_data_dic, 
+                  #                           output_targets, 
+                  #                           output_prefix=out_path)])
+    except KeyboardInterrupt:
+        print('Training ended early.')
+
+    return model
 
 
