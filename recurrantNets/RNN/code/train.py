@@ -233,10 +233,9 @@ def main():
     shape_data(evt_dic_val)
     shape_data(evt_dic_test)
 
-    evt_dic_train, evt_dic_val, evt_dic_test = special_preprocessing(run_mode_user, 
-                                                                     evt_dic_train,
-                                                                     evt_dic_val,
-                                                                     evt_dic_test)
+    evt_dic_train = special_preprocessing(run_mode_user, evt_dic_train)[0]
+    evt_dic_val   = special_preprocessing(run_mode_user, evt_dic_val)[0]
+    evt_dic_test  = special_preprocessing(run_mode_user, evt_dic_test)[0]
 
     print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')

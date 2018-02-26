@@ -273,7 +273,7 @@ def flatten_dictionary(evt_dic, feature_labels_dic=None):
     # write the arrays in a list
     arr_lst = []
     labels = []
-    for key in evt_dic.keys():
+    for key in sorted(evt_dic.keys()):
         if key == 'target':
             continue
         if feature_labels_dic is not None and len(evt_dic[key].shape) == 2:
@@ -298,22 +298,20 @@ def flatten_dictionary(evt_dic, feature_labels_dic=None):
     return concat_arr, labels
 
 
-def special_preprocessing(run_mode_user, *evt_dictionaries):
+def special_preprocessing(run_mode_user, evt_dic, labels_dic=None):
     """
     preprocessing only applied to certain run_mode
     """
-    assert all([isinstance(evt_dic, dict) for evt_dic in evt_dictionaries])
- 
-    for evt_dic in evt_dictionaries:
-        if 'NN' in run_mode_user or 'anomaly' in run_mode_user:
-            tmp_evt_dic = {'target': evt_dic['target']}
-            tmp_evt_dic['feature_matrix'] = flatten_dictionary(evt_dic)[0]
 
-            if 'anomaly' in run_mode_user:
-                tmp_evt_dic['target'] = tmp_evt_dic['feature_matrix']
+    if 'NN' in run_mode_user or 'anomaly' in run_mode_user:
+        tmp_evt_dic = {'target': evt_dic['target']}
+        tmp_evt_dic['feature_matrix'], labels_list = flatten_dictionary(evt_dic, labels_dic)
 
-            evt_dic = tmp_evt_dic
+        if 'anomaly' in run_mode_user:
+            tmp_evt_dic['target'] = tmp_evt_dic['feature_matrix']
+
+        evt_dic = tmp_evt_dic
 
 
-    return evt_dictionaries
+    return evt_dic, labels_list
 
