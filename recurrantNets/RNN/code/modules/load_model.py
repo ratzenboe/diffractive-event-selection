@@ -165,7 +165,7 @@ def train_model(data, run_mode_user, val_data,
                       epochs = n_epochs, 
                       batch_size = batch_size,
                       validation_data = val_data,
-                      callbacks = checkpointer)
+                      callbacks = [checkpointer])
                       # class_weight = class_weight)
                       # ,callbacks = [callback_ROC(train_data_dic, 
                       #                           output_targets, 
@@ -264,7 +264,7 @@ def train_model(data, run_mode_user, val_data,
                       epochs = n_epochs, 
                       batch_size = batch_size,
                       validation_data = val_data,
-                      callbacks = checkpointer)
+                      callbacks = [checkpointer])
                       # class_weight = class_weight)
                       # ,callbacks = [callback_ROC(train_data, 
                       #                           y_train, 
@@ -345,7 +345,7 @@ def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'ou
                   epochs = n_epochs, 
                   batch_size = batch_size,
                   validation_data = val_data,
-                  callbacks = checkpointer)
+                  callbacks = [checkpointer])
                   # ,callbacks = [callback_ROC(train_data_dic, 
                   #                           output_targets, 
                   #                           output_prefix=out_path)])
