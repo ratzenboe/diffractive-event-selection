@@ -278,7 +278,7 @@ def main():
     print('\n:: Finished training!')
 
     # Get the best model
-    # model = load_model(out_path + 'weights_final.hdf5')
+    # model = load_model(out_path + 'best_model.hdf5')
     ######################################################################################
     # STEP 3:
     # ----------------------------- Evaluating the model ---------------------------------
