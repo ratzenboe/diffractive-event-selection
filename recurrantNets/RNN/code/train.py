@@ -298,7 +298,7 @@ def main():
 
     print('\n::  Evaluating the model on the test sample...')
     # save the test dictionary for easy testing later on
-    save_data_dictionary(evt_dic_test, out_path+'evt_dic_test.pkl')
+    save_data_dictionary(out_path+'evt_dic_test.pkl', evt_dic_test)
 
     y_test_truth = evt_dic_test['target']
     # to predict the labels we have to ged rid of the target:
