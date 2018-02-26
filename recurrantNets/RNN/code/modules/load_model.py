@@ -155,11 +155,16 @@ def train_model(data, run_mode_user, val_data,
                 
         print(model.summary())
         try:
+            checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
+                               verbose=0,
+                               save_best_only=True)
+
             model.fit(train_data,
                       y_train,  
                       epochs = n_epochs, 
                       batch_size = batch_size,
-                      validation_data = val_data)
+                      validation_data = val_data,
+                      callbacks = checkpointer)
                       # class_weight = class_weight)
                       # ,callbacks = [callback_ROC(train_data_dic, 
                       #                           output_targets, 
@@ -250,11 +255,15 @@ def train_model(data, run_mode_user, val_data,
         model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
         print(model.summary())
         try:
+            checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
+                               verbose=0,
+                               save_best_only=True)
             model.fit(train_data,
                       y_train,  
                       epochs = n_epochs, 
                       batch_size = batch_size,
-                      validation_data = val_data)
+                      validation_data = val_data,
+                      callbacks = checkpointer)
                       # class_weight = class_weight)
                       # ,callbacks = [callback_ROC(train_data, 
                       #                           y_train, 
@@ -334,7 +343,7 @@ def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'ou
                   y_train,  
                   epochs = n_epochs, 
                   batch_size = batch_size,
-                  validation_data = (X_val_data, y_val_data),
+                  validation_data = val_data,
                   callbacks = checkpointer)
                   # ,callbacks = [callback_ROC(train_data_dic, 
                   #                           output_targets, 

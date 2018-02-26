@@ -272,8 +272,8 @@ def main():
                         batch_norm  = batch_norm,
                         activation  = activation)
 
-    # save model
-    model.model.save(out_path + 'weights_final.h5', overwrite=True)
+    # model is now saved during training
+    # model.save(out_path + 'weights_final.h5', overwrite=True)
     end_time_training = time.time()
     print('\n:: Finished training!')
 
