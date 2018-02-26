@@ -34,7 +34,8 @@ from modules.data_preparation                   import get_data, save_data_dicti
 from modules.utils                              import print_dict, split_dictionary, \
                                                        pause_for_input, get_subsample, \
                                                        print_array_in_dictionary_stats, \
-                                                       remove_field_name, flatten_dictionary
+                                                       remove_field_name, flatten_dictionary, \
+                                                       special_preprocessing
 from modules.file_management                    import OutputManager
 from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAoutput, \
                                                        plot_cut_efficiencies, plot_all_features
@@ -272,7 +273,7 @@ def main():
                         activation  = activation)
 
     # save model
-    model.save(out_path + 'weights_final.h5', overwrite=True)
+    model.model.save(out_path + 'weights_final.h5', overwrite=True)
     end_time_training = time.time()
     print('\n:: Finished training!')
 
@@ -283,8 +284,8 @@ def main():
     # ----------------------------- Evaluating the model ---------------------------------
     ######################################################################################
     print('\nEvaluating the model on the training sample...')
-    y_train_truth = evt_dic_train['target']
-    evt_dic_train.pop('target')
+    # returns the poped element
+    y_train_truth = evt_dic_train.pop('target')
     y_train_score = model.predict(evt_dic_train)
     num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, 
                                                     out_path, label='train')

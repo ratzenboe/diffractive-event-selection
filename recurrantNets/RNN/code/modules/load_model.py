@@ -273,6 +273,8 @@ def train_model(data, run_mode_user, val_data,
     else:
         raise NameError('ERROR: Unrecognized model {}'.format(run_mode_user))
 
+
+
 def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'output/', 
                       dropout=0.2, n_layers=[14,7,7,14], batch_norm=False, activation='relu'):
     """
