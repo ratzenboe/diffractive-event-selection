@@ -257,10 +257,11 @@ def main():
 
     start_time_training = time.time()
 
-    y_val_data = evt_dic_val['target']
-    # to predict the labels we have to ged rid of the target:
-    evt_dic_val.pop('target')
+    y_val_data = evt_dic_val.pop('target')
     X_val_data = evt_dic_val
+    if 'anomaly' in run_mode_user:
+        y_val_data = X_val_data
+    # to predict the labels we have to ged rid of the target:
     print('\nFitting the model...')
     model = train_model(evt_dic_train,
                         run_mode_user, 

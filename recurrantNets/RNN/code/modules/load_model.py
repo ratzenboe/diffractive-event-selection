@@ -298,11 +298,9 @@ def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'ou
         # X_train itself
         X_train = data['feature_matrix']
         # train only on bg data, as this will be the only available source
-        bg_indices = np.array(np.where(data['target']==1)).ravel()
+        bg_indices = np.array(np.where(data['target']==0)).ravel()
         X_train = X_train[bg_indices]
-        y_train = X_train
-        train_data = data.copy() 
-        train_data.pop('target')
+        train_data = {'feature_matrix': X_train}
 
     except KeyError:
         raise KeyError('The data-dictionary provided does not contain' \
@@ -344,7 +342,7 @@ def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'ou
                                        verbose=0,
                                        save_best_only=True)
         model.fit(train_data,
-                  y_train,  
+                  X_train,  
                   epochs = n_epochs, 
                   batch_size = batch_size,
                   validation_data = val_data,
