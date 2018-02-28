@@ -160,12 +160,12 @@ def train_model(data, run_mode_user, val_data,
                                verbose=0,
                                save_best_only=True)
 
-            model.fit(train_data,
-                      y_train,  
-                      epochs = n_epochs, 
-                      batch_size = batch_size,
-                      validation_data = val_data,
-                      callbacks = [checkpointer])
+            history = model.fit(train_data,
+                                y_train,  
+                                epochs = n_epochs, 
+                                batch_size = batch_size,
+                                validation_data = val_data,
+                                callbacks = [checkpointer]).history
                       # class_weight = class_weight)
                       # ,callbacks = [callback_ROC(train_data_dic, 
                       #                           output_targets, 
@@ -174,7 +174,7 @@ def train_model(data, run_mode_user, val_data,
         except KeyboardInterrupt:
             print('Training ended early.')
 
-        return model
+        return history
 
     elif 'Grid' in run_mode_user:
         try:
@@ -259,12 +259,12 @@ def train_model(data, run_mode_user, val_data,
             checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
                                verbose=0,
                                save_best_only=True)
-            model.fit(train_data,
-                      y_train,  
-                      epochs = n_epochs, 
-                      batch_size = batch_size,
-                      validation_data = val_data,
-                      callbacks = [checkpointer])
+            history = model.fit(train_data,
+                                y_train,  
+                                epochs = n_epochs, 
+                                batch_size = batch_size,
+                                validation_data = val_data,
+                                callbacks = [checkpointer]).history
                       # class_weight = class_weight)
                       # ,callbacks = [callback_ROC(train_data, 
                       #                           y_train, 
@@ -273,7 +273,7 @@ def train_model(data, run_mode_user, val_data,
         except KeyboardInterrupt:
             print('Training ended early.')
 
-        return model
+        return history
 
 
     elif 'anomaly' in run_mode_user:
@@ -334,25 +334,25 @@ def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'ou
                         kernel_initializer = 'glorot_normal')(x)
     model = Model(inputs=input_train, outputs=main_output)
 
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['mse'])
             
     print(model.summary())
     try:
         checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
                                        verbose=0,
                                        save_best_only=True)
-        model.fit(train_data,
-                  X_train,  
-                  epochs = n_epochs, 
-                  batch_size = batch_size,
-                  validation_data = val_data,
-                  callbacks = [checkpointer])
+        history = model.fit(train_data,
+                            X_train,  
+                            epochs = n_epochs, 
+                            batch_size = batch_size,
+                            validation_data = val_data,
+                            callbacks = [checkpointer]).history
                   # ,callbacks = [callback_ROC(train_data_dic, 
                   #                           output_targets, 
                   #                           output_prefix=out_path)])
     except KeyboardInterrupt:
         print('Training ended early.')
 
-    return model
+    return history
 
 
