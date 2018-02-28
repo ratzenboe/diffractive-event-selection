@@ -139,6 +139,7 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     trackTree->Branch("n_cls_tpc", &hlt_n_tpc_cls);
     trackTree->Branch("n_cls_trd", &hlt_n_trd_cls);
     trackTree->Branch("n_shared_cls_tpc", &hlt_n_tpc_shared_cls);
+    trackTree->Branch("golden_chi2", &hlt_golden_chi2);
 
     // raw/low level track information
     trackTree->Branch("track_length", &trackLength);
@@ -282,6 +283,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
 
             hlt_pid_bayes_proba_electron = trk->GetPIDBayesProbability(AliPID::kElectron);
             hlt_pid_bayes_proba_muon = trk->GetPIDBayesProbability(AliPID::kMuon);
+
+            hlt_golden_chi2 = trk->GetGoldenChi2();
             // charge sign
             hlt_charge_sign = trk->GetChargeSign();
             evt_charge_sum += hlt_charge_sign;
