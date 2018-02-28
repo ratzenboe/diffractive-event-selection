@@ -38,7 +38,8 @@ from modules.utils                              import print_dict, split_diction
                                                        special_preprocessing
 from modules.file_management                    import OutputManager
 from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAoutput, \
-                                                       plot_cut_efficiencies, plot_all_features
+                                                       plot_cut_efficiencies, plot_all_features, \
+                                                       plot_model_loss
 
 def main():
 
@@ -275,6 +276,7 @@ def main():
                         batch_norm  = batch_norm,
                         activation  = activation)
 
+    plot_model_loss(model, out_path)
     # model is now saved during training
     # model.save(out_path + 'weights_final.h5', overwrite=True)
     end_time_training = time.time()

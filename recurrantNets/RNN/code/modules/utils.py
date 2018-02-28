@@ -307,9 +307,6 @@ def special_preprocessing(run_mode_user, evt_dic, labels_dic=None):
         tmp_evt_dic = {'target': evt_dic['target']}
         tmp_evt_dic['feature_matrix'], labels_list = flatten_dictionary(evt_dic, labels_dic)
 
-        if 'anomaly' in run_mode_user:
-            tmp_evt_dic['target'] = tmp_evt_dic['feature_matrix']
-
         evt_dic = tmp_evt_dic
 
 

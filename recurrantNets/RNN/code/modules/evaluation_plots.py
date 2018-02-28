@@ -17,6 +17,26 @@ from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, \
     average_precision_score
 
 
+def plot_model_loss(model):
+    """
+    Plot the model training and validation loss over the training epochs
+    """
+    history = model.history
+
+    plt.figure()
+    plt.plot(history['loss'])
+    plt.plot(history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss', fontsize=18)
+    plt.xlabel('epoch', fontsize=18)
+    plt.legend(['train', 'test'], loc='upper right', fontsize=15)
+    plt.tight_layout()
+
+    plt.savefig(out_path + 'model_loss' + '.png')
+    plt.savefig(out_path + 'model_loss' + '.pdf')
+
+
+
 def plot_all_features(evt_dic, branches_dic, outpath, post_fix=''):
     """
     Plot all features of the event dictionary comparing fully reconstructed events
