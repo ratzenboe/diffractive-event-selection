@@ -17,12 +17,10 @@ from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, \
     average_precision_score
 
 
-def plot_model_loss(model, out_path):
+def plot_model_loss(history, out_path):
     """
     Plot the model training and validation loss over the training epochs
     """
-    history = model.history
-
     plt.figure()
     plt.plot(history['loss'])
     plt.plot(history['val_loss'])
