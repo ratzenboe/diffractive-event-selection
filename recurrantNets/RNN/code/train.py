@@ -203,8 +203,9 @@ def main():
             evt_dictionary[key] = remove_field_name(evt_dictionary[key], feature_name)
         print('Features left in {}: {}'.format(key, list(evt_dictionary[key].dtype.names)))
      
-    # print('\n::  Plotting the features...')
-    # plot_all_features(evt_dictionary, std_scale_dic, out_path)
+    if plot:
+        print('\n::  Plotting the features...')
+        plot_all_features(evt_dictionary, std_scale_dic, out_path)
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
@@ -227,8 +228,9 @@ def main():
     preprocess(evt_dic_val,   std_scale_dic, out_path, load_fitted_attributes=True)
     preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
 
-    # print('\n::  Plotting the standard scaled features...')
-    # plot_all_features(evt_dic_train, std_scale_dic, out_path, post_fix='_std_scaled')
+    if plot:
+        print('\n::  Plotting the standard scaled features...')
+        plot_all_features(evt_dic_train, std_scale_dic, out_path, post_fix='_std_scaled')
  
     print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
     evt_dic_train, feature_names_dic = shape_data(evt_dic_train)
@@ -340,7 +342,7 @@ def main():
     plot_ROCcurve(y_test_truth, y_test_score, out_path, label='test')
 
     del y_test_truth, y_test_score
-    del evt_dic_test, evt_dic_train
+    del evt_dic_test
 
     ######################################################################################
     # ------------------------------------ EOF -------------------------------------------
@@ -368,6 +370,7 @@ if __name__ == "__main__":
     if(len(sys.argv) > 1):
         user_argv = sys.argv[1:]
 
+    # commend line parser (right now not a own function as only 2 elements are used)
     parser = argparse.ArgumentParser()
     parser.add_argument('-run_mode', '-run_setting',
                         help='keyword to identify which run settings to \
@@ -376,8 +379,17 @@ if __name__ == "__main__":
                         dest='run_mode',
                         default='SimpleGrid',
                         type=str)
+
+    parser.add_argument('-plot', 
+                        help='bool: if used the feature plots will be produced
+			      this usually takes a long time',
+                        action='store_true',
+                        dest='plot',
+                        default=False)
+
     command_line_args = parser.parse_args(user_argv)
 
     run_mode_user = command_line_args.run_mode
+    plot = command_line_args.plot
 
     main()
