@@ -297,7 +297,10 @@ def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'ou
         # we use an autoencoder thus the target is the 
         # X_train itself
         X_train = data['feature_matrix']
-        y_train = data['target']    # is the same as 'feature_matrix'
+        # train only on bg data, as this will be the only available source
+        bg_indices = np.array(np.where(data['target']==1)).ravel()
+        X_train = X_train[bg_indices]
+        y_train = X_train
         train_data = data.copy() 
         train_data.pop('target')
 
