@@ -291,44 +291,55 @@ def main():
     # save the test dictionary for easy testing later on
     save_data_dictionary(out_path+'evt_dic_train.pkl', evt_dic_train)
 
-    if not 'anomaly' in run_mode_user:
-        print('\nEvaluating the model on the training sample...')
-        # returns the poped element
-        y_train_truth = evt_dic_train.pop('target')
+    print('\nEvaluating the model on the training sample...')
+    # returns the poped element
+    y_train_truth = evt_dic_train.pop('target')
+    y_train_score = model.predict(evt_dic_train)
 
-        y_train_score = model.predict(evt_dic_train)
+    if not 'anomaly' in run_mode_user:
         num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, 
                                                         out_path, label='train')
         MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
-        plot_ROCcurve(y_train_truth, y_train_score, out_path, label='train')
-
-        del y_train_truth, y_train_score
         del num_trueSignal, num_trueBackgr
-        del evt_dic_train
+    else:
+        y_train_truth, y_train_score = plot_autoencoder_output(y_train_score, 
+                                                               evt_dic_train['feature_matrix'],
+                                                               y_train_truth,
+                                                               out_path,
+                                                               label='train')
 
-        save_data_dictionary(out_path+'evt_dic_test.pkl', evt_dic_test)
+    plot_ROCcurve(y_train_truth, y_train_score, out_path, label='train')
 
-        print('\n::  Evaluating the model on the test sample...')
-        y_test_truth = evt_dic_test['target']
-        # to predict the labels we have to ged rid of the target:
-        evt_dic_test.pop('target')
-        y_test_score = model.predict(evt_dic_test)
-        for idx in range(y_test_score.shape[0]):
-            if y_test_score[idx] > 0.00001: 
-                print('y_test_score: {}     target = {}'.format(
-                    y_test_score[idx], y_test_truth[idx]))
+    del y_train_truth, y_train_score
+    del evt_dic_train
 
+    save_data_dictionary(out_path+'evt_dic_test.pkl', evt_dic_test)
+
+    print('\n::  Evaluating the model on the test sample...')
+    y_test_truth = evt_dic_test['target']
+    # to predict the labels we have to ged rid of the target:
+    evt_dic_test.pop('target')
+    y_test_score = model.predict(evt_dic_test)
+    for idx in range(y_test_score.shape[0]):
+        if y_test_score[idx] > 0.00001: 
+            print('y_test_score: {}     target = {}'.format(
+                y_test_score[idx], y_test_truth[idx]))
+
+    if not 'anomaly' in run_mode_user:
         num_trueSignal, num_trueBackgr = plot_MVAoutput(y_test_truth, y_test_score, 
                                                         out_path, label='test')
         MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
-        plot_ROCcurve(y_test_truth, y_test_score, out_path, label='test')
-
-        del y_test_truth, y_test_score
         del num_trueSignal, num_trueBackgr
-    
     else:
+        y_train_truth, y_train_score = plot_autoencoder_output(y_train_score, 
+                                                               evt_dic_train['feature_matrix'],
+                                                               y_train_truth,
+                                                               out_path,
+                                                               label='train')
 
+    plot_ROCcurve(y_test_truth, y_test_score, out_path, label='test')
 
+    del y_test_truth, y_test_score
     del evt_dic_test, evt_dic_train
 
     ######################################################################################
