@@ -357,3 +357,63 @@ def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'ou
     return history
 
 
+def train_koala(data, val_data, batch_size=64, n_epochs=50, out_path = 'output/', 
+                dropout = 0.2, n_layers=3, layer_nodes=100, batch_norm=False, activation='relu'):
+    """
+    Train a model on two sets of randomly picked sets of (unknown signal background ratio)
+    the targets are not 0:bg and 1:sig but rather the set the particle came from. 
+    meaning 0:set0 and 1:set1; 
+    see: https://arxiv.org/abs/1801.10158
+    """
+    try:
+        X_train = data['feature_matrix']
+        y_train = data['target']
+        train_data = data.copy() 
+        train_data.pop('target')
+    except KeyError:
+        raise KeyError('The data-dictionary provided does not contain' \
+                'all necessary keys for the selected run-mode (run_mode_user)')
+
+    input_train = Input(shape=(X_train.shape[-1],), name='feature_matrix')
+    if activation != 'relu':
+        x = Dense(layer_nodes, kernel_initializer='glorot_normal')(input_train)
+        x = getattr(keras.layers, activation)(x)
+    else:
+        x = Dense(layer_nodes, 
+                  activation = activation, 
+                  kernel_initializer = 'glorot_normal')(input_train)
+
+    for i in range(0,n_layers-1):
+        if activation == 'PReLU':
+            x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
+            x = PReLU()(x)
+        else:
+            x = Dense(layer_nodes, 
+                      activation         = activation, 
+                      kernel_initializer = 'glorot_normal')(x)
+        if batch_norm:
+            x = BatchNormalization()(x)
+        if dropout > 0.0:
+             x = Dropout(dropout)(x)
+
+    main_output = Dense(1, 
+                        activation = 'sigmoid', 
+                        name = 'main_output', 
+                        kernel_initializer = 'glorot_normal')(x)
+    model = Model(inputs=input_train, outputs=main_output)
+
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+            
+    print(model.summary())
+    try:
+        checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
+                           verbose=0,
+                           save_best_only=True)
+
+        history = model.fit(train_data,
+                            y_train,  
+                            epochs = n_epochs, 
+                            batch_size = batch_size,
+                            validation_data = val_data,
+                            callbacks = [checkpointer]).history
+
