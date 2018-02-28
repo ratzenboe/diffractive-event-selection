@@ -39,7 +39,7 @@ from modules.utils                              import print_dict, split_diction
 from modules.file_management                    import OutputManager
 from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAoutput, \
                                                        plot_cut_efficiencies, plot_all_features, \
-                                                       plot_model_loss
+                                                       plot_model_loss, plot_autoencoder_output
 
 def main():
 
@@ -267,7 +267,7 @@ def main():
         X_val_data = evt_dic_val
     # to predict the labels we have to ged rid of the target:
     print('\nFitting the model...')
-    model = train_model(evt_dic_train,
+    history = train_model(evt_dic_train,
                         run_mode_user, 
                         val_data    = (X_val_data, y_val_data),
                         batch_size  = batch_size,
@@ -281,7 +281,7 @@ def main():
                         batch_norm  = batch_norm,
                         activation  = activation)
 
-    plot_model_loss(model, out_path)
+    plot_model_loss(history, out_path)
     # model is now saved during training
     # model.save(out_path + 'weights_final.h5', overwrite=True)
     end_time_training = time.time()
@@ -321,14 +321,9 @@ def main():
     save_data_dictionary(out_path+'evt_dic_test.pkl', evt_dic_test)
 
     print('\n::  Evaluating the model on the test sample...')
-    y_test_truth = evt_dic_test['target']
+    y_test_truth = evt_dic_test.pop('target')
     # to predict the labels we have to ged rid of the target:
-    evt_dic_test.pop('target')
     y_test_score = model.predict(evt_dic_test)
-    for idx in range(y_test_score.shape[0]):
-        if y_test_score[idx] > 0.00001: 
-            print('y_test_score: {}     target = {}'.format(
-                y_test_score[idx], y_test_truth[idx]))
 
     if not 'anomaly' in run_mode_user:
         num_trueSignal, num_trueBackgr = plot_MVAoutput(y_test_truth, y_test_score, 
@@ -336,11 +331,11 @@ def main():
         MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
         del num_trueSignal, num_trueBackgr
     else:
-        y_train_truth, y_train_score = plot_autoencoder_output(y_train_score, 
-                                                               evt_dic_train['feature_matrix'],
-                                                               y_train_truth,
-                                                               out_path,
-                                                               label='train')
+        y_test_truth, y_test_score = plot_autoencoder_output(y_test_score, 
+                                                             evt_dic_test['feature_matrix'],
+                                                             y_test_truth,
+                                                             out_path,
+                                                             label='test')
 
     plot_ROCcurve(y_test_truth, y_test_score, out_path, label='test')
 
