@@ -234,7 +234,10 @@ def main():
     shape_data(evt_dic_val)
     shape_data(evt_dic_test)
 
-    evt_dic_train = special_preprocessing(run_mode_user, evt_dic_train)[0]
+    evt_dic_train, feature_lst = special_preprocessing(
+            run_mode_user, evt_dic_train, feature_names_dic)
+    # saveing the feature_list to do shap predictions
+    om.save(feature_lst, 'feature_list')
     evt_dic_val   = special_preprocessing(run_mode_user, evt_dic_val)[0]
     evt_dic_test  = special_preprocessing(run_mode_user, evt_dic_test)[0]
 
@@ -283,6 +286,9 @@ def main():
     # STEP 3:
     # ----------------------------- Evaluating the model ---------------------------------
     ######################################################################################
+    # save the test dictionary for easy testing later on
+    save_data_dictionary(out_path+'evt_dic_train.pkl', evt_dic_train)
+
     print('\nEvaluating the model on the training sample...')
     # returns the poped element
     y_train_truth = evt_dic_train.pop('target')
@@ -296,10 +302,9 @@ def main():
     del num_trueSignal, num_trueBackgr
     del evt_dic_train
 
-    print('\n::  Evaluating the model on the test sample...')
-    # save the test dictionary for easy testing later on
     save_data_dictionary(out_path+'evt_dic_test.pkl', evt_dic_test)
 
+    print('\n::  Evaluating the model on the test sample...')
     y_test_truth = evt_dic_test['target']
     # to predict the labels we have to ged rid of the target:
     evt_dic_test.pop('target')
