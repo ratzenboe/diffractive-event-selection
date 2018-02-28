@@ -277,8 +277,9 @@ def train_model(data, run_mode_user, val_data,
 
 
     elif 'anomaly' in run_mode_user:
-        train_autoencoder(data, val_data, batch_size, n_epochs, out_path, dropout, 
+        history = train_autoencoder(data, val_data, batch_size, n_epochs, out_path, dropout, 
                           n_layers, batch_norm, activation)
+        return history
 
     else:
         raise NameError('ERROR: Unrecognized model {}'.format(run_mode_user))
