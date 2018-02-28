@@ -17,7 +17,7 @@ from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, \
     average_precision_score
 
 
-def plot_model_loss(model):
+def plot_model_loss(model, out_path):
     """
     Plot the model training and validation loss over the training epochs
     """
@@ -110,6 +110,67 @@ def plot_feature(x_sig, x_bg, out_path, label=''):
     plt.savefig(out_path + 'feature_' + label + '_log.pdf')    
     
     return n_truePos, n_trueNeg
+
+
+def plot_autoencoder_output(y_predictions, y_target, y_true, out_path, label=''):
+    """
+    Plots the distance to the expected output in a histogram
+    """
+    mse = np.mean(np.power(X_target - predictions, 2), axis=1)
+    error_df = pd.DataFrame({'reconstruction_error': mse,
+                             'true_class': y_true})
+
+    x_sig = error_df[error_df['true_class']== 1].values
+    x_bg  = error_df[error_df['true_class']== 0].values
+    x_total = np.concatenate([x_sig, x_bg])
+
+    n_unique = np.unique(x_total).shape[0]
+
+    if n_unique < 30:
+        nbins = n_unique*3
+    else:
+        nbins = 100
+    
+    plt.figure()
+
+    n_total, bins_total, patches_total = \
+        plt.hist(x_total,
+                 bins=nbins,
+                 range=(x_total.min(), x_total.max()),
+                 alpha=.25,
+                 color='black',
+                 label='signal+backgr.')
+    
+    n_trueNeg, bins_trueNeg, patches_trueNeg = \
+        plt.hist(x_bg,
+                 bins=nbins,
+                 range=(x_total.min(), x_total.max()),
+                 alpha=0.5,
+                 color='#dd0000',
+                 label='background')
+    
+    n_truePos, bins_truePos, patches_truePos = \
+        plt.hist(x_sig,
+                 bins=nbins,
+                 range=(x_total.min(), x_total.max()),
+                 alpha=0.5,
+                 color='green',
+                 label='signal')
+    
+    # plt.title('Put title here')
+    # plt.xlim(-0.05, 1.05)
+    plt.xlabel('Reconstruction error ' + label, fontsize=18)
+    plt.ylabel('Entries', fontsize=18)
+    plt.legend(fontsize=15)
+    plt.tight_layout()
+    plt.savefig(out_path + 'reconstruction_error_' + label + '.png')
+    plt.savefig(out_path + 'reconstruction_error_' + label + '.pdf')
+
+    plt.yscale('log')
+    plt.savefig(out_path + 'reconstruction_error_' + label + '_log.png')
+    plt.savefig(out_path + 'reconstruction_error_' + label + '_log.pdf')    
+    
+    return error_df.true_class, error_df.reconstruction_error
 
 
 
