@@ -114,7 +114,7 @@ def plot_autoencoder_output(y_predictions, y_target, y_true, out_path, label='')
     """
     Plots the distance to the expected output in a histogram
     """
-    mse = np.mean(np.power(X_target - predictions, 2), axis=1)
+    mse = np.mean(np.power(y_target - y_predictions, 2), axis=1)
     error_df = pd.DataFrame({'reconstruction_error': mse,
                              'true_class': y_true})
 
