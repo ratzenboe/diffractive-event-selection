@@ -125,9 +125,9 @@ def train_model(data, run_mode_user, val_data,
                     'all necessary keys for the selected run-mode (run_mode_user)')
 
         input_train = Input(shape=(X_train.shape[-1],), name='feature_matrix')
-        if activation == 'PReLU':
+        if activation != 'relu':
              x = Dense(layer_nodes, kernel_initializer='glorot_normal')(input_train)
-             x = PReLU()(x)
+             x = (getattr(keras.layers, activation)())(x)
         else:
              x = Dense(layer_nodes, 
                       activation = activation, 
@@ -136,7 +136,7 @@ def train_model(data, run_mode_user, val_data,
         for i in range(0,n_layers-1):
            if activation == 'PReLU':
                x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
-               x = PReLU()(x)
+               x = (getattr(keras.layers, activation)())(x)
            else:
                x = Dense(layer_nodes, 
                          activation         = activation, 
@@ -226,9 +226,9 @@ def train_model(data, run_mode_user, val_data,
         # stack the layers on top of a fully connected DNN
         x = keras.layers.concatenate(concatenate_list)
         for i in range(0,n_layers):
-            if activation == 'PReLU':
+            if activation != 'relu':
                 x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
-                x = PReLU()(x)
+                x = (getattr(keras.layers, activation)())(x)
             else:
                 x = Dense(layer_nodes, 
                           activation         = activation, 
@@ -308,18 +308,18 @@ def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'ou
                 'all necessary keys for the selected run-mode (run_mode_user)')
 
     input_train = Input(shape=(X_train.shape[-1],), name='feature_matrix')
-    if activation == 'PReLU':
+    if activation != 'relu':
         x = Dense(n_layers[0], kernel_initializer='glorot_normal')(input_train)
-        x = PReLU()(x)
+        x = (getattr(keras.layers, activation)())(x)
     else:
          x = Dense(n_layers[0], 
                   activation = activation, 
                   kernel_initializer = 'glorot_normal')(input_train)
 
     for layer_nodes in n_layers[1:]:
-        if activation == 'PReLU':
+        if activation != 'relu':
             x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
-            x = PReLU()(x)
+            x = (getattr(keras.layers, activation)())(x)
         else:
             x = Dense(layer_nodes, 
                       activation         = activation, 
@@ -368,8 +368,30 @@ def train_koala(data, val_data, batch_size=64, n_epochs=50, out_path = 'output/'
     try:
         X_train = data['feature_matrix']
         y_train = data['target']
-        train_data = data.copy() 
-        train_data.pop('target')
+        # divide the training data into 2 groups at random and assign the
+        # new targets according to these groups
+        data_size = y_train.shape[0]
+        idx = np.arange(data_size)
+        np.random.shuffle(idx)
+        y_train = y_train[idx]
+        y_train[:int(data_size/2)] = 0 
+        y_train[int(data_size/2):] = 1
+
+        # print split details
+        all_evts_0 = data['target'][np.where(y_train==0)].shape[0]
+        all_evts_1 = data['target'][np.where(y_train==1)].shape[0]
+        sig_evts_in_0 = data['target'][np.where(y_train==0)][
+                data['target'][np.where(y_train==1)]==1].shape[0]
+        sig_evts_in_1 = data['target'][np.where(y_train==1)][
+                data['target'][np.where(y_train==1)]==1].shape[0]
+
+        sig_bg_percentage_0 = sig_evts_in_0/all_evts_0*100.
+        sig_bg_percentage_1 = sig_evts_in_1/all_evts_1*100.
+        print('{}/{} signal events in 0({:.3f}%)'.format(
+            sig_evts_in_0, all_evts_0, sig_bg_percentage_0))
+        print('{}/{} signal events in 1({:.3f}%)'.format(
+            sig_evts_in_1, all_evts_1, sig_bg_percentage_1))
+  
     except KeyError:
         raise KeyError('The data-dictionary provided does not contain' \
                 'all necessary keys for the selected run-mode (run_mode_user)')
@@ -377,16 +399,16 @@ def train_koala(data, val_data, batch_size=64, n_epochs=50, out_path = 'output/'
     input_train = Input(shape=(X_train.shape[-1],), name='feature_matrix')
     if activation != 'relu':
         x = Dense(layer_nodes, kernel_initializer='glorot_normal')(input_train)
-        x = getattr(keras.layers, activation)(x)
+        x = (getattr(keras.layers, activation)())(x)
     else:
         x = Dense(layer_nodes, 
                   activation = activation, 
                   kernel_initializer = 'glorot_normal')(input_train)
 
     for i in range(0,n_layers-1):
-        if activation == 'PReLU':
+        if activation != 'relu':
             x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
-            x = PReLU()(x)
+            x = (getattr(keras.layers, activation)())(x)
         else:
             x = Dense(layer_nodes, 
                       activation         = activation, 
