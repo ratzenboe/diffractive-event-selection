@@ -14,7 +14,7 @@ import pickle
 
 # only for python 3
 # uncomment for python 2
-# import root_numpy
+import root_numpy
 
 from modules.utils import pause_for_input, print_dict
 
@@ -65,14 +65,25 @@ def pad_dataframe(df, max_entries):
 
     length = df.shape[0]
     if length > max_entries:
-        warnings.warn('The input dataframe exceeds the maxiumum entries! It is cut from {} ' \
-                'instances to {} entries! This may affect the performance. Please adjust ' \
-                'the maximum entries in the data-config file accordingly!'.format(
-                    length, max_entries))
+        # warnings.warn('The input dataframe exceeds the maxiumum entries! It is cut from {} ' \
+        #         'instances to {} entries! This may affect the performance. Please adjust ' \
+        #         'the maximum entries in the data-config file accordingly!'.format(
+        #             length, max_entries))
         # pause_for_input('A warning was issued, do you want to abort the program?', timeout=1)
         # max_entries-1 will give return a dataframe with length max_entries as the 
         # first entry is 0
-        return df.loc[:max_entries-1]
+        # But first we shuffle the entries so that we do not pick always the first 2 entries
+        # the randomly picked samples however have to sum up to zero charge
+        while True:
+            df_new = df.sample(n=max_entries).reset_index(drop=True)
+            try:
+                if int(df_new['charge_sign'].sum()) == 0:
+                    df = df_new
+                    break
+            except KeyError:
+                raise KeyError('The feature "charge_sign" is not stored in the read data!')
+            
+        return df
 
     elif length < max_entries:
         for i in range(length, max_entries):
@@ -80,6 +91,8 @@ def pad_dataframe(df, max_entries):
         return df
 
     elif length == max_entries:
+        if int(df['charge_sum'].sum()) != 0:
+            raise ValueError('The tracks provided do not sum up to a neutral particle!')
         return df
 
 
@@ -156,6 +169,7 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
     all_events = []
     y_data = []
     signal_evts = 0
+    real_bg_evts = 0
     if len(list_of_events) == 0:
         warnings.warn('No entries found in input data!\nReturning the unprocessed input.')
         pause_for_input('A warning was issued, do you want to abort the program?', timeout=4)
@@ -188,11 +202,29 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
                 # in the grid case the event is however just a single entry 
                 # in this case .iloc[-1] does not matter
                 y = evt_dataframe[trgt].iloc[-1]
+                
                 # if the target is in the columns we have to drop it
                 evt_dataframe = evt_dataframe.drop(trgt, axis=1)
                 target_list.append(y)
-            
-            if 106 and 1 in target_list:
+
+            ###################################################################
+            # we select 2 tracks out of 3 or more to simulate the background
+            # this is done in the pad_dataframe function
+            # HERE: we mark them as a special target, namely 99
+            #       we also know that the targets are only present in the
+            #       event therefore we can do evt_dataframe['n_tracks']
+            try:
+                if int(evt_dataframe['n_tracks'].iloc[-1]) % 2 != 0:
+                    print('uneven number of tracks!')
+                    target_list.append(99)
+            except KeyError:
+                raise KeyError('The key "n_tracks" is not in the evt_dataframe! Therefore it ' \
+                        'is not among the list of features: \n {}'.format(list_of_features))
+
+            if 99 in target_list: 
+                y_data.append(99)
+                real_bg_evts += 1
+            elif 106 in target_list and 1 in target_list:
                 y_data.append(1)
                 signal_evts += 1
             else:
@@ -235,7 +267,9 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
     if len(y_data) != 0:
         print('\n:: {} signal events found in data. ({:.3f}%)'.format(
             signal_evts, signal_evts/len(list_of_events)*100.))
-    ###############################################################################
+        print('\n:: {} real bg (3+tracks) events found in data. ({:.3f}%)'.format(
+            real_bg_evts, real_bg_evts/len(list_of_events)*100.))
+     ###############################################################################
 
     return all_events, y_data
 
@@ -348,7 +382,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
         print('\n{} Loading {} data {}'.format(10*'-', key, 10*'-'))
         if load:
             list_of_events = (pd.read_pickle(
-                path_dic[key][:-5]+'list_of_events.pkl')).values.tolist()
+                path_dic[key][:-5]+'_list_of_events.pkl')).values.tolist()
             # flatten the list (it is loaded as such [[2], [8], ...]
             list_of_events = [y for x in list_of_events for y in x]
 
@@ -358,7 +392,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
             # [:-5] removes .root from the string
             data.to_pickle(path_dic[key][:-5]+'_data_pandas.pkl')
             df_list_of_events = pd.DataFrame(list_of_events)
-            df_list_of_events.to_pickle(path_dic[key][:-5]+'list_of_events.pkl')
+            df_list_of_events.to_pickle(path_dic[key][:-5]+'_list_of_events.pkl')
             del df_list_of_events
 
 
@@ -440,13 +474,13 @@ def load_data(filename, treename=None, branches=None, load=False, selection=None
     if not os.path.exists(filename):
         raise IOError('File {} does not exist.'.format(filename))
 
-    # data = pd.DataFrame(root_numpy.root2array(filename, 
-    #                                           branches = branches,
-    #                                           treename = treename,
-    #                                           selection = selection))
-    # data = data.astype(float)
+    data = pd.DataFrame(root_numpy.root2array(filename, 
+                                              branches = branches,
+                                              treename = treename,
+                                              selection = selection))
+    data = data.astype(float)
 
-    # return data
+    return data
 
 
 
@@ -770,7 +804,7 @@ def get_evt_id_list(data, cut_dic, event_id_string):
     list_of_events = map(int, list_of_events)
 
     # print-out
-    percentage_of_all = n_evts_total/len(list_of_events)
+    percentage_of_all = len(list_of_events)/n_evts_total
     print(':: Processing {}/{} events ({:.2f}%) with the following number of ' \
             'cuts:\n'.format(
                 len(list_of_events), n_evts_total, percentage_of_all))
@@ -840,5 +874,7 @@ def unpack_and_order_data_path(path_dic):
     n_diff_paths = len(list_of_path_ints[0])
 
     return out_path_dic, n_diff_paths
+
+
 
 
