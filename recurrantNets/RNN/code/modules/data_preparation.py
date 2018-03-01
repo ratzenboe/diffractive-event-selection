@@ -14,7 +14,7 @@ import pickle
 
 # only for python 3
 # uncomment for python 2
-import root_numpy
+# import root_numpy
 
 from modules.utils import pause_for_input, print_dict
 
@@ -91,7 +91,7 @@ def pad_dataframe(df, max_entries):
         return df
 
     elif length == max_entries:
-        if int(df['charge_sum'].sum()) != 0:
+        if int(df['charge_sign'].sum()) != 0:
             raise ValueError('The tracks provided do not sum up to a neutral particle!')
         return df
 
@@ -215,7 +215,6 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
             #       event therefore we can do evt_dataframe['n_tracks']
             try:
                 if int(evt_dataframe['n_tracks'].iloc[-1]) % 2 != 0:
-                    print('uneven number of tracks!')
                     target_list.append(99)
             except KeyError:
                 raise KeyError('The key "n_tracks" is not in the evt_dataframe! Therefore it ' \
@@ -472,13 +471,13 @@ def load_data(filename, treename=None, branches=None, load=False, selection=None
     if not os.path.exists(filename):
         raise IOError('File {} does not exist.'.format(filename))
 
-    data = pd.DataFrame(root_numpy.root2array(filename, 
-                                              branches = branches,
-                                              treename = treename,
-                                              selection = selection))
-    data = data.astype(float)
+    # data = pd.DataFrame(root_numpy.root2array(filename, 
+    #                                           branches = branches,
+    #                                           treename = treename,
+    #                                           selection = selection))
+    # data = data.astype(float)
 
-    return data
+    # return data
 
 
 
