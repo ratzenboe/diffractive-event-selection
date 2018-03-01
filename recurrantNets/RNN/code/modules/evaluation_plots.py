@@ -80,6 +80,11 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     x_total = np.concatenate([x_sig, x_bg])
     n_unique = np.unique(x_total).shape[0]
 
+    if n_unique < 30:
+        nbins = n_unique*3
+    else:
+        nbins = 100
+    
     plt.figure()
 
     title = kwargs.pop('title', None)
@@ -91,18 +96,17 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     if kwargs:
         raise TypeError('Invalid kwargs passed: {}'.format(kwargs))
 
-    if 'combined' in xlabel:
-        x_sig_norm  = np.copy(x_sig)
-        x_sig_norm /= np.sum(x_sig_norm)
-        x_bg_norm  = np.copy(x_bg)
-        x_bg_norm /= np.sum(x_bg_norm)
+    x_sig_norm  = np.copy(x_sig)
+    x_sig_norm /= np.sum(x_sig_norm)
+    x_bg_norm  = np.copy(x_bg)
+    x_bg_norm /= np.sum(x_bg_norm)
 
-        _, ks_p_val = stats.ks_2samp(x_sig_norm, x_bg_norm)
-        plt.plot([], [], ' ', label='KS p-value: {:.3f}'.format(ks_p_val))
+    _, ks_p_val = stats.ks_2samp(x_sig_norm, x_bg_norm)
+    plt.plot([], [], ' ', label='KS p-value: {:.3f}'.format(ks_p_val))
 
     n_total, bins_total, patches_total = \
         plt.hist(x_total,
-                 bins='auto',
+                 bins=nbins,
                  range=(x_total.min(), x_total.max()),
                  alpha=.25,
                  color='black',
@@ -110,7 +114,7 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     
     n_trueNeg, bins_trueNeg, patches_trueNeg = \
         plt.hist(x_bg,
-                 bins=bins_total,
+                 bins=nbins,
                  range=(x_total.min(), x_total.max()),
                  alpha=0.5,
                  color='#dd0000',
@@ -118,7 +122,7 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     
     n_truePos, bins_truePos, patches_truePos = \
         plt.hist(x_sig,
-                 bins=bins_total,
+                 bins=nbins,
                  range=(x_total.min(), x_total.max()),
                  alpha=0.5,
                  color='green',
