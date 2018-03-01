@@ -39,7 +39,7 @@ def plot_model_loss(history, out_path):
 
 
 
-def plot_all_features(evt_dic, branches_dic, outpath, post_fix='', real_bg=False):
+def plot_all_features(evt_dic, branches_dic, outpath, post_fix='', real_bg=False, normed=None):
     """
     Plot all features of the event dictionary comparing fully reconstructed events
     with background (feed-down) events
@@ -68,7 +68,7 @@ def plot_all_features(evt_dic, branches_dic, outpath, post_fix='', real_bg=False
             print('::   Creating the feature plot for {} in {}.'.format(list_val, key))
             plot_feature(x_sig, x_bg, outpath, title=key, xlabel=list_val+post_fix, 
                                                sig_label=sig_label, bg_label=bg_label,
-                                               combined_label=combined_label)
+                                               combined_label=combined_label, normed=normed)
 
 
 
@@ -92,6 +92,7 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     sig_label = kwargs.pop('sig_label', 'signal')
     bg_label = kwargs.pop('bg_label', 'background')
     combined_label = kwargs.pop('combined_label', 'signal+backgr.')
+    normed = kwargs.pop('normed', None)
 
     if kwargs:
         raise TypeError('Invalid kwargs passed: {}'.format(kwargs))
@@ -107,6 +108,7 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
         plt.hist(x_total,
                  bins=nbins,
                  range=(x_total.min(), x_total.max()),
+                 normed=normed,
                  alpha=.25,
                  color='black',
                  label=combined_label)
@@ -115,6 +117,7 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
         plt.hist(x_bg,
                  bins=nbins,
                  range=(x_total.min(), x_total.max()),
+                 normed=normed,
                  alpha=0.5,
                  color='#dd0000',
                  label=bg_label)
@@ -123,10 +126,19 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
         plt.hist(x_sig,
                  bins=nbins,
                  range=(x_total.min(), x_total.max()),
+                 normed=normed,
                  alpha=0.5,
                  color='green',
                  label=sig_label)
 
+    # currently not working -> some binning problem 
+    # zeros_in_neg = np.where(n_trueNeg==0)[0].tolist()
+    # zeros_in_pos = np.where(n_truePos==0)[0].tolist()
+    # zeros_in_both = sorted(list(set(zeros_in_pos).intersection(zeros_in_neg)))
+    # all_idx = list(range(n_trueNeg.shape[0]))
+    # non_zero_lst = [x for x in all_idx if x not in zeros_in_both]
+    # ks_p_val = stats.ks_2samp(n_trueNeg[non_zero_lst], n_truePos[non_zero_lst])[1]
+    # plt.plot([], [], ' ', label='KS p-value: {:.3f}'.format(ks_p_val))
     
     plt.title(title, fontsize=18)
     # plt.xlim(-0.05, 1.05)

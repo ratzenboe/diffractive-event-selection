@@ -248,7 +248,7 @@ def remove_field_name(np_recarray, name):
     return new_recarray
         
 
-def flatten_dictionary(evt_dic, feature_labels_dic=None):
+def flatten_dictionary(evt_dic, feature_labels_dic=None, skip_list=['target']):
     """
     Args
         evt_dic:
@@ -257,6 +257,12 @@ def flatten_dictionary(evt_dic, feature_labels_dic=None):
 
         feature_labels_dic:
             dictionary containing the feature labels
+        ___________________________________________________________
+
+        skip_list:
+            keys (e.g. track to skip therefore not putting them into
+            the final feature-matrix, at least 'target' has to be
+            in the skip_list!
     _______________________________________________________________
 
     Operation breakdown
@@ -270,11 +276,18 @@ def flatten_dictionary(evt_dic, feature_labels_dic=None):
            in the event dictionary
         2: If provided, a flattened feature label list  
     """
+    if not isinstance(skip_list, list):
+        raise TypeError('The variable "skip_list" has to be a list ' \
+                'here {} was recieved!.'.format(type(skip_list)))
+
+    if 'target' not in skip_list:
+        skip_list.append('target')
+
     # write the arrays in a list
     arr_lst = []
     labels = []
     for key in sorted(evt_dic.keys()):
-        if key == 'target':
+        if key in skip_list:
             continue
         if feature_labels_dic is not None and len(evt_dic[key].shape) == 2:
             labels.extend(feature_labels_dic[key])
@@ -302,10 +315,14 @@ def special_preprocessing(run_mode_user, evt_dic, labels_dic=None):
     """
     preprocessing only applied to certain run_mode
     """
-
-    if 'NN' in run_mode_user or 'anomaly' in run_mode_user:
+    skip_list = ['target']
+    if 'NN' in run_mode_user or 'anomaly' in run_mode_user or 'koala' in run_mode_user:
         tmp_evt_dic = {'target': evt_dic['target']}
-        tmp_evt_dic['feature_matrix'], labels_list = flatten_dictionary(evt_dic, labels_dic)
+        if 'koala' in run_mode_user:
+            skip_list.append('event')
+        tmp_evt_dic['feature_matrix'], labels_list = flatten_dictionary(evt_dic, 
+                                                                        labels_dic,
+                                                                        skip_list)
 
         evt_dic = tmp_evt_dic
 
