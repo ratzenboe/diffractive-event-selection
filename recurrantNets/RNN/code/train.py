@@ -206,7 +206,7 @@ def main():
      
     if plot:
         print('\n::  Plotting the features...')
-        plot_all_features(evt_dictionary, std_scale_dic, out_path)
+        plot_all_features(evt_dictionary, std_scale_dic, out_path, real_bg=True)
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
@@ -231,8 +231,9 @@ def main():
 
     if plot:
         print('\n::  Plotting the standard scaled features...')
-        plot_all_features(evt_dic_train, std_scale_dic, out_path, post_fix='_std_scaled')
- 
+        plot_all_features(evt_dic_train, std_scale_dic, out_path, 
+                          post_fix='_std_scaled', real_bg=True)
+
     print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
     evt_dic_train, feature_names_dic = shape_data(evt_dic_train)
     shape_data(evt_dic_val)

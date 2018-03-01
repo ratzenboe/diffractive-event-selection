@@ -155,9 +155,14 @@ def print_array_in_dictionary_stats(evt_dic, message='Event dictionary'):
                 if key == 'target':
                     all_evts = evt_dic[key].shape[0]
                     sig_evts = evt_dic[key][evt_dic[key] == 1].shape[0]
+                    three_tracks_bg = evt_dic[key][evt_dic[key] == 99].shape[0]
                     sig_bg_percentage = sig_evts/all_evts*100.
                     print('{}/{} signal events ({:.3f}%)'.format(
                         sig_evts, all_evts, sig_bg_percentage))
+                    if three_tracks_bg >0:
+                        print('{}/{} real bg (3 tracks) events ({:.3f}%)'.format(
+                            three_tracks_bg, all_evts, three_tracks_bg/all_evts *100.))
+
             print('{}'.format(50*'-'))
 
 
