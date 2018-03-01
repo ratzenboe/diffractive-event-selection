@@ -80,8 +80,8 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     x_total = np.concatenate([x_sig, x_bg])
     n_unique = np.unique(x_total).shape[0]
 
-    if n_unique < 30:
-        nbins = n_unique*3
+    if n_unique < 40:
+        nbins = n_unique*2
     else:
         nbins = 100
     
@@ -96,13 +96,12 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     if kwargs:
         raise TypeError('Invalid kwargs passed: {}'.format(kwargs))
 
-    x_sig_norm  = np.copy(x_sig)
-    x_sig_norm /= np.sum(x_sig_norm)
-    x_bg_norm  = np.copy(x_bg)
-    x_bg_norm /= np.sum(x_bg_norm)
+    # #### Kolmogorov-Smirnov test seems not to work at the moment ####
+    # h_sig_norm = np.histogram(x_sig, nbins, density=True)[0]
+    # h_bg_norm  = np.histogram(x_bg, nbins, density=True)[0] 
 
-    _, ks_p_val = stats.ks_2samp(x_sig_norm, x_bg_norm)
-    plt.plot([], [], ' ', label='KS p-value: {:.3f}'.format(ks_p_val))
+    # ks_p_val = stats.ks_2samp(h_sig_norm, h_bg_norm)[1]
+    # plt.plot([], [], ' ', label='KS p-value: {:.3f}'.format(ks_p_val))
 
     n_total, bins_total, patches_total = \
         plt.hist(x_total,
