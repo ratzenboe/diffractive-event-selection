@@ -267,7 +267,7 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
     if len(y_data) != 0:
         print('\n:: {} signal events found in data. ({:.3f}%)'.format(
             signal_evts, signal_evts/len(list_of_events)*100.))
-        print('\n:: {} real bg (3+tracks) events found in data. ({:.3f}%)'.format(
+        print(':: {} real bg (3+tracks) events found in data. ({:.3f}%)\n'.format(
             real_bg_evts, real_bg_evts/len(list_of_events)*100.))
      ###############################################################################
 
@@ -392,6 +392,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
             # [:-5] removes .root from the string
             data.to_pickle(path_dic[key][:-5]+'_data_pandas.pkl')
             df_list_of_events = pd.DataFrame(list_of_events)
+            print('Saving the data in {}'.format(path_dic[key][:-5]+'_pandas.pkl'))
             df_list_of_events.to_pickle(path_dic[key][:-5]+'_list_of_events.pkl')
             del df_list_of_events
 
@@ -414,9 +415,6 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
 
         del data, list_of_features
 
-    if save is True:
-        pause_for_input('We just saved the data in {}. The program may be ' \
-                'exited'.format(path_dic[key][:-5]+'_pandas.pkl'), timeout=2)
 
     return evt_dictionary
 
