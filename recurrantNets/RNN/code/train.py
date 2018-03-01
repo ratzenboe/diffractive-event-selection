@@ -189,7 +189,6 @@ def main():
                     'however currently python 2 is in use! Proceed at own risk!\n\n', timeout=20)
         print('::  Saving event dictionary in {}...'.format(output_path+'evt_dic.pkl'))
         save_data_dictionary(output_path + 'evt_dic.pkl', evt_dictionary)
-        sys.exit(0)
         # saving the data as numpy record array
 
     # remove a feature if it is in the cut_dic and contains no further info 

@@ -1,6 +1,7 @@
 from __future__ import division
 
 import os
+import sys
 import math
 import itertools
 
@@ -11,6 +12,7 @@ import seaborn as sns
 sns.set()
 
 import numpy as np
+import pandas as pd
 
 from sklearn.metrics import roc_curve, roc_auc_score, accuracy_score, \
     confusion_matrix, classification_report, precision_recall_curve, \
@@ -35,14 +37,25 @@ def plot_model_loss(history, out_path):
 
 
 
-def plot_all_features(evt_dic, branches_dic, outpath, post_fix=''):
+def plot_all_features(evt_dic, branches_dic, outpath, post_fix='', real_bg=False):
     """
     Plot all features of the event dictionary comparing fully reconstructed events
     with background (feed-down) events
     """
     target_array = evt_dic['target']
-    index_sig = np.where(target_array == 1)
-    index_bg  = np.where(target_array == 0)
+    sig_value = 1
+    bg_value  = 0
+    sig_label = 'signal'
+    bg_label  = 'background'
+    combined_label  = 'signal+backgr.'
+    if real_bg:
+        sig_value = 0
+        bg_value  = 99
+        sig_label = 'real BG'
+        bg_label  = '3+ tracks BG'
+        combined_label  = 'Backgrounds combined'
+    index_sig = np.where(target_array == sig_value)
+    index_bg  = np.where(target_array == bg_value)
 
     for key in branches_dic.keys():
         if key == 'target':
@@ -51,12 +64,14 @@ def plot_all_features(evt_dic, branches_dic, outpath, post_fix=''):
             x_sig = np.array(evt_dic[key][index_sig][list_val].ravel())
             x_bg  = np.array(evt_dic[key][index_bg][list_val].ravel())
             print('::   Creating the feature plot for {} in {}.'.format(list_val, key))
-            plot_feature(x_sig, x_bg, outpath, label=key+'_'+list_val+post_fix)
+            plot_feature(x_sig, x_bg, outpath, title=key, xlabel=list_val+post_fix, 
+                                               sig_label=sig_label, bg_label=bg_label,
+                                               combined_label=combined_label)
 
 
 
 
-def plot_feature(x_sig, x_bg, out_path, label=''):
+def plot_feature(x_sig, x_bg, out_path, **kwargs):
     """
     Plots the features comparing signal and background as histogram 
     """
@@ -70,13 +85,19 @@ def plot_feature(x_sig, x_bg, out_path, label=''):
     
     plt.figure()
 
+    title = options.pop('title', None)
+    xlabel = options.pop('xlabel', 'x')
+    sig_label = options.pop('sig_label', 'signal')
+    bg_label = options.pop('bg_label', 'background')
+    combined_label = options.pop('combined_label', 'signal+backgr.')
+
     n_total, bins_total, patches_total = \
         plt.hist(x_total,
                  bins=nbins,
                  range=(x_total.min(), x_total.max()),
                  alpha=.25,
                  color='black',
-                 label='signal+backgr.')
+                 label=combined_label)
     
     n_trueNeg, bins_trueNeg, patches_trueNeg = \
         plt.hist(x_bg,
@@ -84,7 +105,7 @@ def plot_feature(x_sig, x_bg, out_path, label=''):
                  range=(x_total.min(), x_total.max()),
                  alpha=0.5,
                  color='#dd0000',
-                 label='background')
+                 label=bg_label)
     
     n_truePos, bins_truePos, patches_truePos = \
         plt.hist(x_sig,
@@ -92,20 +113,20 @@ def plot_feature(x_sig, x_bg, out_path, label=''):
                  range=(x_total.min(), x_total.max()),
                  alpha=0.5,
                  color='green',
-                 label='signal')
+                 label=sig_label)
     
-    # plt.title('Put title here')
+    plt.title(title)
     # plt.xlim(-0.05, 1.05)
-    plt.xlabel(label, fontsize=18)
+    plt.xlabel(xlabel, fontsize=18)
     plt.ylabel('Entries', fontsize=18)
     plt.legend(fontsize=15)
     plt.tight_layout()
-    plt.savefig(out_path + 'feature_' + label + '.png')
-    plt.savefig(out_path + 'feature_' + label + '.pdf')
+    plt.savefig(out_path + 'feature_' + title + '_' + xlabel + '.png')
+    plt.savefig(out_path + 'feature_' + title + '_' + xlabel + '.pdf')
 
     plt.yscale('log')
-    plt.savefig(out_path + 'feature_' + label + '_log.png')
-    plt.savefig(out_path + 'feature_' + label + '_log.pdf')    
+    plt.savefig(out_path + 'feature_' + title + '_' + xlabel + '_log.png')
+    plt.savefig(out_path + 'feature_' + title + '_' + xlabel + '_log.pdf')
     
     return n_truePos, n_trueNeg
 
@@ -115,11 +136,12 @@ def plot_autoencoder_output(y_predictions, y_target, y_true, out_path, label='')
     Plots the distance to the expected output in a histogram
     """
     mse = np.mean(np.power(y_target - y_predictions, 2), axis=1)
+
     error_df = pd.DataFrame({'reconstruction_error': mse,
                              'true_class': y_true})
 
-    x_sig = error_df[error_df['true_class']== 1].values
-    x_bg  = error_df[error_df['true_class']== 0].values
+    x_sig = error_df['reconstruction_error'][error_df['true_class']== 1].as_matrix()
+    x_bg  = error_df['reconstruction_error'][error_df['true_class']== 0].as_matrix()
     x_total = np.concatenate([x_sig, x_bg])
 
     n_unique = np.unique(x_total).shape[0]
