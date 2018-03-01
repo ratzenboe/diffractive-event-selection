@@ -215,8 +215,12 @@ def main():
     # output type is the same as input type!
     evt_dic, evt_dic_val = split_dictionary(evt_dictionary, split_size=frac_val_sample)
     del evt_dictionary
-    evt_dic_train, evt_dic_test  = split_dictionary(evt_dic, split_size=frac_test_sample)
-    del evt_dic
+    if 'koala' in run_mode_user:
+        evt_dic_train = evt_dic
+        evt_dic_test = evt_dic_val
+    else:
+        evt_dic_train, evt_dic_test  = split_dictionary(evt_dic, split_size=frac_test_sample)
+        del evt_dic
 
     # generates a subsample of the original event dictionary containing
     # 10 signal-samples and 10-bg samples
@@ -226,8 +230,9 @@ def main():
     print('\n::  Standarad scaling...')
     # returns a numpy array (due to fit_transform function)
     preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
-    preprocess(evt_dic_val,   std_scale_dic, out_path, load_fitted_attributes=True)
     preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
+    if 'koala' not in run_mode_user:
+        preprocess(evt_dic_val,   std_scale_dic, out_path, load_fitted_attributes=True)
 
     if plot:
         print('\n::  Plotting the standard scaled features...')
@@ -236,15 +241,17 @@ def main():
 
     print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
     evt_dic_train, feature_names_dic = shape_data(evt_dic_train)
-    shape_data(evt_dic_val)
     shape_data(evt_dic_test)
+    if 'koala' not in run_mode_user:
+        shape_data(evt_dic_val)
 
     evt_dic_train, feature_lst = special_preprocessing(
             run_mode_user, evt_dic_train, feature_names_dic)
     # saveing the feature_list to do shap predictions
     om.save(feature_lst, 'feature_list')
-    evt_dic_val  = special_preprocessing(run_mode_user, evt_dic_val)[0]
     evt_dic_test = special_preprocessing(run_mode_user, evt_dic_test)[0]
+    if 'koala' not in run_mode_user:
+        evt_dic_val  = special_preprocessing(run_mode_user, evt_dic_val)[0]
 
     print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
@@ -266,9 +273,12 @@ def main():
         X_val_data = {'feature_matrix': 
             evt_dic_val['feature_matrix'][np.array(np.where(evt_dic_val['target']==0)).ravel()]}
         y_val_data = X_val_data['feature_matrix']
-    else:
+    elif 'koala' not in run_mode_user:
         y_val_data = evt_dic_val.pop('target')
         X_val_data = evt_dic_val
+    else:
+        X_val_data = 0
+        y_val_data = 0
     # to predict the labels we have to ged rid of the target:
     print('\nFitting the model...')
     history = train_model(evt_dic_train,
@@ -303,6 +313,7 @@ def main():
     print('\nEvaluating the model on the training sample...')
     # returns the poped element
     y_train_truth = evt_dic_train.pop('target')
+    y_train_truth[y_train_truth==99] = 0
     y_train_score = model.predict(evt_dic_train)
 
     if not 'anomaly' in run_mode_user:
@@ -326,6 +337,7 @@ def main():
 
     print('\n::  Evaluating the model on the test sample...')
     y_test_truth = evt_dic_test.pop('target')
+    y_test_truth[y_train_truth==99] = 0
     # to predict the labels we have to ged rid of the target:
     y_test_score = model.predict(evt_dic_test)
 
