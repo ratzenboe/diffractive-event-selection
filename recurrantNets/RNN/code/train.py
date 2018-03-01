@@ -381,7 +381,7 @@ if __name__ == "__main__":
                         type=str)
 
     parser.add_argument('-plot', 
-                        help='bool: if used the feature plots will be produced
+                        help='bool: if used the feature plots will be produced \
 			      this usually takes a long time',
                         action='store_true',
                         dest='plot',
