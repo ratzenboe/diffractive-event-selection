@@ -7,8 +7,14 @@
 #include <stdlib.h> 
 
 
+
+
 void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
 {
+    // get the cut-selection info
+    gROOT->ProcessLine(".L /home/ratzenboe/Documents/ML_master_thesis/ML-repo/recurrantNets/RNN/data/CEPfilters.C");
+
+
     TFile* CEPfile = 0x0;
     try {
         CEPfile = TFile::Open(filename);
@@ -19,7 +25,7 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     TTree* CEPtree = (TTree*)CEPfile->Get("CEP");
 
     CEPRawEventBuffer* CEPRawEvts = 0x0;
-    CEPEventBuffer* CEPEvts = 0x0;
+    CEPEventBuffer* cep_evt = 0x0;
 
     TString save_dir("/media/hdd/train_files/");
     TString file_addon_str(TString::Itoa(file_addon, 10));
@@ -30,16 +36,17 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     }
 
     CEPtree->SetBranchAddress("CEPRawEvents", &CEPRawEvts);
-    CEPtree->SetBranchAddress("CEPEvents", &CEPEvts);
+    CEPtree->SetBranchAddress("CEPEvents", &cep_evt);
     // event number is a global number which is the recall variable for
     // every detector, track etc
     UInt_t event_nb;
 
     TFile* eventFile = new TFile((save_dir+"event_info"+file_addon_str).Data(), "RECREATE");
     TTree* eventTree = new TTree("event", "event level info");
+
     Int_t evt_n_tracks, evt_n_tracklets, evt_n_singles, evt_n_residuals, 
           evt_n_tracks_total, evt_n_tracks_its_only,
-          mc_process_type, evt_is_full_recon,
+          mc_process_type, evt_is_full_recon, evt_lhc16_filter,
           evt_n_v0s, evt_charge_sum;
     Double_t evt_tot_ad_mult, evt_tot_ad_time, evt_tot_ad_charge,
              evt_tot_fmd_mult,
@@ -74,6 +81,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     eventTree->Branch("n_v0s", &evt_n_v0s);
     // charge sum, e.g. 2 pi+ = 2, for 2 pi- = -2 and for pi+pi- = 0
     eventTree->Branch("charge_sum", &evt_charge_sum);
+    // lhc-16 filer: currently applied to the real data
+    eventTree->Branch("lhc16_filter", &evt_lhc16_filter);
 
     TFile* trackFile = new TFile((save_dir+"track_info"+file_addon_str).Data(), "RECREATE");
     TTree* trackTree = new TTree("track", "high level track info");
@@ -161,7 +170,7 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     trackTree->Branch("pt_on_emc", &track_ptEMC);
     trackTree->Branch("p_on_emc", &track_pEMC);
     trackTree->Branch("__test_eta", &rawtrk_eta);
-
+    trackTree->Branch("__lhc16_filter", &evt_lhc16_filter);
 
 
     TFile* adFile = new TFile((save_dir+"ad_info"+file_addon_str).Data(), "RECREATE");
@@ -219,13 +228,41 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     CEPRawCaloBuffer* phos  = 0x0;
     
     std::cout << CEPtree->GetEntries() << " events in the file: " << filename << std::endl;
+
+    // CEPEventBuffer = cep_evt
+    Int_t cu;
+    Int_t ntrk2c;
+    Bool_t isDG, isNDG;
+    Int_t nseltracks;
+
     for (UInt_t ii(0); ii<CEPtree->GetEntries(); ii++)
     {
         CEPtree->GetEntry(ii);
-        if (!CEPEvts) std::cout << "Event number " << ii << " cannot be found!" << std::endl;
+        
+
+        /* cu: 
+         *      ist ein bitword mit dem man den Filter steuern kann, für Simulationen ist ein
+         *      Wert von 74 geeignet.
+         *
+         * ntrk2c:
+         *      ist die Anzahl tracks die man will, für den Anfang also 2.
+         *
+         * isDG: 
+         *      wird dir am Ende sagen, ob das event ev ein CEP Kandidat ist
+         *
+         * nseltracks:
+         *      ist dann die Anzahl tracks im event 
+         */ 
+        cu = 74;
+        ntrk2c = 2;
+        nseltracks = LHC16Filter(cep_evt,kFALSE,cu,ntrk2c,isDG,isNDG); 
+        if (isDG == kTRUE && nseltracks == ntrk2c) evt_lhc16_filter = 1;
+        else evt_lhc16_filter = 0;
+
+        if (!cep_evt) std::cout << "Event number " << ii << " cannot be found!" << std::endl;
         if (ii==0)
         {
-            std::cout << "Nb tracks in CEPEvts: " << CEPEvts->GetnTracks() << std::endl;
+            std::cout << "Nb tracks in cep_evt: " << cep_evt->GetnTracks() << std::endl;
             std::cout << "Nb tracks in CEPRawEvts: " << CEPRawEvts->GetnTracksTotal() << std::endl;
         } else if (ii%1000 == 0) std::cout << ii << " events read" << std::endl;
         event_nb = ii;
@@ -238,9 +275,9 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         CEPRawTrackBuffer* rawTrack = 0x0;
         TVector3 v;
         UInt_t hlt_kk(0);
-        for (UInt_t kk(0); kk<CEPEvts->GetnTracks(); kk++)
+        for (UInt_t kk(0); kk<cep_evt->GetnTracks(); kk++)
         {
-            trk = CEPEvts->GetTrack(kk);
+            trk = cep_evt->GetTrack(kk);
             if (!trk) break;
             // put here all track info
             hlt_tof_bunch_crossing = trk->GetTOFBunchCrossing(); 
@@ -333,12 +370,12 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         // Event  
         // event info contains charge sum, hence we have to first loop
         // over the tracks to gain this information
-        evt_n_tracks = CEPEvts->GetnTracks();
-        evt_n_tracklets = CEPEvts->GetnTracklets(); 
-        evt_n_singles = CEPEvts->GetnSingles(); 
-        evt_n_residuals = CEPEvts->GetnResiduals();
-        evt_n_tracks_total = CEPEvts->GetnTracksTotal(); 
-        evt_n_tracks_its_only = CEPEvts->GetnITSpureTracks();
+        evt_n_tracks = cep_evt->GetnTracks();
+        evt_n_tracklets = cep_evt->GetnTracklets(); 
+        evt_n_singles = cep_evt->GetnSingles(); 
+        evt_n_residuals = cep_evt->GetnResiduals();
+        evt_n_tracks_total = cep_evt->GetnTracksTotal(); 
+        evt_n_tracks_its_only = cep_evt->GetnITSpureTracks();
 
         evt_tot_ad_mult = CEPRawEvts->GetTotalADMult();
         evt_tot_ad_time = CEPRawEvts->GetTotalADTime();
@@ -356,10 +393,10 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         evt_tot_phos_ampl = CEPRawEvts->GetTotalPHOSAmplitude();
         evt_tot_phos_time = CEPRawEvts->GetTotalPHOSTime();
 
-        evt_is_full_recon = is_full_recon(CEPEvts);
-        mc_process_type = CEPEvts->GetMCProcessType();
+        evt_is_full_recon = is_full_recon(cep_evt);
+        mc_process_type = cep_evt->GetMCProcessType();
         
-        evt_n_v0s = CEPEvts->GetnV0();
+        evt_n_v0s = cep_evt->GetnV0();
 
         eventTree->Fill();
 
