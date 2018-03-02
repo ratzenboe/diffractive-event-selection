@@ -109,7 +109,7 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
              pidHMPIDsig, pidTRDsig, pid_tof_sig_tuned, 
              rawtrk_its_chi2, rawtrk_tpc_chi2;
     Double_t track_xy, track_z, track_dz, track_dx, track_phiEMC, track_etaEMC, 
-             track_pEMC, track_ptEMC, rawtrk_eta;
+             track_pEMC, track_ptEMC, rawtrk_eta, hlt_golden_chi2;
     trackTree->Branch("event_id", &event_nb);
     trackTree->Branch("tof_bunch_crossing", &hlt_tof_bunch_crossing);
 
