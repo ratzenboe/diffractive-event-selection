@@ -316,7 +316,7 @@ def flatten_dictionary(evt_dic, feature_labels_dic=None, skip_list=['target']):
     return concat_arr, labels
 
 
-def special_preprocessing(run_mode_user, evt_dic, labels_dic=None):
+def special_preprocessing(run_mode_user, evt_dic, labels_dic=None, append_array=None):
     """
     preprocessing only applied to certain run_mode
     """
@@ -324,10 +324,17 @@ def special_preprocessing(run_mode_user, evt_dic, labels_dic=None):
     if 'NN' in run_mode_user or 'anomaly' in run_mode_user or 'koala' in run_mode_user:
         tmp_evt_dic = {'target': evt_dic['target']}
         if 'koala' in run_mode_user:
+            # here we have to reject event level data as the distributions do not
+            # align with the data
             skip_list.append('event')
         tmp_evt_dic['feature_matrix'], labels_list = flatten_dictionary(evt_dic, 
                                                                         labels_dic,
                                                                         skip_list)
+
+        # here append the eta_phi_diff column
+        if 'koala' in run_mode_user and append_array is not None:
+            tmp_evt_dic['feature_matrix'] = np.c_[tmp_evt_dic['feature_matrix'], 
+                                                  append_array]
 
         evt_dic = tmp_evt_dic
 
@@ -357,7 +364,7 @@ def get_eta_phi_dist_array(evt_dic):
                 '{}'.format(list(evt_dic.keys())))
 
 
-def engineer_features(evt_dic):
+def engineer_features(evt_dic, replace=False):
     """
     append new features to the record array
     """
@@ -365,16 +372,23 @@ def engineer_features(evt_dic):
     # therefore we take a save route via a pandas dataframe 
     # the read-out of the record arr is done by looping over them, writing each 
     # feature into the datafreame
+    list_of_engineered_features = ['eta_phi_diff']
+
+    # return a copy because we dont want to modify the original dictionary
+    evt_dic_copy = evt_dic.copy()
 
     df = pd.DataFrame([])
-    for name in evt_dic['event'].dtype.names: 
-        df[name] = evt_dic['event'][name].ravel() 
+    for name in evt_dic_copy['event'].dtype.names: 
+        df[name] = evt_dic_copy['event'][name].ravel() 
 
-    df['eta_phi_diff'] = get_eta_phi_dist_array(evt_dic)
+    df['eta_phi_diff'] = get_eta_phi_dist_array(evt_dic_copy)
 
-    evt_dic['event'] = df.to_records(index=False) 
+    evt_dic_copy['event'] = df.to_records(index=False) 
 
-    return evt_dic
+    if replace:
+        evt_dic = evt_dic_copy
+
+    return evt_dic_copy, list_of_engineered_features
 
 
 
