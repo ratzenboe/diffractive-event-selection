@@ -35,7 +35,7 @@ from modules.utils                              import print_dict, split_diction
                                                        pause_for_input, get_subsample, \
                                                        print_array_in_dictionary_stats, \
                                                        remove_field_name, flatten_dictionary, \
-                                                       special_preprocessing
+                                                       special_preprocessing, engineer_features
 from modules.file_management                    import OutputManager
 from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAoutput, \
                                                        plot_cut_efficiencies, plot_all_features, \
@@ -120,6 +120,7 @@ def main():
 
     out_path = om.get_session_folder()
     try:
+        raise TypeError('We want to produce the evt_dic again')
         evt_dictionary = get_data_dictionary(output_path + 'evt_dic.pkl')
         print('\n:: Event dictionary loaded from file: {}'.format(output_path + 'evt_dic.pkl'))
     except(OSError, IOError, TypeError, ValueError):
@@ -182,6 +183,8 @@ def main():
             evt_dictionary[key] = np.array(evt_dictionary[key]) 
 
         evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
+
+        evt_dictionary = engineer_features(evt_dictionary)
         
         # saveing the record array only works in python 3
         if (sys.version_info < (3, 0)):
@@ -264,8 +267,6 @@ def main():
     ######################################################################################
     # if we want cross validation (in most cases we do) we can in turn easily evaluate the
     # models by passing which metrics should be looked into
-    
-
     start_time_training = time.time()
 
     if 'anomaly' in run_mode_user:
@@ -312,8 +313,9 @@ def main():
 
     print('\nEvaluating the model on the training sample...')
     # returns the poped element
+    evt_dic_train['target'][evt_dic_train['target']==99] = 0
+    print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     y_train_truth = evt_dic_train.pop('target')
-    y_train_truth[y_train_truth==99] = 0
     y_train_score = model.predict(evt_dic_train)
 
     if not 'anomaly' in run_mode_user:
@@ -336,8 +338,9 @@ def main():
     save_data_dictionary(out_path+'evt_dic_test.pkl', evt_dic_test)
 
     print('\n::  Evaluating the model on the test sample...')
+    evt_dic_test['target'][evt_dic_test['target']==99] = 0
+    print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
     y_test_truth = evt_dic_test.pop('target')
-    y_test_truth[y_train_truth==99] = 0
     # to predict the labels we have to ged rid of the target:
     y_test_score = model.predict(evt_dic_test)
 
@@ -377,7 +380,7 @@ if __name__ == "__main__":
     sys.stdout = logger(om.get_session_folder())
 
     # fix random seed for reproducibility
-    np.random.seed(7)
+    # np.random.seed(7)
 
     user_argv = None
 
