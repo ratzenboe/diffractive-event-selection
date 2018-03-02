@@ -334,3 +334,48 @@ def special_preprocessing(run_mode_user, evt_dic, labels_dic=None):
 
     return evt_dic, labels_list
 
+
+def eta_phi_dist(arr):
+    """
+    returns the eta phi distance of a rec-array that has the field names phi and eta
+    """
+    return np.sqrt(np.power(arr['phi'][0]-arr['phi'][1],2) + 
+                   np.power(arr['eta'][0]-arr['eta'][1],2))
+
+def get_eta_phi_dist_array(evt_dic):
+    """
+    returns an numpy array that can be added to the features at any point in the program
+    """
+    try:
+        track_arr = evt_dic['track']
+        new_feature = np.apply_along_axis(eta_phi_dist, 1, track_arr)
+
+        return new_feature
+
+    except KeyError:
+        raise KeyError('The key "track" is not in among the evt dictionary keys: ' \
+                '{}'.format(list(evt_dic.keys())))
+
+
+def engineer_features(evt_dic):
+    """
+    append new features to the record array
+    """
+    # record arrays are in general buggy to extend 
+    # therefore we take a save route via a pandas dataframe 
+    # the read-out of the record arr is done by looping over them, writing each 
+    # feature into the datafreame
+
+    df = pd.DataFrame([])
+    for name in evt_dic['event'].dtype.names: 
+        df[name] = evt_dic['event'][name].ravel() 
+
+    df['eta_phi_diff'] = get_eta_phi_dist_array(evt_dic)
+
+    evt_dic['event'] = df.to_records(index=False) 
+
+    return evt_dic
+
+
+
+
