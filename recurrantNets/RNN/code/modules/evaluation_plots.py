@@ -79,6 +79,8 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     """
     x_total = np.concatenate([x_sig, x_bg])
     n_unique = np.unique(x_total).shape[0]
+    if n_unique == 0:
+        n_unique = 1
 
     if n_unique < 40:
         nbins = n_unique*2

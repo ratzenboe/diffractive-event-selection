@@ -281,6 +281,12 @@ def train_model(data, run_mode_user, val_data,
                           n_layers, batch_norm, activation)
         return history
 
+    elif 'koala' in run_mode_user:
+        history = train_koala(data, batch_size, n_epochs, out_path, dropout, 
+                          n_layers, layer_nodes, batch_norm, activation)
+        return history
+
+
     else:
         raise NameError('ERROR: Unrecognized model {}'.format(run_mode_user))
 
@@ -357,7 +363,7 @@ def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'ou
     return history
 
 
-def train_koala(data, val_data, batch_size=64, n_epochs=50, out_path = 'output/', 
+def train_koala(data, batch_size=64, n_epochs=50, out_path = 'output/', 
                 dropout = 0.2, n_layers=3, layer_nodes=100, batch_norm=False, activation='relu'):
     """
     Train a model on two sets of randomly picked sets of (unknown signal background ratio)
@@ -368,30 +374,20 @@ def train_koala(data, val_data, batch_size=64, n_epochs=50, out_path = 'output/'
     try:
         X_train = data['feature_matrix']
         y_train = data['target']
-        # divide the training data into 2 groups at random and assign the
+        # divide the training data into 2 groups: 
+        #   1 = samples with sig and bg
+        #   0 = samples with modeled bg (by chossing 3 tracks and omitting one)
         # new targets according to these groups
-        data_size = y_train.shape[0]
-        idx = np.arange(data_size)
-        np.random.shuffle(idx)
-        y_train = y_train[idx]
-        y_train[:int(data_size/2)] = 0 
-        y_train[int(data_size/2):] = 1
+        y_train[(y_train==1) | (y_train==0)] = 1
+        y_train[y_train==99] = 0
 
-        # print split details
-        all_evts_0 = data['target'][np.where(y_train==0)].shape[0]
-        all_evts_1 = data['target'][np.where(y_train==1)].shape[0]
-        sig_evts_in_0 = data['target'][np.where(y_train==0)][
-                data['target'][np.where(y_train==1)]==1].shape[0]
-        sig_evts_in_1 = data['target'][np.where(y_train==1)][
-                data['target'][np.where(y_train==1)]==1].shape[0]
+        # the training data stays the same
+        train_data = {'feature_matrix': X_train}
 
-        sig_bg_percentage_0 = sig_evts_in_0/all_evts_0*100.
-        sig_bg_percentage_1 = sig_evts_in_1/all_evts_1*100.
+        sig_percent = y_train[y_train==1].shape[0]/y_train.shape[0]*100.
         print('{}/{} signal events in 0({:.3f}%)'.format(
-            sig_evts_in_0, all_evts_0, sig_bg_percentage_0))
-        print('{}/{} signal events in 1({:.3f}%)'.format(
-            sig_evts_in_1, all_evts_1, sig_bg_percentage_1))
-  
+            y_train[y_train==1].shape[0], y_train.shape[0], sig_percent))
+        
     except KeyError:
         raise KeyError('The data-dictionary provided does not contain' \
                 'all necessary keys for the selected run-mode (run_mode_user)')
@@ -436,6 +432,11 @@ def train_koala(data, val_data, batch_size=64, n_epochs=50, out_path = 'output/'
                             y_train,  
                             epochs = n_epochs, 
                             batch_size = batch_size,
-                            validation_data = val_data,
+                            validation_split = 0.2,
                             callbacks = [checkpointer]).history
+    except KeyboardInterrupt:
+        print('Training ended early.')
+
+    return history
+
 

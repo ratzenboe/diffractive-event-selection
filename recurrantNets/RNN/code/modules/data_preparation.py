@@ -14,6 +14,8 @@ import pickle
 
 # only for python 3
 # uncomment for python 2
+# for the code to work in python 3 uncomment all root_numpy lines
+# currently only two, the next one and in load_data
 # import root_numpy
 
 from modules.utils import pause_for_input, print_dict
@@ -208,13 +210,13 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
                 target_list.append(y)
 
             ###################################################################
-            # we select 2 tracks out of 3 or more to simulate the background
+            # we select 2 tracks out of 3, 4, ... or more to simulate the background
             # this is done in the pad_dataframe function
             # HERE: we mark them as a special target, namely 99
             #       we also know that the targets are only present in the
             #       event therefore we can do evt_dataframe['n_tracks']
             try:
-                if int(evt_dataframe['n_tracks'].iloc[-1]) % 2 != 0:
+                if int(evt_dataframe['n_tracks'].iloc[-1]) > 2:
                     target_list.append(99)
             except KeyError:
                 raise KeyError('The key "n_tracks" is not in the evt_dataframe! Therefore it ' \
@@ -471,6 +473,7 @@ def load_data(filename, treename=None, branches=None, load=False, selection=None
     if not os.path.exists(filename):
         raise IOError('File {} does not exist.'.format(filename))
 
+    # uncomment next lines if code run in python 3
     # data = pd.DataFrame(root_numpy.root2array(filename, 
     #                                           branches = branches,
     #                                           treename = treename,
