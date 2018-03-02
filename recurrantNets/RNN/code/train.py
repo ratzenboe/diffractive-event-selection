@@ -120,7 +120,7 @@ def main():
 
     out_path = om.get_session_folder()
     try:
-        raise TypeError('We want to produce the evt_dic again')
+        # raise TypeError('We want to produce the evt_dic again')
         evt_dictionary = get_data_dictionary(output_path + 'evt_dic.pkl')
         print('\n:: Event dictionary loaded from file: {}'.format(output_path + 'evt_dic.pkl'))
     except(OSError, IOError, TypeError, ValueError):
@@ -183,8 +183,7 @@ def main():
             evt_dictionary[key] = np.array(evt_dictionary[key]) 
 
         evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
-
-        evt_dictionary = engineer_features(evt_dictionary)
+        evt_dictionary = engineer_features(evt_dictionary)[0]
         
         # saveing the record array only works in python 3
         if (sys.version_info < (3, 0)):
@@ -193,6 +192,8 @@ def main():
         print('::  Saving event dictionary in {}...'.format(output_path+'evt_dic.pkl'))
         save_data_dictionary(output_path + 'evt_dic.pkl', evt_dictionary)
         # saving the data as numpy record array
+
+    list_of_engineered_features = engineer_features(evt_dictionary, replace=False)[1]
 
     # remove a feature if it is in the cut_dic and contains no further info 
     for key in evt_dictionary.keys():
@@ -203,13 +204,15 @@ def main():
         remove_features.extend(list(set(evt_dictionary[key].dtype.names) - set(branches_dic[key])))
         # remove possible duplicate entries
         remove_features = list(set(remove_features))
+        # have to remove feature from the remove-list that we have engineered!
+        remove_features = [x for x in remove_features if x not in list_of_engineered_features]
         for feature_name in remove_features:
             evt_dictionary[key] = remove_field_name(evt_dictionary[key], feature_name)
         print('Features left in {}: {}'.format(key, list(evt_dictionary[key].dtype.names)))
-     
+
     if plot:
         print('\n::  Plotting the features...')
-        plot_all_features(evt_dictionary, std_scale_dic, out_path, real_bg=True)
+        plot_all_features(evt_dictionary, std_scale_dic, out_path, real_bg=False)
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
@@ -218,12 +221,8 @@ def main():
     # output type is the same as input type!
     evt_dic, evt_dic_val = split_dictionary(evt_dictionary, split_size=frac_val_sample)
     del evt_dictionary
-    if 'koala' in run_mode_user:
-        evt_dic_train = evt_dic
-        evt_dic_test = evt_dic_val
-    else:
-        evt_dic_train, evt_dic_test  = split_dictionary(evt_dic, split_size=frac_test_sample)
-        del evt_dic
+    evt_dic_train, evt_dic_test  = split_dictionary(evt_dic, split_size=frac_test_sample)
+    del evt_dic
 
     # generates a subsample of the original event dictionary containing
     # 10 signal-samples and 10-bg samples
@@ -234,30 +233,40 @@ def main():
     # returns a numpy array (due to fit_transform function)
     preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
     preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
-    if 'koala' not in run_mode_user:
-        preprocess(evt_dic_val,   std_scale_dic, out_path, load_fitted_attributes=True)
+    preprocess(evt_dic_val,   std_scale_dic, out_path, load_fitted_attributes=True)
 
-    if plot:
-        print('\n::  Plotting the standard scaled features...')
-        plot_all_features(evt_dic_train, std_scale_dic, out_path, 
-                          post_fix='_std_scaled', real_bg=True)
+    # if plot:
+    #     print('\n::  Plotting the standard scaled features...')
+    #     plot_all_features(evt_dic_train, std_scale_dic, out_path, 
+    #                       post_fix='_std_scaled', real_bg=True)
 
+    # before we lose track of the column names we save the eta-phi-diff columns
+    # which we will (is needed for the koala mode)
+    eta_phi_dist_feature_arr_train = evt_dic_train['event']['eta_phi_diff'].ravel()
+    eta_phi_dist_feature_arr_val   = evt_dic_val['event']['eta_phi_diff'].ravel()
+    eta_phi_dist_feature_arr_test  = evt_dic_test['event']['eta_phi_diff'].ravel()
+ 
     print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
     evt_dic_train, feature_names_dic = shape_data(evt_dic_train)
     shape_data(evt_dic_test)
-    if 'koala' not in run_mode_user:
-        shape_data(evt_dic_val)
+    shape_data(evt_dic_val)
 
-    evt_dic_train, feature_lst = special_preprocessing(
-            run_mode_user, evt_dic_train, feature_names_dic)
+    evt_dic_train, feature_lst = special_preprocessing(run_mode_user, 
+                                                       evt_dic_train, 
+                                                       labels_dic=feature_names_dic,
+                                                       append_array=eta_phi_dist_feature_arr_train)
     # saveing the feature_list to do shap predictions
     om.save(feature_lst, 'feature_list')
-    evt_dic_test = special_preprocessing(run_mode_user, evt_dic_test)[0]
-    if 'koala' not in run_mode_user:
-        evt_dic_val  = special_preprocessing(run_mode_user, evt_dic_val)[0]
+    evt_dic_test = special_preprocessing(run_mode_user, 
+                                         evt_dic_test, 
+                                         append_array=eta_phi_dist_feature_arr_test)[0]
+    evt_dic_val  = special_preprocessing(run_mode_user, 
+                                         evt_dic_val,
+                                         append_array=eta_phi_dist_feature_arr_val)[0]
 
     print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
+    print_array_in_dictionary_stats(evt_dic_val, 'Validation data info:')
 
     pause_for_input('\n\n:: The model will be trained anew '\
             'if this is not desired please hit enter', timeout=5)
@@ -274,12 +283,14 @@ def main():
         X_val_data = {'feature_matrix': 
             evt_dic_val['feature_matrix'][np.array(np.where(evt_dic_val['target']==0)).ravel()]}
         y_val_data = X_val_data['feature_matrix']
-    elif 'koala' not in run_mode_user:
+    elif 'koala' in run_mode_user:
         y_val_data = evt_dic_val.pop('target')
+        y_val_data[(y_val_data==1) | (y_val_data==0)] = 1
+        y_val_data[y_val_data==99] = 0
         X_val_data = evt_dic_val
     else:
-        X_val_data = 0
-        y_val_data = 0
+        y_val_data = evt_dic_val.pop('target')
+        X_val_data = evt_dic_val
     # to predict the labels we have to ged rid of the target:
     print('\nFitting the model...')
     history = train_model(evt_dic_train,
