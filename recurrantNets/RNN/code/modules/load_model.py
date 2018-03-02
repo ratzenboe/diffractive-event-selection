@@ -282,7 +282,7 @@ def train_model(data, run_mode_user, val_data,
         return history
 
     elif 'koala' in run_mode_user:
-        history = train_koala(data, batch_size, n_epochs, out_path, dropout, 
+        history = train_koala(data, val_data, batch_size, n_epochs, out_path, dropout, 
                           n_layers, layer_nodes, batch_norm, activation)
         return history
 
@@ -363,7 +363,7 @@ def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'ou
     return history
 
 
-def train_koala(data, batch_size=64, n_epochs=50, out_path = 'output/', 
+def train_koala(data, val_data, batch_size=64, n_epochs=50, out_path = 'output/', 
                 dropout = 0.2, n_layers=3, layer_nodes=100, batch_norm=False, activation='relu'):
     """
     Train a model on two sets of randomly picked sets of (unknown signal background ratio)
@@ -373,7 +373,7 @@ def train_koala(data, batch_size=64, n_epochs=50, out_path = 'output/',
     """
     try:
         X_train = data['feature_matrix']
-        y_train = data['target']
+        y_train = np.copy(data['target'])
         # divide the training data into 2 groups: 
         #   1 = samples with sig and bg
         #   0 = samples with modeled bg (by chossing 3 tracks and omitting one)
@@ -385,7 +385,7 @@ def train_koala(data, batch_size=64, n_epochs=50, out_path = 'output/',
         train_data = {'feature_matrix': X_train}
 
         sig_percent = y_train[y_train==1].shape[0]/y_train.shape[0]*100.
-        print('{}/{} signal events in 0({:.3f}%)'.format(
+        print('{}/{} "signal" events in 0({:.3f}%)'.format(
             y_train[y_train==1].shape[0], y_train.shape[0], sig_percent))
         
     except KeyError:
@@ -432,7 +432,7 @@ def train_koala(data, batch_size=64, n_epochs=50, out_path = 'output/',
                             y_train,  
                             epochs = n_epochs, 
                             batch_size = batch_size,
-                            validation_split = 0.2,
+                            validation_data = val_data,
                             callbacks = [checkpointer]).history
     except KeyboardInterrupt:
         print('Training ended early.')
