@@ -115,66 +115,70 @@ def train_model(data, run_mode_user, val_data,
         return combined_rnn
 
     elif 'NN' in run_mode_user:
-        try:
-            X_train = data['feature_matrix']
-            y_train = data['target']
-            train_data = data.copy() 
-            train_data.pop('target')
-        except KeyError:
-            raise KeyError('The data-dictionary provided does not contain' \
-                    'all necessary keys for the selected run-mode (run_mode_user)')
+        train_composite_NN(data, val_data, batch_size, n_epochs, rnn_layer,
+                       out_path, dropout, class_weight,
+                       n_layers, layer_nodes, batch_norm, activation)
 
-        input_train = Input(shape=(X_train.shape[-1],), name='feature_matrix')
-        if activation != 'relu':
-             x = Dense(layer_nodes, kernel_initializer='glorot_normal')(input_train)
-             x = (getattr(keras.layers, activation)())(x)
-        else:
-             x = Dense(layer_nodes, 
-                      activation = activation, 
-                      kernel_initializer = 'glorot_normal')(input_train)
+        # try:
+        #     X_train = data['feature_matrix']
+        #     y_train = data['target']
+        #     train_data = data.copy() 
+        #     train_data.pop('target')
+        # except KeyError:
+        #     raise KeyError('The data-dictionary provided does not contain' \
+        #             'all necessary keys for the selected run-mode (run_mode_user)')
 
-        for i in range(0,n_layers-1):
-           if activation == 'PReLU':
-               x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
-               x = (getattr(keras.layers, activation)())(x)
-           else:
-               x = Dense(layer_nodes, 
-                         activation         = activation, 
-                         kernel_initializer = 'glorot_normal')(x)
-           if batch_norm:
-               x = BatchNormalization()(x)
-           if dropout > 0.0:
-                x = Dropout(dropout)(x)
+        # input_train = Input(shape=(X_train.shape[-1],), name='feature_matrix')
+        # if activation != 'relu':
+        #      x = Dense(layer_nodes, kernel_initializer='glorot_normal')(input_train)
+        #      x = (getattr(keras.layers, activation)())(x)
+        # else:
+        #      x = Dense(layer_nodes, 
+        #               activation = activation, 
+        #               kernel_initializer = 'glorot_normal')(input_train)
 
-        main_output = Dense(1, 
-                            activation = 'sigmoid', 
-                            name = 'main_output', 
-                            kernel_initializer = 'glorot_normal')(x)
-        model = Model(inputs=input_train, outputs=main_output)
+        # for i in range(0,n_layers-1):
+        #    if activation == 'PReLU':
+        #        x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
+        #        x = (getattr(keras.layers, activation)())(x)
+        #    else:
+        #        x = Dense(layer_nodes, 
+        #                  activation         = activation, 
+        #                  kernel_initializer = 'glorot_normal')(x)
+        #    if batch_norm:
+        #        x = BatchNormalization()(x)
+        #    if dropout > 0.0:
+        #         x = Dropout(dropout)(x)
+
+        # main_output = Dense(1, 
+        #                     activation = 'sigmoid', 
+        #                     name = 'main_output', 
+        #                     kernel_initializer = 'glorot_normal')(x)
+        # model = Model(inputs=input_train, outputs=main_output)
   
-        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        # model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
                 
-        print(model.summary())
-        try:
-            checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
-                               verbose=0,
-                               save_best_only=True)
+        # print(model.summary())
+        # try:
+        #     checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
+        #                        verbose=0,
+        #                        save_best_only=True)
 
-            history = model.fit(train_data,
-                                y_train,  
-                                epochs = n_epochs, 
-                                batch_size = batch_size,
-                                validation_data = val_data,
-                                callbacks = [checkpointer]).history
-                      # class_weight = class_weight)
-                      # ,callbacks = [callback_ROC(train_data_dic, 
-                      #                           output_targets, 
-                      #                           output_prefix=out_path)])
+        #     history = model.fit(train_data,
+        #                         y_train,  
+        #                         epochs = n_epochs, 
+        #                         batch_size = batch_size,
+        #                         validation_data = val_data,
+        #                         callbacks = [checkpointer]).history
+        #               # class_weight = class_weight)
+        #               # ,callbacks = [callback_ROC(train_data_dic, 
+        #               #                           output_targets, 
+        #               #                           output_prefix=out_path)])
 
-        except KeyboardInterrupt:
-            print('Training ended early.')
+        # except KeyboardInterrupt:
+        #     print('Training ended early.')
 
-        return history
+        # return history
 
     elif 'Grid' in run_mode_user:
         try:
@@ -440,3 +444,221 @@ def train_koala(data, val_data, batch_size=64, n_epochs=50, out_path = 'output/'
     return history
 
 
+def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LSTM', 
+                       out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
+                       n_layers=3, layer_nodes=100, batch_norm=False, activation='relu'):
+
+
+        try:
+            train_data = data.copy()
+            X_track_train   = train_data.pop('track')
+            X_event_train   = train_data.pop('event')
+            X_fmd_train     = train_data.pop('fmd', None)
+            X_v0_train      = train_data.pop('v0', None)
+            X_ad_train      = train_data.pop('ad', None)
+            X_emcal_train   = train_data.pop('emcal', None)
+            X_phos_train    = train_data.pop('phos', None)
+            X_calo_cluster_train = train_data.pop('calo_cluster', None)
+
+            y_train         = train_data.pop('target')
+
+        except KeyError:
+            raise KeyError('The data-dictionary provided does not contain' \
+                    'all necessary keys for the selected run-mode (run_mode_user)')
+
+        # the data for the RNNs are of shape (n_evts, n_timesteps=n_particles, n_features) 
+        # the masking layer however is only intersted in (n_timesteps, n_features)
+        TRACK_SHAPE      = X_track_train.shape[1:]
+        N_FEATURES_track = TRACK_SHAPE[-1]
+
+        # this following data is of shape (n_evts, n_features)
+        # the network is fed with n_features
+        EVENT_SHAPE = (X_event_train.shape[-1],)
+
+        # inputs network
+        track_input = Input(shape=TRACK_SHAPE, name='track')
+        event_input = Input(shape=EVENT_SHAPE, name='event')
+        input_list = [track_input, event_input]
+        # ------ Build the model ---------
+        # RNNs feeding into the event level layer
+        # track_mask = Masking(mask_value=float(-999), name='track_masking')(track_input)
+        # event needs no masking
+        try:
+            track_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_track, 
+                name='track_rnn'))(track_input)
+            if batch_norm:
+                track_rnn = BatchNormalization(name='track_batch_norm')(track_rnn)
+            if dropout > 0.0:
+                track_rnn = Dropout(dropout, name='track_dropout')(track_rnn)
+
+        except AttributeError:
+            raise AttributeError('{} is not a valid Keras layer!'.format(rnn_layer))
+        concatenate_list = [track_rnn, event_input]
+        # ----------------------------- std input end -------------------------------
+
+        if X_emcal_train is not None:
+            EMCAL_SHAPE = X_emcal_train.shape[1:]
+            N_FEATURES_emcal = EMCAL_SHAPE[-1]
+            emcal_input = Input(shape=EMCAL_SHAPE, name='emcal')
+            try:
+                emcal_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_emcal, 
+                    name='emcal_rnn'))(emcal_iput)
+                if batch_norm:
+                    emcal_rnn = BatchNormalization(name='emcal_batch_norm')(emcal_rnn)
+                if dropout > 0.0:
+                    emcal_rnn = Dropout(dropout, name='emcal_dropout')(emcal_rnn)
+            except AttributeError:
+                raise AttributeError('{} is not a valid Keras layer!'.format(rnn_layer))
+
+            input_list.extend(emcal_input)
+            concatenate_list.extend(emcal_rnn)
+
+        if X_phos_train is not None:
+            PHOS_SHAPE = X_phos_train.shape[1:]
+            N_FEATURES_phos = PHOS_SHAPE[-1]
+            phos_input = Input(shape=PHOS_SHAPE, name='phos')
+            try:
+                phos_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_phos, 
+                    name='phos_rnn'))(phos_input)
+                if batch_norm:
+                    phos_rnn = BatchNormalization(name='phos_batch_norm')(phos_rnn)
+                if dropout > 0.0:
+                    phos_rnn = Dropout(dropout, name='phos_dropout')(phos_rnn)
+            except AttributeError:
+                raise AttributeError('{} is not a valid Keras layer!'.format(rnn_layer))
+
+            input_list.extend(phos_input)
+            concatenate_list.extend(phos_rnn)
+
+        if X_calo_cluster_train is not None:
+            CALO_CLUSTER_SHAPE = X_calo_cluster_train.shape[1:]
+            N_FEATURES_calo_cluster = CALO_CLUSTER_SHAPE[-1]
+            calo_cluster_input = Input(shape=CALO_CLUSTER_SHAPE, name='calo_cluster')
+            try:
+                calo_cluster_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_calo_cluster, 
+                    name='calo_cluster_rnn'))(calo_cluster_input)
+                if batch_norm:
+                    calo_cluster_rnn = BatchNormalization(name='calo_cluster_batch_norm')(
+                            calo_cluster_rnn)
+                if dropout > 0.0:
+                    calo_cluster_rnn = Dropout(dropout, name='calo_cluster_dropout')(
+                            calo_cluster_rnn)
+            except AttributeError:
+                raise AttributeError('{} is not a valid Keras layer!'.format(rnn_layer))
+
+            input_list.extend(calo_cluster_input)
+            concatenate_list.extend(calo_cluster_rnn)
+
+        if X_ad_train is not None:
+            AD_SHAPE = (X_ad_train.shape[-1],)
+            ad_input = Input(shape=AD_SHAPE, name='ad')
+
+            dense_ad = Dense(16, kernel_initializer='glorot_normal')(ad_input)
+            dense_ad = (getattr(keras.layers, activation)())(dense_ad)
+            if batch_norm:
+                dense_ad = BatchNormalization()(dense_ad)
+            if dropout > 0.0:
+                dense_ad = Dropout(dropout)(dense_ad)
+
+            for i in range(2):
+                dense_ad = Dense(16, kernel_initializer='glorot_normal')(dense_ad)
+                dense_ad = (getattr(keras.layers, activation)())(dense_ad)
+                if batch_norm:
+                    dense_ad = BatchNormalization()(dense_ad)
+                if dropout > 0.0:
+                    dense_ad = Dropout(dropout)(dense_ad)
+
+            dense_ad = Dense(1, 
+                            activation = 'sigmoid', 
+                            name = 'dense_ad_output', 
+                            kernel_initializer = 'glorot_normal')(dense_ad)
+
+            input_list.extend(ad_input)
+            concatenate_list.extend(dense_ad)
+
+
+        if X_fmd_train is not None:
+            FMD_SHAPE = (X_fmd_train.shape[-1],)
+            fmd_input = Input(shape=FMD_SHAPE, name='fmd')
+
+            dense_fmd = Dense(64, kernel_initializer='glorot_normal')(fmd_input)
+            dense_fmd = (getattr(keras.layers, activation)())(dense_fmd)
+            if batch_norm:
+                dense_fmd = BatchNormalization()(dense_fmd)
+            if dropout > 0.0:
+                dense_fmd = Dropout(dropout)(dense_fmd)
+
+            for i in range(2):
+                dense_fmd = Dense(64, kernel_initializer='glorot_normal')(dense_fmd)
+                dense_fmd = (getattr(keras.layers, activation)())(dense_fmd)
+                if batch_norm:
+                    dense_fmd = BatchNormalization()(dense_fmd)
+                if dropout > 0.0:
+                    dense_fmd = Dropout(dropout)(dense_fmd)
+
+            dense_fmd = Dense(1, 
+                            activation = 'sigmoid', 
+                            name = 'dense_fmd_output', 
+                            kernel_initializer = 'glorot_normal')(dense_fmd)
+
+            input_list.extend(fmd_input)
+            concatenate_list.extend(dense_fmd)
+        # V0 is no longer used in ML as we can make a clean cut in the amplitude
+        # ----------------------------- fancy ml end -----------------------------------
+
+        # aux_output_track = Dense(1, activation='softmax', 
+        #         name='aux_output_track')(track_dropout)
+
+        # output_list = [aux_output_track]
+
+        # stack the layers on top of a fully connected DNN
+        x = keras.layers.concatenate(concatenate_list)
+        for i in range(0,n_layers):
+            if activation != 'relu':
+                x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
+                x = (getattr(keras.layers, activation)())(x)
+            else:
+                x = Dense(layer_nodes, 
+                          activation         = activation, 
+                          kernel_initializer = 'glorot_normal')(x)
+            if batch_norm:
+                x = BatchNormalization()(x)
+            if dropout > 0.0:
+                x = Dropout(dropout)(x)
+
+        main_output = Dense(1, 
+                            activation = 'sigmoid', 
+                            name = 'main_output', 
+                            kernel_initializer = 'glorot_normal')(x)
+        model = Model(inputs=input_list, outputs=main_output)
+  
+        # the main output has the full weight (main output is the first element
+        # loss_weights = [1.]
+        # output_targets = [y_train]
+        # for i in range(len(output_list)-1):
+        #     # the auxiliary outputs have to be weighted (here all: 0.2)
+        #     loss_weights.append(0.2)
+        #     # the target is always the same
+        #     output_targets.append(y_train)
+
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        print(model.summary())
+        try:
+            checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
+                               verbose=0,
+                               save_best_only=True)
+            history = model.fit(train_data,
+                                y_train,  
+                                epochs = n_epochs, 
+                                batch_size = batch_size,
+                                validation_data = val_data,
+                                callbacks = [checkpointer]).history
+                      # class_weight = class_weight)
+                      # ,callbacks = [callback_ROC(train_data, 
+                      #                           y_train, 
+                      #                           output_prefix=out_path)])
+
+        except KeyboardInterrupt:
+            print('Training ended early.')
+
+        return history
