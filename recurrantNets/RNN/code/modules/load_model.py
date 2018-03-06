@@ -461,6 +461,12 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             X_calo_cluster_train = train_data.pop('calo_cluster', None)
 
             y_train         = train_data.pop('target')
+            if train_data:
+                raise ValueError('The input dictionary contains unknown keys: {}'.format(
+                    list(train_data.keys())))
+            
+            input_data = data.copy()
+            input_data.pop('target')
 
         except KeyError:
             raise KeyError('The data-dictionary provided does not contain' \
@@ -614,13 +620,8 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
         # stack the layers on top of a fully connected DNN
         x = keras.layers.concatenate(concatenate_list)
         for i in range(0,n_layers):
-            if activation != 'relu':
-                x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
-                x = (getattr(keras.layers, activation)())(x)
-            else:
-                x = Dense(layer_nodes, 
-                          activation         = activation, 
-                          kernel_initializer = 'glorot_normal')(x)
+            x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
+            x = (getattr(keras.layers, activation)())(x)
             if batch_norm:
                 x = BatchNormalization()(x)
             if dropout > 0.0:
@@ -647,7 +648,7 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
                                verbose=0,
                                save_best_only=True)
-            history = model.fit(train_data,
+            history = model.fit(input_data,
                                 y_train,  
                                 epochs = n_epochs, 
                                 batch_size = batch_size,
