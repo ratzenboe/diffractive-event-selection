@@ -21,7 +21,10 @@ while true; do
                 # as we create the the raw files we have to move all
                 # current files out of the directroy because we dont want 
                 # duplicates to occur
-                mv /media/hdd/train_files/raw_trees_from_grid/AnalysisResults*.root /media/hdd/train_files/raw_trees_from_grid/old_files/.
+                array=(/media/hdd/train_files/raw_trees_from_grid/AnalysisResults*.root)
+                if [ "${array[0]}" != "/media/hdd/train_files/raw_trees_from_grid/AnalysisResults*.root" ]; then
+                    mv /media/hdd/train_files/raw_trees_from_grid/AnalysisResults*.root /media/hdd/train_files/raw_trees_from_grid/old_files/.
+                fi
                 read -p "   How may events: " NEVTS
                 NEVTS=${NEVTS:-500000}
                 echo "   Creating $NEVTS events..."
