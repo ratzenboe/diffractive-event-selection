@@ -287,7 +287,7 @@ def main():
         y_val_data = evt_dic_val.pop('target')
         y_val_data[(y_val_data==1) | (y_val_data==0)] = 1
         y_val_data[y_val_data==99] = 0
-        X_val_data = evt_dic_val
+        X_val_data = evt_dic_val['feature_matrix']
     else:
         y_val_data = evt_dic_val.pop('target')
         X_val_data = evt_dic_val
