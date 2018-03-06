@@ -120,6 +120,8 @@ def main():
 
     out_path = om.get_session_folder()
     try:
+        # uncomment the next line if we want to produce the evt-dictionary with the
+        # saved pickle files (the event.pkl, etc)
         # raise TypeError('We want to produce the evt_dic again')
         evt_dictionary = get_data_dictionary(output_path + 'evt_dic.pkl')
         print('\n:: Event dictionary loaded from file: {}'.format(output_path + 'evt_dic.pkl'))
@@ -324,7 +326,7 @@ def main():
 
     print('\nEvaluating the model on the training sample...')
     # returns the poped element
-    evt_dic_train['target'][evt_dic_train['target']==99] = 0
+    # evt_dic_train['target'][evt_dic_train['target']==99] = 0
     print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     y_train_truth = evt_dic_train.pop('target')
     y_train_score = model.predict(evt_dic_train)
@@ -349,7 +351,7 @@ def main():
     save_data_dictionary(out_path+'evt_dic_test.pkl', evt_dic_test)
 
     print('\n::  Evaluating the model on the test sample...')
-    evt_dic_test['target'][evt_dic_test['target']==99] = 0
+    # evt_dic_test['target'][evt_dic_test['target']==99] = 0
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
     y_test_truth = evt_dic_test.pop('target')
     # to predict the labels we have to ged rid of the target:
