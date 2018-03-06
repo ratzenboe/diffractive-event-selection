@@ -467,6 +467,8 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             
             input_data = data.copy()
             input_data.pop('target')
+            # we do not need v0 right now (cut with tot_v0_ampl = 0)
+            input_data.pop('v0', None)
 
         except KeyError:
             raise KeyError('The data-dictionary provided does not contain' \
