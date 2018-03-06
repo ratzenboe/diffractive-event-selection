@@ -81,6 +81,9 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     n_unique = np.unique(x_total).shape[0]
     if n_unique == 0:
         n_unique = 1
+        hist_range = (x_total.min()-1., x_total.max()+1)
+    else:
+        hist_range = (x_total.min(), x_total.max())
 
     if n_unique < 40:
         nbins = n_unique*2
@@ -109,7 +112,7 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     n_total, bins_total, patches_total = \
         plt.hist(x_total,
                  bins=nbins,
-                 range=(x_total.min(), x_total.max()),
+                 range=hist_range,
                  normed=normed,
                  alpha=.25,
                  color='black',
@@ -118,7 +121,7 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     n_trueNeg, bins_trueNeg, patches_trueNeg = \
         plt.hist(x_bg,
                  bins=nbins,
-                 range=(x_total.min(), x_total.max()),
+                 range=hist_range,
                  normed=normed,
                  alpha=0.5,
                  color='#dd0000',
@@ -127,7 +130,7 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     n_truePos, bins_truePos, patches_truePos = \
         plt.hist(x_sig,
                  bins=nbins,
-                 range=(x_total.min(), x_total.max()),
+                 range=hist_range,
                  normed=normed,
                  alpha=0.5,
                  color='green',
