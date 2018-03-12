@@ -256,15 +256,18 @@ def main():
     evt_dic_train, feature_lst = special_preprocessing(run_mode_user, 
                                                        evt_dic_train, 
                                                        labels_dic=feature_names_dic,
-                                                       append_array=eta_phi_dist_feature_arr_train)
+                                                       append_array=eta_phi_dist_feature_arr_train,
+                                                       flat = flat)
     # saveing the feature_list to do shap predictions
     om.save(feature_lst, 'feature_list')
     evt_dic_test = special_preprocessing(run_mode_user, 
                                          evt_dic_test, 
-                                         append_array=eta_phi_dist_feature_arr_test)[0]
+                                         append_array=eta_phi_dist_feature_arr_test,
+                                         flat=flat)[0]
     evt_dic_val  = special_preprocessing(run_mode_user, 
                                          evt_dic_val,
-                                         append_array=eta_phi_dist_feature_arr_val)[0]
+                                         append_array=eta_phi_dist_feature_arr_val,
+                                         flat=flat)[0]
 
     print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
@@ -307,7 +310,8 @@ def main():
                         n_layers    = n_layers,
                         layer_nodes = layer_nodes, 
                         batch_norm  = batch_norm,
-                        activation  = activation)
+                        activation  = activation,
+                        flat        = flat)
 
     plot_model_loss(history, out_path)
     # model is now saved during training
@@ -417,9 +421,18 @@ if __name__ == "__main__":
                         dest='plot',
                         default=False)
 
+    parser.add_argument('-flat', 
+                        help='bool: has only an effect if run_mode NN is used \
+                              if used then the rnn structure of the tracks is flattend',
+                        action='store_true',
+                        dest='flat',
+                        default=False)
+
+
     command_line_args = parser.parse_args(user_argv)
 
     run_mode_user = command_line_args.run_mode
     plot = command_line_args.plot
+    flat = command_line_args.flat
 
     main()
