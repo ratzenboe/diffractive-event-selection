@@ -436,8 +436,9 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
         # track_mask = Masking(mask_value=float(-999), name='track_masking')(track_input)
         # event needs no masking
         try:
+            track_rnn = Masking(mask_value=float(-999), name='track_masking')(track_input)
             track_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_track, 
-                name='track_rnn'))(track_input)
+                name='track_rnn'))(track_rnn)
             if batch_norm:
                 track_rnn = BatchNormalization(name='track_batch_norm')(track_rnn)
             if dropout > 0.0:
@@ -453,8 +454,9 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             N_FEATURES_emcal = EMCAL_SHAPE[-1]
             emcal_input = Input(shape=EMCAL_SHAPE, name='emcal')
             try:
+                emcal_rnn = Masking(mask_value=float(-999), name='emcal_masking')(emcal_input)
                 emcal_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_emcal, 
-                    name='emcal_rnn'))(emcal_input)
+                    name='emcal_rnn'))(emcal_rnn)
                 if batch_norm:
                     emcal_rnn = BatchNormalization(name='emcal_batch_norm')(emcal_rnn)
                 if dropout > 0.0:
@@ -470,8 +472,9 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             N_FEATURES_phos = PHOS_SHAPE[-1]
             phos_input = Input(shape=PHOS_SHAPE, name='phos')
             try:
+                phos_rnn = Masking(mask_value=float(-999), name='phos_masking')(phos_input)
                 phos_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_phos, 
-                    name='phos_rnn'))(phos_input)
+                    name='phos_rnn'))(phos_rnn)
                 if batch_norm:
                     phos_rnn = BatchNormalization(name='phos_batch_norm')(phos_rnn)
                 if dropout > 0.0:
@@ -487,8 +490,10 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             N_FEATURES_calo_cluster = CALO_CLUSTER_SHAPE[-1]
             calo_cluster_input = Input(shape=CALO_CLUSTER_SHAPE, name='calo_cluster')
             try:
+                calo_cluster_rnn = Masking(mask_value=float(-999), 
+                                           name='calo_cluster_masking')(calo_cluster_input)
                 calo_cluster_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_calo_cluster, 
-                    name='calo_cluster_rnn'))(calo_cluster_input)
+                    name='calo_cluster_rnn'))(calo_cluster_rnn)
                 if batch_norm:
                     calo_cluster_rnn = BatchNormalization(name='calo_cluster_batch_norm')(
                             calo_cluster_rnn)
