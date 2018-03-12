@@ -464,8 +464,9 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             except AttributeError:
                 raise AttributeError('{} is not a valid Keras layer!'.format(rnn_layer))
 
-            input_list.extend(emcal_input)
-            concatenate_list.extend(emcal_rnn)
+            # input_list.extend(emcal_input)
+            input_list.append(emcal_input)
+            concatenate_list.append(emcal_rnn)
 
         if X_phos_train is not None:
             PHOS_SHAPE = X_phos_train.shape[1:]
@@ -482,8 +483,8 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             except AttributeError:
                 raise AttributeError('{} is not a valid Keras layer!'.format(rnn_layer))
 
-            input_list.extend(phos_input)
-            concatenate_list.extend(phos_rnn)
+            input_list.append(phos_input)
+            concatenate_list.append(phos_rnn)
 
         if X_calo_cluster_train is not None:
             CALO_CLUSTER_SHAPE = X_calo_cluster_train.shape[1:]
@@ -503,8 +504,8 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             except AttributeError:
                 raise AttributeError('{} is not a valid Keras layer!'.format(rnn_layer))
 
-            input_list.extend(calo_cluster_input)
-            concatenate_list.extend(calo_cluster_rnn)
+            input_list.append(calo_cluster_input)
+            concatenate_list.append(calo_cluster_rnn)
 
         if X_ad_train is not None:
             AD_SHAPE = (X_ad_train.shape[-1],)
@@ -530,8 +531,8 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
                             name = 'dense_ad_output', 
                             kernel_initializer = 'glorot_normal')(dense_ad)
 
-            input_list.extend(ad_input)
-            concatenate_list.extend(dense_ad)
+            input_list.append(ad_input)
+            concatenate_list.append(dense_ad)
 
 
         if X_fmd_train is not None:
@@ -558,10 +559,10 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
                             name = 'dense_fmd_output', 
                             kernel_initializer = 'glorot_normal')(dense_fmd)
 
-            input_list.extend(fmd_input)
-            concatenate_list.extend(dense_fmd)
+            input_list.append(fmd_input)
+            concatenate_list.append(dense_fmd)
 
-        if X_fmd_train is not None:
+        if X_v0_train is not None:
             V0_SHAPE = (X_v0_train.shape[-1],)
             v0_input = Input(shape=V0_SHAPE, name='v0')
 
@@ -585,8 +586,8 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
                             name = 'dense_v0_output', 
                             kernel_initializer = 'glorot_normal')(dense_v0)
 
-            input_list.extend(v0_input)
-            concatenate_list.extend(dense_v0)
+            input_list.append(v0_input)
+            concatenate_list.append(dense_v0)
         # ----------------------------- fancy ml end -----------------------------------
 
         # aux_output_track = Dense(1, activation='softmax', 
