@@ -393,7 +393,7 @@ def get_data(branches_dic, max_entries_dic, path_dic, evt_id_string, target_list
             # [:-5] removes .root from the string
             data.to_pickle(path_dic[key][:-5]+'_data_pandas.pkl')
             df_list_of_events = pd.DataFrame(list_of_events)
-            print('Saving the data in {}'.format(path_dic[key][:-5]+'_pandas.pkl'))
+            print('Saving the data in {}'.format(path_dic[key][:-5]+'_data_pandas.pkl'))
             df_list_of_events.to_pickle(path_dic[key][:-5]+'_list_of_events.pkl')
             del df_list_of_events
 
@@ -439,7 +439,7 @@ def load_data(filename, treename=None, branches=None, load=False, selection=None
         __________________________________________________________________________
 
         load:
-            bool, load file from filename + '_pandas.pkl' (hard-coded)
+            bool, load file from filename + '_data_pandas.pkl' (hard-coded)
     ______________________________________________________________________________
 
     Operation breakdown
@@ -455,14 +455,14 @@ def load_data(filename, treename=None, branches=None, load=False, selection=None
     """
 
     if load:
-        filename_pickle = filename[:-5] +'_pandas.pkl'
+        filename_pickle = filename[:-5] +'_data_pandas.pkl'
         if not os.path.exists(filename_pickle):
             if (sys.version_info > (3, 0)):
                 raise IOError('File {} does not exist ' \
-                        'Loading the data from the root file'.format(filename))
+                        'Loading the data from the root file'.format(filename_pickle))
             else:
                 warnings.warn('File {} does not exist. ' \
-                        'Loading the data from the root file'.format(filename))
+                        'Loading the data from the root file'.format(filename_pickle))
         else:
             print('::  fetching data from {}'.format(filename_pickle))
             data = pd.read_pickle(filename_pickle)
