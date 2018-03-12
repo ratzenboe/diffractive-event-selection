@@ -115,9 +115,14 @@ def train_model(data, run_mode_user, val_data,
         return combined_rnn
 
     elif 'NN' in run_mode_user:
-        history = train_composite_NN(data, val_data, batch_size, n_epochs, rnn_layer,
+        if flat:
+            history = train_flat_NN(data, val_data, batch_size, n_epochs,
                        out_path, dropout, class_weight,
                        n_layers, layer_nodes, batch_norm, activation)
+        else:
+            history = train_composite_NN(data, val_data, batch_size, n_epochs, rnn_layer,
+                           out_path, dropout, class_weight,
+                           n_layers, layer_nodes, batch_norm, activation)
 
         return history
 
@@ -408,8 +413,6 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             
             input_data = data.copy()
             input_data.pop('target')
-            # we do not need v0 right now (cut with tot_v0_ampl = 0)
-            input_data.pop('v0', None)
 
         except KeyError:
             raise KeyError('The data-dictionary provided does not contain' \
@@ -451,7 +454,7 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             emcal_input = Input(shape=EMCAL_SHAPE, name='emcal')
             try:
                 emcal_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_emcal, 
-                    name='emcal_rnn'))(emcal_iput)
+                    name='emcal_rnn'))(emcal_input)
                 if batch_norm:
                     emcal_rnn = BatchNormalization(name='emcal_batch_norm')(emcal_rnn)
                 if dropout > 0.0:
@@ -552,7 +555,33 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
 
             input_list.extend(fmd_input)
             concatenate_list.extend(dense_fmd)
-        # V0 is no longer used in ML as we can make a clean cut in the amplitude
+
+        if X_fmd_train is not None:
+            V0_SHAPE = (X_v0_train.shape[-1],)
+            v0_input = Input(shape=V0_SHAPE, name='v0')
+
+            dense_v0 = Dense(64, kernel_initializer='glorot_normal')(v0_input)
+            dense_v0 = (getattr(keras.layers, activation)())(dense_v0)
+            if batch_norm:
+                dense_v0 = BatchNormalization()(dense_v0)
+            if dropout > 0.0:
+                dense_v0 = Dropout(dropout)(dense_v0)
+
+            for i in range(2):
+                dense_v0 = Dense(64, kernel_initializer='glorot_normal')(dense_v0)
+                dense_v0 = (getattr(keras.layers, activation)())(dense_v0)
+                if batch_norm:
+                    dense_v0 = BatchNormalization()(dense_v0)
+                if dropout > 0.0:
+                    dense_v0 = Dropout(dropout)(dense_v0)
+
+            dense_v0 = Dense(1, 
+                            activation = 'sigmoid', 
+                            name = 'dense_v0_output', 
+                            kernel_initializer = 'glorot_normal')(dense_v0)
+
+            input_list.extend(v0_input)
+            concatenate_list.extend(dense_v0)
         # ----------------------------- fancy ml end -----------------------------------
 
         # aux_output_track = Dense(1, activation='softmax', 
