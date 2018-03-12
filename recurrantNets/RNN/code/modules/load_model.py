@@ -7,7 +7,7 @@ import copy
 import keras
 from keras.models import Model, Sequential
 from keras.layers.core import Activation, Dense, Dropout
-from keras.layers import Masking, LSTM, GRU, Input, BatchNormalization
+from keras.layers import Masking, LSTM, GRU, Input, BatchNormalization, Flatten
 from keras.layers.advanced_activations import PReLU
 from keras.callbacks import ModelCheckpoint
 
@@ -16,7 +16,8 @@ from modules.keras_callback import callback_ROC
 def train_model(data, run_mode_user, val_data,
                 batch_size=64, n_epochs=50, rnn_layer='LSTM', 
                 out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
-                n_layers=3, layer_nodes=100, batch_norm=False, activation='relu', flat=False):
+                n_layers=3, layer_nodes=100, batch_norm=False, activation='relu', 
+                flat=False, aux=False):
     """
     Args 
         data:
@@ -122,7 +123,7 @@ def train_model(data, run_mode_user, val_data,
         else:
             history = train_composite_NN(data, val_data, batch_size, n_epochs, rnn_layer,
                            out_path, dropout, class_weight,
-                           n_layers, layer_nodes, batch_norm, activation)
+                           n_layers, layer_nodes, batch_norm, activation, aux)
 
         return history
 
@@ -390,9 +391,9 @@ def train_koala(data, val_data, batch_size=64, n_epochs=50, out_path = 'output/'
     return history
 
 
-def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LSTM', 
-                       out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
-                       n_layers=3, layer_nodes=100, batch_norm=False, activation='relu'):
+def train_composite_NN(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM', 
+        out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
+        n_layers=3, layer_nodes=100, batch_norm=False, activation='relu', aux=False):
 
 
         try:
@@ -508,10 +509,14 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             concatenate_list.append(calo_cluster_rnn)
 
         if X_ad_train is not None:
-            AD_SHAPE = (X_ad_train.shape[-1],)
+            # the data is in this form: (n_evts, n_cells, n_features)
+            # here: (n_evts, 16 (cells), 1 (amplitude in each cell))
+            # this means we have to flatten the input
+            AD_SHAPE = X_ad_train.shape[1:]
             ad_input = Input(shape=AD_SHAPE, name='ad')
+            dense_ad = Flatten()(ad_input)
 
-            dense_ad = Dense(16, kernel_initializer='glorot_normal')(ad_input)
+            dense_ad = Dense(16, kernel_initializer='glorot_normal')(dense_ad)
             dense_ad = (getattr(keras.layers, activation)())(dense_ad)
             if batch_norm:
                 dense_ad = BatchNormalization()(dense_ad)
@@ -536,10 +541,11 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
 
 
         if X_fmd_train is not None:
-            FMD_SHAPE = (X_fmd_train.shape[-1],)
+            FMD_SHAPE = X_fmd_train.shape[1:]
             fmd_input = Input(shape=FMD_SHAPE, name='fmd')
+            dense_fmd = Flatten()(fmd_input)
 
-            dense_fmd = Dense(64, kernel_initializer='glorot_normal')(fmd_input)
+            dense_fmd = Dense(64, kernel_initializer='glorot_normal')(dense_fmd)
             dense_fmd = (getattr(keras.layers, activation)())(dense_fmd)
             if batch_norm:
                 dense_fmd = BatchNormalization()(dense_fmd)
@@ -563,10 +569,11 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             concatenate_list.append(dense_fmd)
 
         if X_v0_train is not None:
-            V0_SHAPE = (X_v0_train.shape[-1],)
+            V0_SHAPE = X_v0_train.shape[1:]
             v0_input = Input(shape=V0_SHAPE, name='v0')
+            dense_v0 = Flatten()(v0_input)
 
-            dense_v0 = Dense(64, kernel_initializer='glorot_normal')(v0_input)
+            dense_v0 = Dense(64, kernel_initializer='glorot_normal')(dense_v0)
             dense_v0 = (getattr(keras.layers, activation)())(dense_v0)
             if batch_norm:
                 dense_v0 = BatchNormalization()(dense_v0)
@@ -590,13 +597,12 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             concatenate_list.append(dense_v0)
         # ----------------------------- fancy ml end -----------------------------------
 
-        # aux_output_track = Dense(1, activation='softmax', 
-        #         name='aux_output_track')(track_dropout)
-
-        # output_list = [aux_output_track]
-
-        # stack the layers on top of a fully connected DNN
         x = keras.layers.concatenate(concatenate_list)
+        # add an auxilairy output
+        output_list = []
+        if aux: 
+            aux_output_track = Dense(1, activation='sigmoid', name='aux_output_track')(x)
+            output_list.append(aux_output_track)
         for i in range(0,n_layers):
             x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
             x = (getattr(keras.layers, activation)())(x)
@@ -609,17 +615,9 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
                             activation = 'sigmoid', 
                             name = 'main_output', 
                             kernel_initializer = 'glorot_normal')(x)
-        model = Model(inputs=input_list, outputs=main_output)
+        output_list.insert(0, main_output)  
+        model = Model(inputs=input_list, outputs=output_list)
   
-        # the main output has the full weight (main output is the first element
-        # loss_weights = [1.]
-        # output_targets = [y_train]
-        # for i in range(len(output_list)-1):
-        #     # the auxiliary outputs have to be weighted (here all: 0.2)
-        #     loss_weights.append(0.2)
-        #     # the target is always the same
-        #     output_targets.append(y_train)
-
         model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
         print(model.summary())
         try:
