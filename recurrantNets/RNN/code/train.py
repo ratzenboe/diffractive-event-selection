@@ -311,7 +311,8 @@ def main():
                         layer_nodes = layer_nodes, 
                         batch_norm  = batch_norm,
                         activation  = activation,
-                        flat        = flat)
+                        flat        = flat,
+                        aux         = aux)
 
     plot_model_loss(history, out_path)
     # model is now saved during training
@@ -428,11 +429,19 @@ if __name__ == "__main__":
                         dest='flat',
                         default=False)
 
+    parser.add_argument('-aux', 
+                        help='bool: has only an effect if run_mode NN is used \
+                              if used then an auxiliary output is used after the concatination',
+                        action='store_true',
+                        dest='aux',
+                        default=False)
+
 
     command_line_args = parser.parse_args(user_argv)
 
     run_mode_user = command_line_args.run_mode
     plot = command_line_args.plot
     flat = command_line_args.flat
+    aux = command_line_args.aux
 
     main()
