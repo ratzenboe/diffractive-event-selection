@@ -316,12 +316,13 @@ def flatten_dictionary(evt_dic, feature_labels_dic=None, skip_list=['target']):
     return concat_arr, labels
 
 
-def special_preprocessing(run_mode_user, evt_dic, labels_dic=None, append_array=None):
+def special_preprocessing(run_mode_user, evt_dic, labels_dic=None, append_array=None, flat=False):
     """
     preprocessing only applied to certain run_mode
     """
     skip_list = ['target']
-    if 'NN' in run_mode_user or 'anomaly' in run_mode_user or 'koala' in run_mode_user:
+    # if 'NN' in run_mode_user or 'anomaly' in run_mode_user or 'koala' in run_mode_user:
+    if 'anomaly' in run_mode_user or 'koala' in run_mode_user or flat:
         tmp_evt_dic = {'target': evt_dic['target']}
         if 'koala' in run_mode_user:
             # here we have to reject event level data as the distributions do not
@@ -339,7 +340,9 @@ def special_preprocessing(run_mode_user, evt_dic, labels_dic=None, append_array=
         evt_dic = tmp_evt_dic
 
 
-    return evt_dic, labels_list
+        return evt_dic, labels_list
+    else:
+        return evt_dic, []
 
 
 def eta_phi_dist(arr):

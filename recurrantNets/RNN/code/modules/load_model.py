@@ -16,7 +16,7 @@ from modules.keras_callback import callback_ROC
 def train_model(data, run_mode_user, val_data,
                 batch_size=64, n_epochs=50, rnn_layer='LSTM', 
                 out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
-                n_layers=3, layer_nodes=100, batch_norm=False, activation='relu'):
+                n_layers=3, layer_nodes=100, batch_norm=False, activation='relu', flat=False):
     """
     Args 
         data:
@@ -115,70 +115,11 @@ def train_model(data, run_mode_user, val_data,
         return combined_rnn
 
     elif 'NN' in run_mode_user:
-        train_composite_NN(data, val_data, batch_size, n_epochs, rnn_layer,
+        history = train_composite_NN(data, val_data, batch_size, n_epochs, rnn_layer,
                        out_path, dropout, class_weight,
                        n_layers, layer_nodes, batch_norm, activation)
 
-        # try:
-        #     X_train = data['feature_matrix']
-        #     y_train = data['target']
-        #     train_data = data.copy() 
-        #     train_data.pop('target')
-        # except KeyError:
-        #     raise KeyError('The data-dictionary provided does not contain' \
-        #             'all necessary keys for the selected run-mode (run_mode_user)')
-
-        # input_train = Input(shape=(X_train.shape[-1],), name='feature_matrix')
-        # if activation != 'relu':
-        #      x = Dense(layer_nodes, kernel_initializer='glorot_normal')(input_train)
-        #      x = (getattr(keras.layers, activation)())(x)
-        # else:
-        #      x = Dense(layer_nodes, 
-        #               activation = activation, 
-        #               kernel_initializer = 'glorot_normal')(input_train)
-
-        # for i in range(0,n_layers-1):
-        #    if activation == 'PReLU':
-        #        x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
-        #        x = (getattr(keras.layers, activation)())(x)
-        #    else:
-        #        x = Dense(layer_nodes, 
-        #                  activation         = activation, 
-        #                  kernel_initializer = 'glorot_normal')(x)
-        #    if batch_norm:
-        #        x = BatchNormalization()(x)
-        #    if dropout > 0.0:
-        #         x = Dropout(dropout)(x)
-
-        # main_output = Dense(1, 
-        #                     activation = 'sigmoid', 
-        #                     name = 'main_output', 
-        #                     kernel_initializer = 'glorot_normal')(x)
-        # model = Model(inputs=input_train, outputs=main_output)
-  
-        # model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-                
-        # print(model.summary())
-        # try:
-        #     checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
-        #                        verbose=0,
-        #                        save_best_only=True)
-
-        #     history = model.fit(train_data,
-        #                         y_train,  
-        #                         epochs = n_epochs, 
-        #                         batch_size = batch_size,
-        #                         validation_data = val_data,
-        #                         callbacks = [checkpointer]).history
-        #               # class_weight = class_weight)
-        #               # ,callbacks = [callback_ROC(train_data_dic, 
-        #               #                           output_targets, 
-        #               #                           output_prefix=out_path)])
-
-        # except KeyboardInterrupt:
-        #     print('Training ended early.')
-
-        # return history
+        return history
 
     elif 'Grid' in run_mode_user:
         try:
@@ -665,3 +606,65 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=50, rnn_layer='LS
             print('Training ended early.')
 
         return history
+
+
+
+def train_flat_NN(data, val_data, batch_size=64, n_epochs=50, 
+                  out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
+                  n_layers=3, layer_nodes=100, batch_norm=False, activation='relu'):
+    """
+    train a flat NN
+    """
+
+    try:
+        X_train = data['feature_matrix']
+        y_train = data['target']
+        train_data = data.copy() 
+        train_data.pop('target')
+    except KeyError:
+        raise KeyError('The data-dictionary provided does not contain' \
+                'all necessary keys for the selected run-mode (run_mode_user)')
+
+    input_train = Input(shape=(X_train.shape[-1],), name='feature_matrix')
+    x = Dense(layer_nodes, kernel_initializer='glorot_normal')(input_train)
+    x = (getattr(keras.layers, activation)())(x)
+
+    for i in range(0,n_layers-1):
+       x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
+       x = (getattr(keras.layers, activation)())(x)
+       if batch_norm:
+           x = BatchNormalization()(x)
+       if dropout > 0.0:
+            x = Dropout(dropout)(x)
+
+    main_output = Dense(1, 
+                        activation = 'sigmoid', 
+                        name = 'main_output', 
+                        kernel_initializer = 'glorot_normal')(x)
+    model = Model(inputs=input_train, outputs=main_output)
+
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+            
+    print(model.summary())
+    try:
+        checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
+                           verbose=0,
+                           save_best_only=True)
+
+        history = model.fit(train_data,
+                            y_train,  
+                            epochs = n_epochs, 
+                            batch_size = batch_size,
+                            validation_data = val_data,
+                            callbacks = [checkpointer]).history
+                  # class_weight = class_weight)
+                  # ,callbacks = [callback_ROC(train_data_dic, 
+                  #                           output_targets, 
+                  #                           output_prefix=out_path)])
+
+    except KeyboardInterrupt:
+        print('Training ended early.')
+
+    return history
+
+
