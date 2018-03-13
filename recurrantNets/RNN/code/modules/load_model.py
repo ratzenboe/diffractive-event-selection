@@ -17,7 +17,7 @@ def train_model(data, run_mode_user, val_data,
                 batch_size=64, n_epochs=50, rnn_layer='LSTM', 
                 out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
                 n_layers=3, layer_nodes=100, batch_norm=False, activation='relu', 
-                flat=False, aux=False):
+                flat=False, aux=False, koala=False):
     """
     Args 
         data:
@@ -393,7 +393,8 @@ def train_koala(data, val_data, batch_size=64, n_epochs=50, out_path = 'output/'
 
 def train_composite_NN(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM', 
         out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
-        n_layers=3, layer_nodes=100, batch_norm=False, activation='relu', aux=False):
+        n_layers=3, layer_nodes=100, batch_norm=False, activation='relu', aux=False,
+        koala=False):
 
 
         try:
@@ -408,6 +409,10 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LS
             X_calo_cluster_train = train_data.pop('calo_cluster', None)
 
             y_train         = train_data.pop('target')
+            if koala:
+                y_train[(y_train==1) | (y_train==0)] = 1
+                y_train[y_train==99] = 0
+
             if train_data:
                 raise ValueError('The input dictionary contains unknown keys: {}'.format(
                     list(train_data.keys())))

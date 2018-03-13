@@ -254,11 +254,14 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
          *      ist dann die Anzahl tracks im event 
          */ 
         cu = 74;
-        /* ntrk2c = 2; */
+        ntrk2c = 6;
         nseltracks = LHC16Filter(cep_evt,kFALSE,cu,ntrk2c,isDG,isNDG); 
         // want events that have between 2 and 6 tracks
-        if (isDG == kTRUE && nseltracks >= 2 && nseltracks <= 6) evt_lhc16_filter = 1;
+        if (isDG==kTRUE && nseltracks>1 && nseltracks<7) evt_lhc16_filter = 1;
         else evt_lhc16_filter = 0;
+        /* cout << "nseltracks: " << nseltracks; */
+        /* cout << ", isDG: " << isDG; */
+        /* cout << "   --> evt_lhc16_filter: " << evt_lhc16_filter << "\n" << endl; */
 
         if (!cep_evt) std::cout << "Event number " << ii << " cannot be found!" << std::endl;
         if (ii==0)
