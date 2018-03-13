@@ -114,6 +114,18 @@ def main():
         n_layers          = model_params['n_layers']
         layer_nodes       = model_params['layer_nodes']
         batch_norm        = model_params['batch_norm']
+        # printing model parameters:
+        print('\n::  Model Parameters:')
+        print('::    rnn_layer: {}'.format(rnn_layer))
+        print('::    batch_size: {}'.format(batch_size))
+        print('::    n_epochs: {}'.format(n_epochs))
+        print('::    dropout: {}'.format(dropout))
+        print('::    class_weight: {}'.format(class_weight))
+        print('::    activation: {}'.format(activation))
+        print('::    n_layers: {}'.format(n_layers))
+        print('::    layer_nodes: {}'.format(layer_nodes))
+        print('::    batch_norm: {}'.format(batch_norm))
+        print('::    aux-output: {}'.format(aux))
     except KeyError:
         raise KeyError('The variable names in the main either have a typo ' \
                 'or do not exist in the config files!')
