@@ -600,9 +600,11 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LS
         x = keras.layers.concatenate(concatenate_list)
         # add an auxilairy output
         output_list = []
+        output_data = []
         if aux: 
-            aux_output_track = Dense(1, activation='sigmoid', name='aux_output_track')(x)
+            aux_output_track = Dense(1, activation='sigmoid', name='aux_output')(x)
             output_list.append(aux_output_track)
+            output_data.append(y_train)
         for i in range(0,n_layers):
             x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
             x = (getattr(keras.layers, activation)())(x)
@@ -616,6 +618,7 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LS
                             name = 'main_output', 
                             kernel_initializer = 'glorot_normal')(x)
         output_list.insert(0, main_output)  
+        output_data.append(y_train)
         model = Model(inputs=input_list, outputs=output_list)
   
         model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
@@ -625,7 +628,7 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LS
                                verbose=0,
                                save_best_only=True)
             history = model.fit(input_data,
-                                y_train,  
+                                output_data,  
                                 epochs = n_epochs, 
                                 batch_size = batch_size,
                                 validation_data = val_data,

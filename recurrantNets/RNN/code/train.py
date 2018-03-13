@@ -273,15 +273,12 @@ def main():
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
     print_array_in_dictionary_stats(evt_dic_val, 'Validation data info:')
 
-    pause_for_input('\n\n:: The model will be trained anew '\
-            'if this is not desired please hit enter', timeout=5)
     ######################################################################################
     # STEP 2:
     # ------------------------------- Fitting the model -----------------------------------
     ######################################################################################
     # if we want cross validation (in most cases we do) we can in turn easily evaluate the
     # models by passing which metrics should be looked into
-    start_time_training = time.time()
 
     if 'anomaly' in run_mode_user:
         # use only bg events for validation
@@ -293,35 +290,47 @@ def main():
         y_val_data[(y_val_data==1) | (y_val_data==0)] = 1
         y_val_data[y_val_data==99] = 0
         X_val_data = evt_dic_val['feature_matrix']
+    elif aux:
+        y_val_data = {'main_output': evt_dic_val['target'], 'aux_output': evt_dic_val['target']}
+        evt_dic_val.pop('target')
+        X_val_data = evt_dic_val
     else:
         y_val_data = evt_dic_val.pop('target')
         X_val_data = evt_dic_val
-    # to predict the labels we have to ged rid of the target:
-    print('\nFitting the model...')
-    history = train_model(evt_dic_train,
-                        run_mode_user, 
-                        val_data    = (X_val_data, y_val_data),
-                        batch_size  = batch_size,
-                        n_epochs    = n_epochs,
-                        rnn_layer   = rnn_layer,
-                        out_path    = out_path,
-                        dropout     = dropout,
-                        class_weight = class_weight,
-                        n_layers    = n_layers,
-                        layer_nodes = layer_nodes, 
-                        batch_norm  = batch_norm,
-                        activation  = activation,
-                        flat        = flat,
-                        aux         = aux)
 
-    plot_model_loss(history, out_path)
-    # model is now saved during training
-    # model.save(out_path + 'weights_final.h5', overwrite=True)
+    # to predict the labels we have to ged rid of the target:
+    start_time_training = time.time()
+    if not load:
+        print('\nFitting the model...')
+        pause_for_input('\n\n:: The model will be trained anew '\
+                'if this is not desired please hit enter', timeout=5)
+        history = train_model(evt_dic_train,
+                            run_mode_user, 
+                            val_data    = (X_val_data, y_val_data),
+                            batch_size  = batch_size,
+                            n_epochs    = n_epochs,
+                            rnn_layer   = rnn_layer,
+                            out_path    = out_path,
+                            dropout     = dropout,
+                            class_weight = class_weight,
+                            n_layers    = n_layers,
+                            layer_nodes = layer_nodes, 
+                            batch_norm  = batch_norm,
+                            activation  = activation,
+                            flat        = flat,
+                            aux         = aux)
+
+        plot_model_loss(history, out_path)
+        print('\n:: Finished training!')
+        load_model_path = out_path + 'best_model.h5'
+    else:
+        # this is the path where the current best model is located
+        load_model_path = './output/load_model_path/best_model.h5'
+
     end_time_training = time.time()
-    print('\n:: Finished training!')
 
     # Get the best model
-    model = load_model(out_path + 'best_model.h5')
+    model = load_model(load_model_path)
     ######################################################################################
     # STEP 3:
     # ----------------------------- Evaluating the model ---------------------------------
@@ -436,6 +445,12 @@ if __name__ == "__main__":
                         dest='aux',
                         default=False)
 
+    parser.add_argument('-load', 
+                        help='bool: if model should be loaded instead of fitted newly',
+                        action='store_true',
+                        dest='load',
+                        default=False)
+
 
     command_line_args = parser.parse_args(user_argv)
 
@@ -443,5 +458,6 @@ if __name__ == "__main__":
     plot = command_line_args.plot
     flat = command_line_args.flat
     aux = command_line_args.aux
+    load = command_line_args.load
 
     main()
