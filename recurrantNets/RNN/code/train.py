@@ -341,9 +341,12 @@ def main():
     print('\nEvaluating the model on the training sample...')
     # returns the poped element
     # evt_dic_train['target'][evt_dic_train['target']==99] = 0
-    print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     y_train_truth = evt_dic_train.pop('target')
     y_train_score = model.predict(evt_dic_train)
+    if isinstance(y_train_score, list):
+        # if one or several aux-outputs exist the main output is on the
+        # first position in the list
+        y_train_score = y_train_score[0]
 
     if not 'anomaly' in run_mode_user:
         num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, 
@@ -370,6 +373,8 @@ def main():
     y_test_truth = evt_dic_test.pop('target')
     # to predict the labels we have to ged rid of the target:
     y_test_score = model.predict(evt_dic_test)
+    if isinstance(y_test_score, list):
+        y_test_score = y_test_score[0]
 
     if not 'anomaly' in run_mode_user:
         num_trueSignal, num_trueBackgr = plot_MVAoutput(y_test_truth, y_test_score, 
