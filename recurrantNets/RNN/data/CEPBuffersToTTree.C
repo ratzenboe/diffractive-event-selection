@@ -12,7 +12,7 @@
 void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
 {
     // get the cut-selection info
-    gROOT->ProcessLine(".L /home/ratzenboe/Documents/ML_master_thesis/ML-repo/recurrantNets/RNN/data/CEPfilters.C");
+    gROOT->ProcessLine(".L /home/ratzenboe/Documents/ML_master_thesis/ML-repo/recurrantNets/RNN/data/CEPfilters_suggestion.C");
 
 
     TFile* CEPfile = 0x0;
@@ -244,9 +244,6 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
          *      ein bitword mit dem man den Filter steuern kann, für Simulationen ist ein
          *      Wert von 74 geeignet.
          *
-         * ntrk2c:
-         *      ist die Anzahl tracks die man will, für den Anfang also 2.
-         *
          * isDG: 
          *      wird dir am Ende sagen, ob das event ev ein CEP Kandidat ist
          *
@@ -254,10 +251,9 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
          *      ist dann die Anzahl tracks im event 
          */ 
         cu = 74;
-        ntrk2c = 6;
-        nseltracks = LHC16Filter(cep_evt,kFALSE,cu,ntrk2c,isDG,isNDG); 
+        nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG); 
         // want events that have between 2 and 6 tracks
-        if (isDG==kTRUE && nseltracks>1 && nseltracks<7) evt_lhc16_filter = 1;
+        if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) evt_lhc16_filter = 1;
         else evt_lhc16_filter = 0;
         /* cout << "nseltracks: " << nseltracks; */
         /* cout << ", isDG: " << isDG; */
