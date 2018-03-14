@@ -21,7 +21,7 @@ import root_numpy
 from modules.utils import pause_for_input, print_dict
 
 
-def pad_dataframe(df, max_entries):
+def pad_dataframe(df, max_entries, check_charge=False):
     """
     Args
 
@@ -31,6 +31,12 @@ def pad_dataframe(df, max_entries):
 
         max_entries:
             int > 0
+        ____________________________________________________________
+
+        check_charge:
+            bool: if too many tracks are provided this bool controls 
+            if we should check for the charge of the particles to 
+            sum up to 0 (should be false for any cases except for tracks) 
     ________________________________________________________________
 
     Operation breakdown
@@ -67,6 +73,7 @@ def pad_dataframe(df, max_entries):
 
     length = df.shape[0]
     if length > max_entries:
+        if not check_charge:
         warnings.warn('The input dataframe exceeds the maxiumum entries! It is cut from {} ' \
                 'instances to {} entries! This may affect the performance. Please adjust ' \
                 'the maximum entries in the data-config file accordingly!'.format(
@@ -74,21 +81,21 @@ def pad_dataframe(df, max_entries):
         # pause_for_input('A warning was issued, do you want to abort the program?', timeout=1)
         # max_entries-1 will give return a dataframe with length max_entries as the 
         # first entry is 0
-        #################################################################################
         # ----------------------- this is done if we sample the bg ----------------------
         # But first we shuffle the entries so that we do not pick always the first 2 entries
         # the randomly picked samples however have to sum up to zero charge
-        # while True:
-        #     df_new = df.sample(n=max_entries).reset_index(drop=True)
-        #     try:
-        #         if int(df_new['charge_sign'].sum()) == 0:
-        #             df = df_new
-        #             break
-        #     except KeyError:
-        #         raise KeyError('The feature "charge_sign" is not stored in the read data!')
-        #################################################################################
-            
-        df = df.sample(n=max_entries).reset_index(drop=True)
+        if check_charge:
+            while True:
+                df_new = df.sample(n=max_entries).reset_index(drop=True)
+                try:
+                    if int(df_new['charge_sign'].sum()) == 0:
+                        df = df_new
+                        break
+                except KeyError:
+                    raise KeyError('The feature "charge_sign" is not stored in the read data!')
+        else:
+            df = df.sample(n=max_entries).reset_index(drop=True)
+
         return df
 
     elif length < max_entries:
@@ -98,8 +105,9 @@ def pad_dataframe(df, max_entries):
 
     elif length == max_entries:
         # this is only true for the track features
-        # if int(df['charge_sign'].sum()) != 0:
-        #     raise ValueError('The tracks provided do not sum up to a neutral particle!')
+        if check_charge:
+            if int(df['charge_sign'].sum()) != 0:
+                raise ValueError('The tracks provided do not sum up to a neutral particle!')
         return df
 
 
@@ -260,8 +268,12 @@ def event_grouping(inp_data, max_entries_per_evt, list_of_features, evt_id_strin
         #   right before they are put into the model
         #
         #######################################################################
+        if 'charge_sign' in list(evt_dataframe.columns):
+            check_charge = True
+        else:
+            check_charge = False
         
-        evt_filled_up_dataframe = pad_dataframe(evt_dataframe, max_entries_per_evt)
+        evt_filled_up_dataframe = pad_dataframe(evt_dataframe, max_entries_per_evt, check_charge)
         # transform dataframe to numpy records array (no indexing, as ordering does not
         # contain information)
         all_events.append(evt_filled_up_dataframe.to_records(index=False))
