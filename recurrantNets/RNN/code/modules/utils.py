@@ -345,6 +345,21 @@ def special_preprocessing(run_mode_user, evt_dic, labels_dic=None, append_array=
         return evt_dic, []
 
 
+def flatten_feature(evt_dic, feature_to_flatten):
+    """
+    flatten a certain feature (e.g. the tracks)
+    """
+    # can only flatten a feature that has the following shape
+    if len(evt_dic[feature_to_flatten].shape) == 3:
+        n_evts = evt_dic[feature_to_flatten].shape[0]
+        n_particles = evt_dic[feature_to_flatten].shape[1]
+        n_features = evt_dic[feature_to_flatten].shape[2]
+        evt_dic[feature_to_flatten] = np.reshape(
+                evt_dic[feature_to_flatten], (n_evts, n_particles*n_features))
+
+    return evt_dic
+
+
 def eta_phi_dist(arr):
     """
     returns the eta phi distance of a rec-array that has the field names phi and eta
