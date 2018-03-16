@@ -17,7 +17,7 @@ def train_model(data, run_mode_user, val_data,
                 batch_size=64, n_epochs=50, rnn_layer='LSTM', 
                 out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
                 n_layers=3, layer_nodes=100, batch_norm=False, activation='relu', 
-                flat=False, aux=False, koala=False):
+                flat=False, aux=False):
     """
     Args 
         data:
@@ -123,7 +123,7 @@ def train_model(data, run_mode_user, val_data,
         else:
             history = train_composite_NN(data, val_data, batch_size, n_epochs, rnn_layer,
                            out_path, dropout, class_weight,
-                           n_layers, layer_nodes, batch_norm, activation, aux)
+                           n_layers, layer_nodes, batch_norm, activation, aux, koala=False)
 
         return history
 
@@ -233,8 +233,10 @@ def train_model(data, run_mode_user, val_data,
         return history
 
     elif 'koala' in run_mode_user:
-        history = train_koala(data, val_data, batch_size, n_epochs, out_path, dropout, 
-                          n_layers, layer_nodes, batch_norm, activation)
+        history = train_composite_NN(data, val_data, batch_size, n_epochs, rnn_layer,
+                           out_path, dropout, class_weight,
+                           n_layers, layer_nodes, batch_norm, activation, aux, koala=True)
+
         return history
 
 
@@ -409,7 +411,8 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LS
             X_calo_cluster_train = train_data.pop('calo_cluster', None)
 
             y_train         = train_data.pop('target')
-            if koala:
+
+            if koala and y_train[y_train==99].size != 0:
                 y_train[(y_train==1) | (y_train==0)] = 1
                 y_train[y_train==99] = 0
 
