@@ -231,9 +231,12 @@ def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
     """
 
     print('::   Creating MVA output plot...')
+
     
     y_score_truePos = y_score[np.array(y_truth==1)]
     y_score_trueNeg = y_score[np.array(y_truth==0)]
+    y_score_trueBG  = y_score[np.array(y_truth==99)]
+
     
     plt.figure()
 
@@ -258,6 +261,14 @@ def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
                  color='green',
                  label='signal')
     
+    if y_score_trueBG.shape[0] > 0:
+        n_trueBG, bins_trueBG, patches_trueBG = \
+            plt.hist(y_score_trueBG,
+                     bins=nbins,
+                     alpha=0.5,
+                     color='yellow',
+                     label='generated backg.')
+ 
     #plt.title('MVA output distribution (positive class)')
     plt.xlim(-0.05, 1.05)
     plt.xlabel('MVA output', fontsize=18)
