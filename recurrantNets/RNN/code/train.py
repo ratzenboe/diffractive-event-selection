@@ -128,7 +128,6 @@ def main():
         print('::    batch_norm: {}'.format(batch_norm))
         print('::    aux-output: {}'.format(aux))
         print('::    flatten: {}'.format(flat))
-        print('::    koala: {}'.format(koala))
         print('{}'.format(30*'-'))
     except KeyError:
         raise KeyError('The variable names in the main either have a typo ' \
@@ -302,16 +301,28 @@ def main():
             evt_dic_val['feature_matrix'][np.array(np.where(evt_dic_val['target']==0)).ravel()]}
         y_val_data = X_val_data['feature_matrix']
     elif 'koala' in run_mode_user:
-        y_val_data = evt_dic_val.pop('target')
         y_val_data[(y_val_data==1) | (y_val_data==0)] = 1
         y_val_data[y_val_data==99] = 0
-        X_val_data = evt_dic_val['feature_matrix']
-    elif aux:
-        y_val_data = {'main_output': evt_dic_val['target'], 'aux_output': evt_dic_val['target']}
-        evt_dic_val.pop('target')
+        if aux:
+            y_val_data = {
+                          'main_output': evt_dic_val['target'], 
+                          'aux_output': evt_dic_val['target']
+                         }
+            evt_dic_val.pop('target')
+        else: 
+            y_val_data = evt_dic_val.pop('target')
         X_val_data = evt_dic_val
+
     else:
-        y_val_data = evt_dic_val.pop('target')
+        if aux:
+            y_val_data = {
+                          'main_output': evt_dic_val['target'], 
+                          'aux_output': evt_dic_val['target']
+                         }
+            evt_dic_val.pop('target')
+        else:
+            y_val_data = evt_dic_val.pop('target')
+
         X_val_data = evt_dic_val
 
     # to predict the labels we have to ged rid of the target:
@@ -472,13 +483,6 @@ if __name__ == "__main__":
                         dest='load',
                         default=False)
 
-    parser.add_argument('-koala', 
-                        help='bool: if model should be fitted with the CWoLa method',
-                        action='store_true',
-                        dest='koala',
-                        default=False)
-
-
     command_line_args = parser.parse_args(user_argv)
 
     run_mode_user = command_line_args.run_mode
@@ -486,6 +490,5 @@ if __name__ == "__main__":
     flat = command_line_args.flat
     aux = command_line_args.aux
     load = command_line_args.load
-    koala = command_line_args.koala
 
     main()
