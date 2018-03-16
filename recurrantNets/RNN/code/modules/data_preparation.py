@@ -12,12 +12,6 @@ import numpy as np
 import pandas as pd
 import pickle
 
-# only for python 3
-# uncomment for python 2
-# for the code to work in python 3 uncomment all root_numpy lines
-# currently only two, the next one and in load_data
-import root_numpy
-
 from modules.utils import pause_for_input, print_dict
 
 
@@ -74,10 +68,10 @@ def pad_dataframe(df, max_entries, check_charge=False):
     length = df.shape[0]
     if length > max_entries:
         if not check_charge:
-        warnings.warn('The input dataframe exceeds the maxiumum entries! It is cut from {} ' \
-                'instances to {} entries! This may affect the performance. Please adjust ' \
-                'the maximum entries in the data-config file accordingly!'.format(
-                    length, max_entries))
+            warnings.warn('The input dataframe exceeds the maxiumum entries! It is cut from {} ' \
+                    'instances to {} entries! This may affect the performance. Please adjust ' \
+                    'the maximum entries in the data-config file accordingly!'.format(
+                        length, max_entries))
         # pause_for_input('A warning was issued, do you want to abort the program?', timeout=1)
         # max_entries-1 will give return a dataframe with length max_entries as the 
         # first entry is 0
@@ -460,7 +454,7 @@ def load_data(filename, treename=None, branches=None, load=False, selection=None
 
     Operation breakdown
         
-        The data in form of a TTree is loaded via root_numpy and stored 
+        The data in form of a TTree is loaded via pd.read_pickle and stored 
         in a pandas dataframe (for easier slicing and processing of the data)
     ______________________________________________________________________________
 
@@ -489,15 +483,7 @@ def load_data(filename, treename=None, branches=None, load=False, selection=None
     if not os.path.exists(filename):
         raise IOError('File {} does not exist.'.format(filename))
 
-    # uncomment next lines if code run in python 3
-    data = pd.DataFrame(root_numpy.root2array(filename, 
-                                              branches = branches,
-                                              treename = treename,
-                                              selection = selection))
-    data = data.astype(float)
-
     return data
-
 
 
 def save_data_dictionary(outfile, all_evt_data):
