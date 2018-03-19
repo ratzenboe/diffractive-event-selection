@@ -39,12 +39,12 @@ def main():
                 break
             
             treename = files_list[i].partition('_info')[0]
-            print('converting {} into pickle format'.format(files_list[i]))
+            print('::  converting {} into pickle format'.format(files_list[i]))
             data = pd.DataFrame(root_numpy.root2array(filespath+files_list[i], treename=treename))
             data = data.astype(float)
             # [:-5] cuts away the .root ending
             data.to_pickle(outpath + files_list[i][:-5] + '_data_pandas.pkl')
-            print('Saving pickled file in {}'.format(outpath + files_list[i][:-5] + '_data_pandas.pkl'))
+            print('::  Saving pickled file in {}'.format(outpath + files_list[i][:-5] + '_data_pandas.pkl\n'))
     
 
 if __name__ == "__main__":
