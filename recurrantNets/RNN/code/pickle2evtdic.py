@@ -9,6 +9,8 @@ import copy
 import warnings
 import pickle
 
+import timeit
+
 import fnmatch
 
 import numpy as np
@@ -137,8 +139,7 @@ def get_evt_id_list(data, cut_dic, event_id_string):
     return list_of_events
 
 
-def event_grouping(inp_data, max_entries_per_evt, evt_id_string, 
-        targets, list_of_events, max_tracks=2):
+def event_grouping(inp_data, max_entries_per_evt, evt_id_string, targets, list_of_events, max_tracks=2):
     """
     Args
 
@@ -197,9 +198,13 @@ def event_grouping(inp_data, max_entries_per_evt, evt_id_string,
         pause_for_input('A warning was issued, do you want to abort the program?', timeout=4)
         return all_events, y_data
     
+    time_needed_for_loc = []
+    time_needed_for_pad_df = []
     for evt_int in tqdm(list_of_events):
         # get relevant data for one event 
+        start_time = time.time()
         evt_dataframe = inp_data.loc[inp_data[evt_id_string] == evt_int, list_of_features]
+        time_needed_for_loc.append((time.time() - start_time))
         # the dataframe has some arbitraty indices because we just slice some
         # instances out of it: we fix the index here
         evt_dataframe = evt_dataframe.reset_index(drop=True)
@@ -248,7 +253,9 @@ def event_grouping(inp_data, max_entries_per_evt, evt_id_string,
         else:
             check_charge = False
         
+        time_start = time.time()
         evt_filled_up_dataframe = pad_dataframe(evt_dataframe, max_entries_per_evt, check_charge)
+        time_needed_for_pad_df.append((time.time() - time_start))
         #######################################################################
         # Attention:
         #
@@ -283,7 +290,12 @@ def event_grouping(inp_data, max_entries_per_evt, evt_id_string,
             signal_evts, signal_evts/len(list_of_events)*100.))
         print(':: {} real bg (3+tracks) events found in data. ({:.3f}%)\n'.format(
             real_bg_evts, real_bg_evts/len(list_of_events)*100.))
-    ###############################################################################
+
+    print(':: Average time for: "inp_data.loc[inp_data[evt_id_string] == evt_int, list_of_features]" : {:.4f} s'.format(
+        sum(time_needed_for_loc) / float(len(time_needed_for_loc))))
+    print(':: Average time for: "pad_dataframe" : {:.4f} s'.format(
+        sum(time_needed_for_pad_df) / float(len(time_needed_for_pad_df))))
+     ###############################################################################
 
     return all_events, y_data
 
@@ -380,7 +392,6 @@ def main():
         raise OSError('Python 3+ is needed for this program to work ' \
             'but version {} is used!'.format(sys.version))
 
-    start_time_main = time.time()
     ######################################################################################
     # STEP 0:
     # ----------------------------- fetching the data ------------------------------------
@@ -511,7 +522,7 @@ def main():
 
     # # saveing the record array only works in python 3
     outfile = outpath + 'evt_dic' + file_suffix + '.pkl'
-    print('::  Saving the data in {}'.format(outfile))
+    print('\n::  Saving the data in {}'.format(outfile))
     with open(outfile, 'wb') as f:
         pickle.dump(evt_dictionary, f)
 
