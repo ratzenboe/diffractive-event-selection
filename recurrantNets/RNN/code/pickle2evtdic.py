@@ -460,7 +460,11 @@ def main():
 
     #########################################################################################
     # variable modifications
-    if all_files or nfiles > n_diff_paths:
+    if base >= n_diff_paths:
+        raise ValueError('The value "base" {} exceeds the number of different paths: {}'.format(
+            base, n_diff_paths)
+
+    if all_files or base + nfiles > n_diff_paths:
         num_paths = n_diff_paths
     else:
         num_paths = base + nfiles
@@ -486,11 +490,8 @@ def main():
     temp_path_dic = {}
     for i in range(base, num_paths):
         # change path_dic to file-path i
-        print('base: {}, i: {}, num_paths: {}'.format(base, i, num_paths))
         for key in path_dic.keys():
             temp_path_dic[key] = path_dic[key][i]
-        print('Temporary path dictionary: {}'.format(temp_path_dic))
-
         ##################################################################################
         # at first we make a preselection of possible events (stored in event info)
         # currently cuts are only supported at event-level
