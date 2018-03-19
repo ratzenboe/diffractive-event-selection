@@ -87,6 +87,6 @@ if __name__ == "__main__":
         filespath += '/'
 
     if not outfile:
-        outfile = filespath + 'evt_dic_all.pkl'
+        outfile = filespath + 'concat_evt_dic.pkl'
 
     main()
