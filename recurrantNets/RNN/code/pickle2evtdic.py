@@ -3,44 +3,74 @@ from __future__ import division
 import sys
 import os
 import time
-from select                                     import select
 import argparse 
 import ast 
 import copy
 import warnings
+import pickle
 
 import fnmatch
 
-import matplotlib
-matplotlib.use('agg')
-import matplotlib.pyplot                        as plt
-import seaborn                                  as sns
-sns.set()
+import numpy as np
+import pandas as pd
 
-import numpy                                    as np
-import pandas                                   as pd
+from tqdm import tqdm
 
-from keras.models                               import load_model
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
-from sklearn.model_selection                    import train_test_split
-from sklearn.externals                          import joblib
 
-from modules.control                            import config_file_to_dict
-from modules.logger                             import logger
-from modules.load_model                         import train_model
-from modules.data_preparation                   import get_data, save_data_dictionary, \
-                                                       get_data_dictionary, preprocess, \
-                                                       fix_missing_values, shape_data, \
-                                                       unpack_and_order_data_path
-from modules.utils                              import print_dict, split_dictionary, \
-                                                       pause_for_input, get_subsample, \
-                                                       print_array_in_dictionary_stats, \
-                                                       remove_field_name, flatten_dictionary, \
-                                                       special_preprocessing, engineer_features
-from modules.file_management                    import OutputManager
-from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAoutput, \
-                                                       plot_cut_efficiencies, plot_all_features, \
-                                                       plot_model_loss, plot_autoencoder_output
+def print_dict(dictionary, headline=None):
+    """
+    Prints the contents of a dictionary to the terminal, line by line.
+    """
+
+    if headline:
+        print('\n{}'.format(headline))
+            
+    for item in dictionary:
+        print('  {:25}: {}'.format(item, dictionary[item]))
+
+    return
+
+
+class fileparser(configparser.ConfigParser):
+    """
+    Extends the functionality of the Python configparser.
+    """
+
+    def as_dict(self):
+        """
+        Returns the entire config file as a dictionary.
+        """
+
+        d = dict(self._sections)
+        for k in d:
+            d[k] = dict(**d[k])
+            d[k].pop('__name__', None)
+            for j in d[k].keys():
+                d[k][j] = ast.literal_eval(d[k][j])
+        
+        return d
+
+
+def config_file_to_dict(filename):
+    """
+    Imports an entire config file and returns it as a dictionary.
+    """
+    if not isinstance(filename, str):
+        raise ValueError('Passed argument is not a string but instead {}'.format(type(filename)))
+ 
+    if not os.path.isfile(filename):
+        raise IOError('File {} does not exist.'.format(filename))
+    
+    parser = fileparser(configparser.ConfigParser())
+    parser.optionxform=str # make key parsing case-sensitive
+    parser.read(filename)
+
+    return parser.as_dict()
 
 
 def get_evt_id_list(data, cut_dic, event_id_string):
@@ -96,17 +126,19 @@ def get_evt_id_list(data, cut_dic, event_id_string):
     if not isinstance(list_of_events, list):
         raise TypeError('The event-id-list is not a of type list!')
     # the integers in this list are long-ints -> convert them here to standard ints
-    list_of_events = map(int, list_of_events)
+    list_of_events = list(map(int, list_of_events))
 
     # print-out
     percentage_of_all = len(list_of_events)/n_evts_total
-    print(':: Processing {}/{} events ({:.2f}%) with the following number of ' \
+    print('\n::  Processing {}/{} events ({:.3f}%) with the following number of ' \
             'cuts:\n'.format(len(list_of_events), n_evts_total, percentage_of_all))
+    print_dict(cut_dic)
 
     return list_of_events
 
 
-def event_grouping(inp_data, max_entries_per_evt, evt_id_string, targets, list_of_events):
+def event_grouping(inp_data, max_entries_per_evt, evt_id_string, 
+        targets, list_of_events, max_tracks=2):
     """
     Args
 
@@ -134,6 +166,11 @@ def event_grouping(inp_data, max_entries_per_evt, evt_id_string, targets, list_o
         list_of_events:
             An index-list containing the event numbers of the desired events (right amount
             of tracks)
+        __________________________________________________________________________________
+
+        max_tracks:
+            int, the maximum number of tracks used to distinguish the modeled background (99)
+            from the signal events (0,1)
     _______________________________________________________________________________________
     
     Operation breakdown
@@ -149,7 +186,7 @@ def event_grouping(inp_data, max_entries_per_evt, evt_id_string, targets, list_o
 
     """
     # remove event id from the list of features
-    list_of_features = list(filter(lambda x: x != evt_id_string, list_of_features))
+    list_of_features = list(filter(lambda x: x != evt_id_string, list(inp_data.columns)))
 
     all_events = []
     y_data = []
@@ -160,20 +197,13 @@ def event_grouping(inp_data, max_entries_per_evt, evt_id_string, targets, list_o
         pause_for_input('A warning was issued, do you want to abort the program?', timeout=4)
         return all_events, y_data
     
-    current_n_evts = 0
-    for evt_int in list_of_events:
-        current_n_evts += 1
-        if current_n_evts%1000 == 0:
-            print(':: {} events from {} fetched'.format(current_n_evts, len(list_of_events)))
+    for evt_int in tqdm(list_of_events):
         # get relevant data for one event 
         evt_dataframe = inp_data.loc[inp_data[evt_id_string] == evt_int, list_of_features]
         # the dataframe has some arbitraty indices because we just slice some
         # instances out of it: we fix the index here
         evt_dataframe = evt_dataframe.reset_index(drop=True)
-        # check if the dataframe contains any values
-        if evt_dataframe.empty:
-            warnings.warn('The event {} has no information stored!'.format(evt_int))
-            pause_for_input('A warning was issued, do you want to abort the program?', timeout=4)
+
         ###########################################################################
         # we are already finished getting the dataframe however we have to
         # extract the target values:
@@ -197,10 +227,7 @@ def event_grouping(inp_data, max_entries_per_evt, evt_id_string, targets, list_o
             #       we also know that the targets are only present in the
             #       event therefore we can do evt_dataframe['n_tracks']
             try:
-                ######################################################
-                # TODO: fix hardcoded maximum number of tracks to match max-nb in config file!
-                # ATTENTION: here we have hard coded the maximum number of tracks to 2
-                if int(evt_dataframe['n_tracks'].iloc[-1]) > 2:
+                if int(evt_dataframe['n_tracks'].iloc[-1]) > max_tracks:
                     target_list.append(99)
             except KeyError:
                 raise KeyError('The key "n_tracks" is not in the evt_dataframe! Therefore it ' \
@@ -375,19 +402,16 @@ def main():
     #    data['fmd'].shape = (n_evts, n_cells, n_features)
     #    data['target'].shape = (n_evts, )
     #    etc. 
-    data_params = config_file_to_dict(config_path + 'data_params.conf')
-
+    data_params = config_file_to_dict(config_path)
     data_params = data_params[run_mode_user]
     # here is a collection of variables extracted from the config files
     try:
         # ----------- data-parameters --------------
-        branches_dic      = data_params['branches']
         max_entries_dic   = data_params['max_entries']
         target_list       = data_params['target']
         evt_id_string     = data_params['evt_id']
         cut_dic           = data_params['cut_dic']
         event_string      = data_params['event_string']
-        missing_vals_dic  = data_params['missing_values']
     except KeyError:
         raise KeyError('The variable names in the main either have a typo ' \
                 'or do not exist in the config files!')
@@ -421,7 +445,7 @@ def main():
     # number of file-collections (file-collection = ad, fmd, event, track, ...)
     n_diff_paths = len(list_of_path_ints[0])
 
-    if all_files:
+    if all_files or nfiles > n_diff_paths:
         num_paths = n_diff_paths
     else:
         num_paths = nfiles
@@ -437,16 +461,17 @@ def main():
         # change path_dic to file-path i
         for key in path_dic.keys():
             temp_path_dic[key] = path_dic[key][i]
-            print('Temporary path dictionary: {}'.format(temp_path_dic))
+        print('Temporary path dictionary: {}'.format(temp_path_dic))
 
         ##################################################################################
         # at first we make a preselection of possible events (stored in event info)
         # currently cuts are only supported at event-level
         data = pd.read_pickle(filespath + temp_path_dic['event'])
         list_of_events = get_evt_id_list(data, cut_dic, evt_id_string)
-
+        
         ##################################################################################
         # now we have a subset of the data -> extract that subset
+        tmp_evt_dictionary = {}
         for key in temp_path_dic.keys():
             print('\n{} Loading {} data {}'.format(10*'-', key, 10*'-'))
             data = pd.read_pickle(filespath + temp_path_dic[key])
@@ -457,7 +482,8 @@ def main():
                                                         max_entries_per_evt=max_entries_dic[key],
                                                         evt_id_string = evt_id_string,
                                                         targets = target_list,
-                                                        list_of_events = list_of_events)
+                                                        list_of_events = list_of_events,
+                                                        max_tracks = max_entries_dic['track'])
 
             # if the y_data array has a size, then we add the 
             # target information to the tmp_evt_dictionary 
@@ -467,16 +493,16 @@ def main():
             if y_data:
                 tmp_evt_dictionary['target'] = y_data
 
-            # check if the keys are the same
-            if set(tmp_evt_dictionary.keys()) != set(evt_dictionary.keys()):
-                raise KeyError('The temporary event-dictionary is not compatible ' \
-                        'to the global one:\n tmp_evt_dic.keys(): {} \n evt_dic.keys(): {}'.format(
-                            set(tmp_evt_dictionary.keys()), set(evt_dictionary.keys())))
+        # check if the keys are the same
+        if set(tmp_evt_dictionary.keys()) != set(evt_dictionary.keys()):
+            raise KeyError('The temporary event-dictionary is not compatible ' \
+                    'to the global one:\n tmp_evt_dic.keys(): {} \n evt_dic.keys(): {}'.format(
+                        set(tmp_evt_dictionary.keys()), set(evt_dictionary.keys())))
 
-            for key in tmp_evt_dictionary.keys():
-                evt_dictionary[key] += tmp_evt_dictionary[key]
-            
-            del tmp_evt_dictionary
+        for key in tmp_evt_dictionary.keys():
+            evt_dictionary[key] += tmp_evt_dictionary[key]
+        
+        del tmp_evt_dictionary
 
     # we loop over the entries and transform the list of record arrays into
     # a numpy record array
@@ -484,7 +510,12 @@ def main():
         evt_dictionary[key] = np.array(evt_dictionary[key]) 
 
     # # saveing the record array only works in python 3
-    save_data_dictionary(output_path + 'evt_dic' + file_suffix + '.pkl', evt_dictionary)
+    outfile = outpath + 'evt_dic' + file_suffix + '.pkl'
+    print('::  Saving the data in {}'.format(outfile))
+    with open(outfile, 'wb') as f:
+        pickle.dump(evt_dictionary, f)
+
+    return
 
    
 if __name__ == "__main__":
@@ -497,14 +528,14 @@ if __name__ == "__main__":
     # commend line parser (right now not a own function as only 2 elements are used)
     parser = argparse.ArgumentParser()
     parser.add_argument('-filespath', '-pklfilesdir',
-                        help='string: the path where the root files are stored',
+                        help='string (mandatory): the path where the pickle files are stored',
                         action='store',
                         dest='filespath',
                         default=None,
                         type=str)
 
     parser.add_argument('-basefile', '-base',
-                        help='int: the lowest number corresponding to the *_base.root file \
+                        help='int (default: 0): the lowest number corresponding to the *_base.root file \
                                 files from this number on will be processed',
                         action='store',
                         dest='base',
@@ -512,23 +543,37 @@ if __name__ == "__main__":
                         type=int)
 
     parser.add_argument('-nfiles', 
-                        help='int: number of files to be processed',
+                        help='int (default: 1): number of files to be processed',
                         action='store',
                         dest='nfiles',
                         default=1,
                         type=int)
 
     parser.add_argument('-all_files', 
-                        help='bool: if true all files are processed at once',
+                        help='bool (default: False): if true all files are processed at once',
                         action='store_true',
                         dest='all_files',
                         default=False)
 
     parser.add_argument('-filesuffix', 
-                        help='string(or int): suffix to the output file',
+                        help='string(or int) (default: ''): suffix to the output file',
                         action='store',
                         dest='file_suffix',
                         default='',
+                        type=str)
+
+    parser.add_argument('-config_path', 
+                        help='string (mandatory): path to the data config file',
+                        action='store',
+                        dest='config_path',
+                        default=None,
+                        type=str)
+
+    parser.add_argument('-run_mode_user', 
+                        help='string (default: koala): the key word that is found in the config file',
+                        action='store',
+                        dest='run_mode_user',
+                        default='koala',
                         type=str)
 
     command_line_args = parser.parse_args(user_argv)
@@ -536,9 +581,16 @@ if __name__ == "__main__":
     base = command_line_args.base
     nfiles = command_line_args.nfiles
     all_files = command_line_args.all_files
-    outpath = command_line_args.outpath
     filespath = command_line_args.filespath
     file_suffix = command_line_args.file_suffix
+    config_path = command_line_args.config_path
+    run_mode_user = command_line_args.run_mode_user
+
+    file_suffix = str(file_suffix)
+
+    if config_path is None or not os.path.isfile(config_path):
+        raise IOError('No valid "config_path" provided!\nPlease do so via ' \
+                'command line argument: -config_path /path/to/config_file.conf')
 
     if file_suffix is not '':
         file_suffix = '_' + file_suffix
@@ -550,7 +602,7 @@ if __name__ == "__main__":
     if not filespath.endswith('/'):
         filespath += '/'
 
-    outpath = filespath + 'output_pickle_files/'
+    outpath = filespath + 'output_evt_dic/'
     if not os.path.isdir(outpath):
         os.makedirs(outpath)
 
