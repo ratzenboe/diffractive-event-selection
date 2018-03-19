@@ -373,9 +373,13 @@ def pad_dataframe(df, max_entries, check_charge=False):
         return df
 
     elif length < max_entries:
-        for i in range(length, max_entries):
-            df.loc[i] = float(-999)
-        return df
+        diff = max_entries - length
+        new_df = pd.DataFrame(float(-999), index=np.arange(diff), columns=df.columns)
+        concat_df = pd.concat([df, new_df], ignore_index=True)
+        if concat_df.shape[0] != max_entries:
+            raise ValueError('The dataframe was not padded properly!')
+
+        return concat_df
 
     elif length == max_entries:
         # this is only true for the track features
@@ -456,10 +460,24 @@ def main():
     # number of file-collections (file-collection = ad, fmd, event, track, ...)
     n_diff_paths = len(list_of_path_ints[0])
 
+    #########################################################################################
+    # variable modifications
     if all_files or nfiles > n_diff_paths:
         num_paths = n_diff_paths
     else:
-        num_paths = nfiles
+        num_paths = base + nfiles
+
+    if file_suffix and not all_files:
+        suffix = '_' + str(int(base/(num_paths-base))) + '_' + file_suffix
+    elif not all_files:
+        suffix = '_' + str(int(base/(num_paths-base)))
+    elif not file_suffix:
+        suffix = ''
+    else:
+        suffix = '_' + file_suffix
+    # 
+    #########################################################################################
+
 
     evt_dictionary = {'target': []}
     # fill the (final) evt_dictionary with the correct keys
@@ -521,7 +539,7 @@ def main():
         evt_dictionary[key] = np.array(evt_dictionary[key]) 
 
     # # saveing the record array only works in python 3
-    outfile = outpath + 'evt_dic' + file_suffix + '.pkl'
+    outfile = outpath + 'evt_dic' + suffix + '.pkl'
     print('\n::  Saving the data in {}'.format(outfile))
     with open(outfile, 'wb') as f:
         pickle.dump(evt_dictionary, f)
@@ -570,7 +588,7 @@ if __name__ == "__main__":
                         help='string(or int) (default: ''): suffix to the output file',
                         action='store',
                         dest='file_suffix',
-                        default='',
+                        default=None,
                         type=str)
 
     parser.add_argument('-config_path', 
@@ -597,14 +615,12 @@ if __name__ == "__main__":
     config_path = command_line_args.config_path
     run_mode_user = command_line_args.run_mode_user
 
-    file_suffix = str(file_suffix)
+    if file_suffix:
+        file_suffix = str(file_suffix)
 
     if config_path is None or not os.path.isfile(config_path):
         raise IOError('No valid "config_path" provided!\nPlease do so via ' \
                 'command line argument: -config_path /path/to/config_file.conf')
-
-    if file_suffix is not '':
-        file_suffix = '_' + file_suffix
 
     if filespath is None or not os.path.isdir(filespath):
         raise IOError('No valid input path provided!\nPlease do so via ' \
