@@ -562,6 +562,13 @@ if __name__ == "__main__":
                         default=None,
                         type=str)
 
+    parser.add_argument('-config_path', 
+                        help='string (mandatory): path to the data config file',
+                        action='store',
+                        dest='config_path',
+                        default=None,
+                        type=str)
+
     parser.add_argument('-basefile', '-base',
                         help='int (default: 0): the lowest number corresponding to the *_base.root file \
                                 files from this number on will be processed',
@@ -584,16 +591,9 @@ if __name__ == "__main__":
                         default=False)
 
     parser.add_argument('-filesuffix', 
-                        help='string(or int) (default: ''): suffix to the output file',
+                        help='string(or int) (default: None) suffix to the output file',
                         action='store',
                         dest='file_suffix',
-                        default=None,
-                        type=str)
-
-    parser.add_argument('-config_path', 
-                        help='string (mandatory): path to the data config file',
-                        action='store',
-                        dest='config_path',
                         default=None,
                         type=str)
 
