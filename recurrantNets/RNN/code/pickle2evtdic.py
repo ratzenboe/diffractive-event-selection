@@ -462,7 +462,7 @@ def main():
     # variable modifications
     if base >= n_diff_paths:
         raise ValueError('The value "base" {} exceeds the number of different paths: {}'.format(
-            base, n_diff_paths)
+            base, n_diff_paths))
 
     if all_files or base + nfiles > n_diff_paths:
         num_paths = n_diff_paths
