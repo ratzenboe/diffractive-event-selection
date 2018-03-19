@@ -57,7 +57,7 @@ if __name__ == "__main__":
     # commend line parser (right now not a own function as only 2 elements are used)
     parser = argparse.ArgumentParser()
     parser.add_argument('-filespath', '-rootfilesdir',
-                        help='string: the path where the root files are stored',
+                        help='string (mandatory): the path where the root files are stored',
                         action='store',
                         dest='filespath',
                         default=None,
@@ -89,7 +89,6 @@ if __name__ == "__main__":
     base = command_line_args.base
     nfiles = command_line_args.nfiles
     all_files = command_line_args.all_files
-    outpath = command_line_args.outpath
     filespath = command_line_args.filespath
 
     if filespath is None or not os.path.isdir(filespath):
