@@ -26,6 +26,10 @@ def main():
     if not files_list: 
         raise IOError('There are no event dictionaries in the path {}!'.format(filespath)) 
 
+    if len(files_list) is 1:
+        print('There is only one file in the input path; no need to concatenate')
+        return
+
     lst_of_evt_dics = []
     # load all event dictionaries 
     for filename in files_list:
