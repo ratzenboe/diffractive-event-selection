@@ -1,5 +1,3 @@
-from __future__ import division
-
 import sys
 import os
 import time
@@ -433,7 +431,7 @@ def main():
 
     files_lst = []
     for filename in os.listdir(filespath):
-        if fnmatch.fnmatch(filename, '*.pkl'):
+        if fnmatch.fnmatch(filename, '*_pandas.pkl'):
             files_lst.append(filename)
     
     # first we make a list of all the file types in the filespath
@@ -488,6 +486,7 @@ def main():
     temp_path_dic = {}
     for i in range(base, num_paths):
         # change path_dic to file-path i
+        print('base: {}, i: {}, num_paths: {}'.format(base, i, num_paths))
         for key in path_dic.keys():
             temp_path_dic[key] = path_dic[key][i]
         print('Temporary path dictionary: {}'.format(temp_path_dic))
