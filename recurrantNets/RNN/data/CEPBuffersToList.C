@@ -188,13 +188,9 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
         // want events that have between 2 and 6 tracks
         if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) evt_lhc16_filter->Fill(1);
         else evt_lhc16_filter->Fill(0);
-        /* cout << "nseltracks: " << nseltracks; */
-        /* cout << ", isDG: " << isDG; */
-        /* cout << "   --> evt_lhc16_filter: " << evt_lhc16_filter << "\n" << endl; */
-
-       
+        
         // initialize charge_sum with 0 for every new event
-        evt_charge_sum_var = 0;
+        Int_t evt_charge_sum_var = 0;
         
         // HL track info
         CEPTrackBuffer* trk = 0x0;
