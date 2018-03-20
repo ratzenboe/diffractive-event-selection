@@ -63,27 +63,27 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
     UInt_t event_nb;
 
 
-    TFile* eventFile = new TFile((output_prefix+"feature_plots"+file_addon_str).Data(), "RECREATE");
+    TFile* list_file = new TFile((output_prefix+"feature_plots"+file_addon_str).Data(), "RECREATE");
     TList* hist_list = new TList();
 
     // event level features:
     TH1F* evt_n_tracks = new TH1F("n_tracks", "", 11, 0, 10);
-    TH1F* evt_n_tracklets = new TH1F("n_tracklets", "", 100, 0, 2000);
-    TH1F* evt_n_singles = new TH1F("n_singles", "", 100, 0, 2000);
-    TH1F* evt_n_tracks_total = new TH1F("n_tracks_total", "", 100, 0, 2000);
-    TH1F* evt_n_residuals = new TH1F("n_residuals", "", 100, 0, 2000);
+    TH1F* evt_n_tracklets = new TH1F("n_tracklets", "", 2000, 0, 2000);
+    TH1F* evt_n_singles = new TH1F("n_singles", "", 2000, 0, 2000);
+    TH1F* evt_n_tracks_total = new TH1F("n_tracks_total", "", 2000, 0, 2000);
+    TH1F* evt_n_residuals = new TH1F("n_residuals", "", 2000, 0, 2000);
     TH1F* evt_n_calo_tracks = new TH1F("n_calo_tracks", "", 100, 0, 100);
-    TH1F* evt_tot_ad_mult = new TH1F("tot_ad_mult", "", 100, 0, 25000);
-    TH1F* evt_tot_ad_time = new TH1F("tot_ad_time", "", 100, -2000, 2500);
-    TH1F* evt_tot_ad_charge = new TH1F("tot_ad_charge", "", 100, 0, 20000);
-    TH1F* evt_tot_fmd_mult = new TH1F("tot_fmd_mult", "", 100, 0, 10000);
-    TH1F* evt_tot_v0_mult = new TH1F("tot_v0_mult", "", 100, 0, 5000);
-    TH1F* evt_tot_v0_charge = new TH1F("tot_v0_charge", "", 100, 0, 30000);
-    TH1F* evt_tot_v0_time = new TH1F("tot_v0_time", "", 100, 0, 30000);
-    TH1F* evt_tot_v0_sig_width = new TH1F("tot_v0_sig_width", "", 100, 0, 6000);
+    TH1F* evt_tot_ad_mult = new TH1F("tot_ad_mult", "", 5000, 0, 25000);
+    TH1F* evt_tot_ad_time = new TH1F("tot_ad_time", "", 1000, -2000, 2500);
+    TH1F* evt_tot_ad_charge = new TH1F("tot_ad_charge", "", 5000, 0, 20000);
+    TH1F* evt_tot_fmd_mult = new TH1F("tot_fmd_mult", "", 2000, 0, 10000);
+    TH1F* evt_tot_v0_mult = new TH1F("tot_v0_mult", "", 1000, 0, 5000);
+    TH1F* evt_tot_v0_charge = new TH1F("tot_v0_charge", "", 5000, 0, 30000);
+    TH1F* evt_tot_v0_time = new TH1F("tot_v0_time", "", 5000, 0, 30000);
+    TH1F* evt_tot_v0_sig_width = new TH1F("tot_v0_sig_width", "", 1000, 0, 6000);
     TH1F* evt_tot_emc_ampl = new TH1F("tot_emc_ampl", "", 100, 0, 500);
     TH1F* evt_tot_emc_time = new TH1F("tot_emc_time", "", 100, 0, 0.3e-3);
-    TH1F* evt_tot_phos_ampl = new TH1F("tot_phos_ampl", "", 100, 0, 30000);
+    TH1F* evt_tot_phos_ampl = new TH1F("tot_phos_ampl", "", 5000, 0, 30000);
     TH1F* evt_tot_phos_time = new TH1F("tot_phos_time", "", 100, 0, 0.7e-3);
     TH1F* evt_n_v0s = new TH1F("n_v0s", "", 100, 0, 1000);
     TH1F* evt_charge_sum = new TH1F("charge_sum", "", 40, -10, 10);
@@ -121,7 +121,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
     TH1F* trk_pid_bayes_proba_proton = new TH1F("pid_bayes_proba_proton", "", 100, 0, 1);
     TH1F* trk_length = new TH1F("track_length", "", 100, 0, 1000);
     TH1F* trk_global_chi2 = new TH1F("global_chi2", "", 100, 0, 100);
-    TH1F* trk_golden_chi2 = new TH1F("golden_chi2", "", 100, -100, 120e3);
+    TH1F* trk_golden_chi2 = new TH1F("golden_chi2", "", 1000, -100, 120e3);
     TH1F* trk_its_chi2 = new TH1F("its_chi2", "", 100, 0, 200);
     TH1F* trk_tpc_chi2 = new TH1F("tpc_chi2", "", 100, 0, 600);
     TH1F* trk_hmpid_signal = new TH1F("hmpid_signal", "", 100, -20, 10);
@@ -375,6 +375,8 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
     hist_list->Write();
     list_file->Close();
     delete list_file;
+
+    std::cout << "\nSaving the TList in " << (output_prefix+"feature_plots"+file_addon_str).Data() << std::endl;
 }
 
 Int_t is_full_recon(CEPEventBuffer* cepevt)
