@@ -216,8 +216,8 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
     TTree* phosTree = new TTree("phos", "raw phos info");
     Double_t phos_amplidude, phos_time; 
     phosTree->Branch("event_id", &event_nb);
-    phosTree->Branch("amplitude", &emcal_amplidude);
-    phosTree->Branch("time", &emcal_time);
+    phosTree->Branch("amplitude", &phos_amplidude);
+    phosTree->Branch("time", &phos_time);
 
     // now that we have prepared all Trees and files we go along and read out the 
     // raw-buffers and write the content to the output files
@@ -444,7 +444,7 @@ void CEPBuffersToTTree(const char* filename, Int_t file_addon = -1)
         for (UInt_t kk(0); kk<phos->GetNCells(); kk++)
         {
             phos_amplidude = phos->GetCaloCellAmplitude(kk);
-            phos_amplidude =  phos->GetCaloCellTime(kk);
+            phos_time =  phos->GetCaloCellTime(kk);
 
             phosTree->Fill();
         }
