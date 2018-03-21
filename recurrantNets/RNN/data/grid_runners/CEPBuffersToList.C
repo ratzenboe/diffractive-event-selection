@@ -134,6 +134,34 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
     TH1F* trk_trd_ncls = new TH1F("trd_n_cls", "", 100, 0, 160);
     TH1F* trk_tpc_n_shared_cls = new TH1F("tpc_n_shared_cls", "", 100, 0, 160);
 
+    // ad
+    TH1F* ad_mult = new TH1F("ad_multiplicity", "", 100, 0, 160);
+    TH1F* ad_time = new TH1F("ad_time", "", 100, 0, 160);
+    TH1F* ad_charge = new TH1F("ad_charge", "", 100, 0, 160);
+
+    // fmd
+    TH1F* fmd_mult = new TH1F("fmd_multiplicity", "", 100, 0, 160);
+
+    // v0
+    TH1F* v0_mult = new TH1F("v0_multiplicity", "", 100, 0, 160);
+    TH1F* v0_charge = new TH1F("v0_charge", "", 100, 0, 160);
+    TH1F* v0_time = new TH1F("v0_time", "", 100, 0, 160);
+    TH1F* v0_sig_width = new TH1F("v0_sig_width", "", 100, 0, 160);
+
+    // emc
+    TH1F* emcal_amplidude = new TH1F("emcal_amplidude", "", 100, 0, 160);
+    TH1F* emcal_time = new TH1F("emcal_time", "", 100, 0, 160);
+    
+    // phos
+    TH1F* phos_amplidude = new TH1F("phos_amplidude", "", 100, 0, 160);
+    TH1F* phos_time = new TH1F("phos_time", "", 100, 0, 160);
+
+    // calo-cluster
+    TH1F* cc_energy = new TH1F("calo_cluster_energy", "", 100, 0, 100);
+    TH1F* cc_shapeDispersion = new TH1F("calo_cluster_shape_dispersion", "", 100, 0, 100);
+    TH1F* cc_chi2 = new TH1F("calo_cluster_chi2", "", 100, 0, 100);
+    TH1F* cc_cpvdist = new TH1F("calo_cluster_cpvdist", "", 100, 0, 100);
+
     Int_t cu;
     Bool_t isDG, isNDG;
     Int_t nseltracks;
@@ -151,7 +179,13 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
     Int_t barWidth = 70;
     /////////////////////////////
     std::cout << "\nReading events: " << evt_offset << " - " << evt_offset+n_evts_to_read-1 << std::endl;
+
     Int_t lhc16_filter = -999;
+    CEPRawADBuffer* ad      = 0x0;
+    CEPRawFMDBuffer* fmd    = 0x0;
+    CEPRawV0Buffer* v0      = 0x0;
+    CEPRawCaloBuffer* emcal = 0x0;
+    CEPRawCaloBuffer* phos  = 0x0;
     for (UInt_t ii(evt_offset); ii<evt_offset+n_evts_to_read; ii++)
     {
         // display purposes only ////////////////////
@@ -301,6 +335,56 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
         evt_tot_phos_time->Fill(cep_raw_evt->GetTotalPHOSTime());
 
         evt_n_v0s->Fill(cep_evt->GetnV0());
+
+        // AD
+        ad = cep_raw_evt->GetRawADBuffer();
+        for (UInt_t kk(0); kk<ad->GetNCells(); kk++)
+        {
+            ad_mult->Fill(ad->GetADMultiplicity(kk));
+            ad_time->Fill(ad->GetADTime(kk));
+            ad_charge->Fill(ad->GetADCharge(kk));
+        }
+        // FMD
+        fmd = cep_raw_evt->GetRawFMDBuffer();
+        for (UInt_t kk(0); kk<fmd->GetFMDnCells(); kk++)
+        {
+            fmd_mult->Fill(fmd->GetFMDCellMultiplicity(kk));
+        }
+        // V0 
+        v0 = cep_raw_evt->GetRawV0Buffer();
+        for (UInt_t kk(0); kk<v0->GetNCells(); kk++)
+        {
+            v0_mult->Fill(v0->GetV0Multiplicity(kk));
+            v0_time->Fill(v0->GetV0Time(kk));
+            v0_charge->Fill(v0->GetV0Charge(kk));
+            v0_sig_width->Fill(v0->GetV0Width(kk));
+        }
+        // EMCAL
+        emcal = cep_raw_evt->GetRawEMCalBuffer();
+        for (UInt_t kk(0); kk<emcal->GetNCells(); kk++)
+        {
+            emcal_amplidude->Fill(emcal->GetCaloCellAmplitude(kk));
+            emcal_time->Fill(emcal->GetCaloCellTime(kk));
+        }
+        // PHOS
+        phos = cep_raw_evt->GetRawPHOSBuffer();
+        for (UInt_t kk(0); kk<phos->GetNCells(); kk++)
+        {
+            phos_amplidude->Fill(phos->GetCaloCellAmplitude(kk));
+            phos_time->Fill(phos->GetCaloCellTime(kk));
+        }
+        // Calo Clusters 
+        CEPRawCaloClusterTrack* rawCaloCluster = 0x0;
+        for (UInt_t kk(0); kk<cep_raw_evt->GetnCaloClusterTotal(); kk++)
+        {
+            rawCaloCluster = cep_raw_evt->GetCaloClusterTrack(kk);
+            if (!rawCaloCluster) break;
+            // put here all track info
+            cc_energy->Fill(rawCaloCluster->GetCaloClusterE());
+            cc_shapeDispersion->Fill(rawCaloCluster->GetCaloClusterShapeDispersion());
+            cc_chi2->Fill(rawCaloCluster->GetCaloClusterChi2());
+            cc_cpvdist->Fill(rawCaloCluster->GetCaloClusterCPVDist());
+        }
     }
     // cursor of status display has to move to the next line
     std::cout << std::endl;
@@ -372,6 +456,28 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
     hist_list->Add(trk_tpc_ncls);
     hist_list->Add(trk_trd_ncls);
     hist_list->Add(trk_tpc_n_shared_cls);
+
+    hist_list->Add(ad_mult);
+    hist_list->Add(ad_time);
+    hist_list->Add(ad_charge);
+
+    hist_list->Add(fmd_mult);
+
+    hist_list->Add(v0_mult);
+    hist_list->Add(v0_time);
+    hist_list->Add(v0_charge);
+    hist_list->Add(v0_sig_width);
+
+    hist_list->Add(emcal_amplidude);
+    hist_list->Add(emcal_time);
+
+    hist_list->Add(phos_amplidude);
+    hist_list->Add(phos_time);
+
+    hist_list->Add(cc_energy);
+    hist_list->Add(cc_shapeDispersion);
+    hist_list->Add(cc_chi2);
+    hist_list->Add(cc_cpvdist);
  
     list_file->cd();
     hist_list->Write();
