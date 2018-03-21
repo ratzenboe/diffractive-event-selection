@@ -27,10 +27,8 @@ from sklearn.externals                          import joblib
 from modules.control                            import config_file_to_dict
 from modules.logger                             import logger
 from modules.load_model                         import train_model
-from modules.data_preparation                   import get_data, save_data_dictionary, \
-                                                       get_data_dictionary, preprocess, \
-                                                       fix_missing_values, shape_data, \
-                                                       unpack_and_order_data_path
+from modules.data_preparation                   import get_data_dictionary, preprocess, \
+                                                       fix_missing_values, shape_data
 from modules.utils                              import print_dict, split_dictionary, \
                                                        pause_for_input, get_subsample, \
                                                        print_array_in_dictionary_stats, \
@@ -43,41 +41,12 @@ from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAou
 
 def main():
 
-    if (sys.version_info > (3, 0)):
-        load_pandas = True
-        save_pandas = False
-    else:
-        # for python 2.7 we can load the data from root_numpy
-        # in python 3+ we have to load it from a pickeled pandas file
-        load_pandas = False
-        save_pandas = True
-
-    print('\n\n:: Running mode \n::    load_pandas: {} \n::    save_pandas: {}'.format(
-        load_pandas, save_pandas))
-    pause_for_input('You may review the load and save state of the program.', timeout=1)
+    if (sys.version_info < (3, 0)):
+        raise OSError('This program needs python3 to work! Currently {} is used.'.format(
+            sys.version_info))
 
     start_time_main = time.time()
-    ######################################################################################
-    # STEP 0:
-    # ----------------------------- fetching the data ------------------------------------
-    # we fetch the data from 8 different root files where detector data is saved
-    #       - AD
-    #       - FMD
-    #       - V0
-    #       - EMC
-    #       - PHOS
-    #       - Evt-level data
-    #       - tracking data
-    #       - calo cluster data
-    # 
-    # therefore we want to have a data structure where we have a dataframe for each  
-    # of these 8 departments
-    ######################################################################################    
-    # data is a dictionary which contains the 9 numpy arrays in form 
-    # -> data['track'].shape = (n_evts, n_parts, n_features)
-    #    data['fmd'].shape = (n_evts, n_cells, n_features)
-    #    data['target'].shape = (n_evts, )
-    #    etc. 
+
     print('run_mode_user: {}'.format(run_mode_user))
     run_params = config_file_to_dict(config_path + 'run_params.conf')
     data_params = config_file_to_dict(config_path + 'data_params.conf')
@@ -139,77 +108,15 @@ def main():
         # saved pickle files (the event.pkl, etc)
         # raise TypeError('We want to produce the evt_dic again')
         evt_dictionary = get_data_dictionary(output_path + 'evt_dic.pkl')
-        print('\n:: Event dictionary loaded from file: {}'.format(output_path + 'evt_dic.pkl'))
+        print('\n:: Event dictionary loaded from file: {}'.format(
+            output_path + 'evt_dic.pkl'))
     except(OSError, IOError, TypeError, ValueError):
-        pause_for_input('::   The data will be read from the root files...', timeout=5)
-        # first we have to check the path variables which can refer to multiple paths
-        # -> we loop though all paths and add the each event dictionary to a global one
-        all_paths_dic, num_paths = unpack_and_order_data_path(path_dic)
-        # create final event dictionary, target is always in it
-        # the rest in added a few lines below
-        evt_dictionary = {'target': []}
-        # fill the (final) evt_dictionary with the correct keys
-        # and empty arrays
-        for key in path_dic.keys():
-            evt_dictionary[key] = []
+        raise IOError('The event dictionary cannot be loaded from {}!'.format(
+            output_path+'evt_dic.pkl'))
 
-        temp_path_dic = {}
-        for i in range(num_paths):
-            # change path_dic to file-path i
-            try:
-                for key in path_dic.keys():
-                    # all_paths_dic[key][i] access the path list key (e.g. event)
-                    # and takes the i'th position (=i'th path) out and writes is to
-                    # the temporary path dictionary: temp_path_dic which is passed to the 
-                    # function
-                    temp_path_dic[key] = all_paths_dic[key][i]
-
-                print_dict(temp_path_dic)
-
-            except KeyError:
-                raise KeyError('The dictionary "path_dic" and "all_paths_dic" ' \
-                    'contain a different set of keys!')
-
-
-            print('\nfetching data...\n')
-            tmp_evt_dictionary = get_data(branches_dic      = branches_dic, 
-                                          max_entries_dic   = max_entries_dic, 
-                                          path_dic          = temp_path_dic, 
-                                          evt_id_string     = evt_id_string, 
-                                          target_list       = target_list,
-                                          cut_dic           = cut_dic,
-                                          event_string      = event_string,
-                                          save              = save_pandas,
-                                          load              = load_pandas)
-
-            print('type(target): {}'.format(type(tmp_evt_dictionary['target'])))
-            # check if the keys are the same
-            if set(tmp_evt_dictionary.keys()) != set(evt_dictionary.keys()):
-                raise KeyError('The temporary event-dictionary is not compatible ' \
-                        'to the global one:\n tmp_evt_dic.keys(): {} \n evt_dic.keys(): {}'.format(
-                            set(tmp_evt_dictionary.keys()), set(evt_dictionary.keys())))
-
-            for key in tmp_evt_dictionary.keys():
-                evt_dictionary[key] += tmp_evt_dictionary[key]
-            
-            del tmp_evt_dictionary
-
-        # we loop over the entries and transform the list of record arrays into
-        # a numpy record array
-        for key in evt_dictionary.keys():
-            evt_dictionary[key] = np.array(evt_dictionary[key]) 
-
-        evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
-        evt_dictionary = engineer_features(evt_dictionary)[0]
-        
-        # saveing the record array only works in python 3
-        if (sys.version_info < (3, 0)):
-            pause_for_input('\n\n\n\n::  The following lines are written as python 3 code ' \
-                    'however currently python 2 is in use! Proceed at own risk!\n\n', timeout=20)
-        print('::  Saving event dictionary in {}...'.format(output_path+'evt_dic.pkl'))
-        save_data_dictionary(output_path + 'evt_dic.pkl', evt_dictionary)
-        # saving the data as numpy record array
-
+    evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
+    evt_dictionary = engineer_features(evt_dictionary)[0]
+    
     list_of_engineered_features = engineer_features(evt_dictionary, replace=False)[1]
 
     # remove a feature if it is in the cut_dic and contains no further info 
