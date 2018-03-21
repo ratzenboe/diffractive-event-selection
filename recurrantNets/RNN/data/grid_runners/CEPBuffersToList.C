@@ -67,7 +67,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
     TList* hist_list = new TList();
 
     // event level features:
-    TH1F* evt_n_tracks = new TH1F("n_tracks", "", 11, 0, 10);
+    TH1F* evt_n_tracks = new TH1F("n_tracks", "", 10, 0, 10);
     TH1F* evt_n_tracklets = new TH1F("n_tracklets", "", 2000, 0, 2000);
     TH1F* evt_n_singles = new TH1F("n_singles", "", 2000, 0, 2000);
     TH1F* evt_n_tracks_total = new TH1F("n_tracks_total", "", 2000, 0, 2000);
@@ -76,11 +76,11 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
     TH1F* evt_tot_ad_mult = new TH1F("tot_ad_mult", "", 5000, 0, 25000);
     TH1F* evt_tot_ad_time = new TH1F("tot_ad_time", "", 1000, -2000, 2500);
     TH1F* evt_tot_ad_charge = new TH1F("tot_ad_charge", "", 5000, 0, 20000);
-    TH1F* evt_tot_fmd_mult = new TH1F("tot_fmd_mult", "", 2000, 0, 10000);
-    TH1F* evt_tot_v0_mult = new TH1F("tot_v0_mult", "", 1000, 0, 5000);
-    TH1F* evt_tot_v0_charge = new TH1F("tot_v0_charge", "", 5000, 0, 30000);
-    TH1F* evt_tot_v0_time = new TH1F("tot_v0_time", "", 5000, 0, 30000);
-    TH1F* evt_tot_v0_sig_width = new TH1F("tot_v0_sig_width", "", 1000, 0, 6000);
+    TH1F* evt_tot_fmd_mult = new TH1F("tot_fmd_mult", "", 2000, 0, 5000);
+    TH1F* evt_tot_v0_mult = new TH1F("tot_v0_mult", "", 1000, 0, 2500);
+    TH1F* evt_tot_v0_charge = new TH1F("tot_v0_charge", "", 5000, 0, 15000);
+    TH1F* evt_tot_v0_time = new TH1F("tot_v0_time", "", 5000, 0, 15000);
+    TH1F* evt_tot_v0_sig_width = new TH1F("tot_v0_sig_width", "", 1000, 0, 3000);
     TH1F* evt_tot_emc_ampl = new TH1F("tot_emc_ampl", "", 100, 0, 500);
     TH1F* evt_tot_emc_time = new TH1F("tot_emc_time", "", 100, 0, 0.3e-3);
     TH1F* evt_tot_phos_ampl = new TH1F("tot_phos_ampl", "", 5000, 0, 30000);
@@ -91,29 +91,29 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
 
     // hlt = high level track
     TH1F* trk_tof_bunch_crossing = new TH1F("tof_bunch_crossing", "", 100, 0, 100);
-    TH1F* trk_dca_vtx_z = new TH1F("dca_vtx_z", "", 100, -100, 100);
-    TH1F* trk_pt = new TH1F("pt", "", 100, 0, 5);
+    TH1F* trk_dca_vtx_z = new TH1F("dca_vtx_z", "", 100, -30, 30);
+    TH1F* trk_pt = new TH1F("pt", "", 100, 0, 10);
     TH1F* trk_eta = new TH1F("eta", "", 100, -1.7, 1.7);
     TH1F* trk_phi = new TH1F("phi", "", 100, -3.5, 3.5);
-    TH1F* trk_P = new TH1F("P", "", 100, 0, 7);
+    TH1F* trk_P = new TH1F("P", "", 100, 0, 10);
     TH1F* trk_pid_global = new TH1F("pid_global", "", 100, 0, 100);
     TH1F* trk_tpc_status = new TH1F("pid_tpc_status", "", 2, 0, 1);
     TH1F* trk_tpc_signal = new TH1F("pid_tpc_signal", "", 100, 0, 1400);
-    TH1F* trk_tpc_n_sigma_pion = new TH1F("pid_tpc_n_sigma_pion", "", 100, 0, 400);
-    TH1F* trk_tpc_n_sigma_kaon = new TH1F("pid_tpc_n_sigma_kaon", "", 100, 0, 150);
-    TH1F* trk_tpc_n_sigma_proton = new TH1F("pid_tpc_n_sigma_proton", "", 100, -40, 60);
+    TH1F* trk_tpc_n_sigma_pion = new TH1F("pid_tpc_n_sigma_pion", "", 100, -10, 150);
+    TH1F* trk_tpc_n_sigma_kaon = new TH1F("pid_tpc_n_sigma_kaon", "", 100, -10, 100);
+    TH1F* trk_tpc_n_sigma_proton = new TH1F("pid_tpc_n_sigma_proton", "", 100, -10, 30);
     TH1F* trk_tpc_proba_pion = new TH1F("pid_tpc_proba_pion", "", 100, 0, 1);
     TH1F* trk_tpc_proba_kaon = new TH1F("pid_tpc_proba_kaon", "", 100, 0, 1);
     TH1F* trk_tpc_proba_proton = new TH1F("pid_tpc_proba_proton", "", 100, 0, 1);
-    TH1F* trk_tof_signal = new TH1F("pid_tof_signal", "", 100, 0, 350e3);
+    TH1F* trk_tof_signal = new TH1F("pid_tof_signal", "", 100e3, -120e3, 350e3);
     TH1F* trk_tof_status = new TH1F("pid_tof_status", "", 2, 0, 1);
-    TH1F* trk_tof_n_sigma_pion = new TH1F("pid_tof_n_sigma_pion", "", 100, -50, 500);
-    TH1F* trk_tof_n_sigma_kaon = new TH1F("pid_tof_n_sigma_kaon", "", 100, -50, 500);
-    TH1F* trk_tof_n_sigma_proton = new TH1F("pid_tof_n_sigma_proton", "", 100, -50, 500); 
+    TH1F* trk_tof_n_sigma_pion = new TH1F("pid_tof_n_sigma_pion", "", 1000, -1000, 1000);
+    TH1F* trk_tof_n_sigma_kaon = new TH1F("pid_tof_n_sigma_kaon", "", 1000, -1000, 1000);
+    TH1F* trk_tof_n_sigma_proton = new TH1F("pid_tof_n_sigma_proton", "", 1000, -100, 1000); 
     TH1F* trk_tof_proba_pion = new TH1F("pid_tof_proba_pion", "", 100, 0, 1);
     TH1F* trk_tof_proba_kaon = new TH1F("pid_tof_proba_kaon", "", 100, 0, 1);
     TH1F* trk_tof_proba_proton = new TH1F("pid_tof_proba_proton", "", 100, 0, 1);
-    TH1F* trk_pid_bayes_status = new TH1F("pid_bayes_status", "", 100, 0, 1);
+    TH1F* trk_pid_bayes_status = new TH1F("pid_bayes_status", "", 20, 0, 11);
     TH1F* trk_pid_bayes_proba_e = new TH1F("pid_bayes_proba_e", "", 100, 0, 1);
     TH1F* trk_pid_bayes_proba_muon = new TH1F("pid_bayes_proba_muon", "", 100, 0, 1);
     TH1F* trk_pid_bayes_proba_pion = new TH1F("pid_bayes_proba_pion", "", 100, 0, 1);
@@ -121,12 +121,12 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
     TH1F* trk_pid_bayes_proba_proton = new TH1F("pid_bayes_proba_proton", "", 100, 0, 1);
     TH1F* trk_length = new TH1F("track_length", "", 100, 0, 1000);
     TH1F* trk_global_chi2 = new TH1F("global_chi2", "", 100, 0, 100);
-    TH1F* trk_golden_chi2 = new TH1F("golden_chi2", "", 1000, -100, 120e3);
-    TH1F* trk_its_chi2 = new TH1F("its_chi2", "", 100, 0, 200);
-    TH1F* trk_tpc_chi2 = new TH1F("tpc_chi2", "", 100, 0, 600);
+    TH1F* trk_golden_chi2 = new TH1F("golden_chi2", "", 500, -2, 2e3);
+    TH1F* trk_its_chi2 = new TH1F("its_chi2", "", 50, 0, 100);
+    TH1F* trk_tpc_chi2 = new TH1F("tpc_chi2", "", 100, 0, 500);
     TH1F* trk_hmpid_signal = new TH1F("hmpid_signal", "", 100, -20, 10);
-    TH1F* trk_its_signal = new TH1F("its_signal", "", 100, 0, 800);
-    TH1F* trk_trd_signal = new TH1F("trd_signal", "", 100, 0, 200);
+    TH1F* trk_its_signal = new TH1F("its_signal", "", 100, 0, 400);
+    TH1F* trk_trd_signal = new TH1F("trd_signal", "", 100, 0, 10);
     TH1F* trk_xy_impact = new TH1F("xy_impact", "", 100, -3, 3);
     TH1F* trk_z_impact = new TH1F("z_impact", "", 100, -4, 4);
     TH1F* trk_its_ncls = new TH1F("its_n_cls", "", 100, 0, 100);
@@ -135,32 +135,32 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
     TH1F* trk_tpc_n_shared_cls = new TH1F("tpc_n_shared_cls", "", 100, 0, 160);
 
     // ad
-    TH1F* ad_mult = new TH1F("ad_multiplicity", "", 100, 0, 160);
-    TH1F* ad_time = new TH1F("ad_time", "", 100, 0, 160);
-    TH1F* ad_charge = new TH1F("ad_charge", "", 100, 0, 160);
+    TH1F* ad_mult = new TH1F("ad_multiplicity", "", 100, 0, 2000);
+    TH1F* ad_time = new TH1F("ad_time", "", 100, -200, 300);
+    TH1F* ad_charge = new TH1F("ad_charge", "", 100, 0, 5000);
 
     // fmd
-    TH1F* fmd_mult = new TH1F("fmd_multiplicity", "", 100, 0, 160);
+    TH1F* fmd_mult = new TH1F("fmd_multiplicity", "", 100, 0, 40);
 
     // v0
-    TH1F* v0_mult = new TH1F("v0_multiplicity", "", 100, 0, 160);
-    TH1F* v0_charge = new TH1F("v0_charge", "", 100, 0, 160);
-    TH1F* v0_time = new TH1F("v0_time", "", 100, 0, 160);
-    TH1F* v0_sig_width = new TH1F("v0_sig_width", "", 100, 0, 160);
+    TH1F* v0_mult = new TH1F("v0_multiplicity", "", 100, 0, 20);
+    TH1F* v0_charge = new TH1F("v0_charge", "", 500, 0, 2000);
+    TH1F* v0_time = new TH1F("v0_time", "", 100, -60, 50);
+    TH1F* v0_sig_width = new TH1F("v0_sig_width", "", 100, 0, 100);
 
     // emc
-    TH1F* emcal_amplidude = new TH1F("emcal_amplidude", "", 100, 0, 160);
-    TH1F* emcal_time = new TH1F("emcal_time", "", 100, 0, 160);
+    TH1F* emcal_amplidude = new TH1F("emcal_amplidude", "", 100, 0, 100);
+    TH1F* emcal_time = new TH1F("emcal_time", "", 100, 0, 2e-6);
     
     // phos
-    TH1F* phos_amplidude = new TH1F("phos_amplidude", "", 100, 0, 160);
-    TH1F* phos_time = new TH1F("phos_time", "", 100, 0, 160);
+    TH1F* phos_amplidude = new TH1F("phos_amplidude", "", 100, 0, 5);
+    TH1F* phos_time = new TH1F("phos_time", "", 100, 0, 2e-6);
 
     // calo-cluster
-    TH1F* cc_energy = new TH1F("calo_cluster_energy", "", 100, 0, 100);
-    TH1F* cc_shapeDispersion = new TH1F("calo_cluster_shape_dispersion", "", 100, 0, 100);
-    TH1F* cc_chi2 = new TH1F("calo_cluster_chi2", "", 100, 0, 100);
-    TH1F* cc_cpvdist = new TH1F("calo_cluster_cpvdist", "", 100, 0, 100);
+    TH1F* cc_energy = new TH1F("calo_cluster_energy", "", 100, 0, 1000);
+    TH1F* cc_shapeDispersion = new TH1F("calo_cluster_shape_dispersion", "", 100, 0, 10);
+    TH1F* cc_chi2 = new TH1F("calo_cluster_chi2", "", 10, -2, 2);
+    TH1F* cc_cpvdist = new TH1F("calo_cluster_cpvdist", "", 1000, 0, 1500);
 
     Int_t cu;
     Bool_t isDG, isNDG;
@@ -338,10 +338,12 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
 
         // AD
         ad = cep_raw_evt->GetRawADBuffer();
+	    Double_t time_var = 0;
         for (UInt_t kk(0); kk<ad->GetNCells(); kk++)
         {
             ad_mult->Fill(ad->GetADMultiplicity(kk));
-            ad_time->Fill(ad->GetADTime(kk));
+	    time_var = ad->GetADTime(kk);
+	    if (time_var!=-1024.) ad_time->Fill(time_var);
             ad_charge->Fill(ad->GetADCharge(kk));
         }
         // FMD
@@ -355,7 +357,8 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
         for (UInt_t kk(0); kk<v0->GetNCells(); kk++)
         {
             v0_mult->Fill(v0->GetV0Multiplicity(kk));
-            v0_time->Fill(v0->GetV0Time(kk));
+       	    time_var = v0->GetV0Time(kk);
+	    if (time_var!=-1024.) v0_time->Fill(time_var);
             v0_charge->Fill(v0->GetV0Charge(kk));
             v0_sig_width->Fill(v0->GetV0Width(kk));
         }
