@@ -17,7 +17,7 @@
 #include <TTree.h>
 
 void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path_to_cepfilter_macro, 
-        Int_t evt_offset, Int_t n_evts_to_read, TString file_addon_str="")
+        Int_t evt_offset, Int_t n_evts_to_read, TString file_addon_str="", Int_t filter=-1)
 {
     // get the cut-selection info
     gROOT->ProcessLine((".L " + path_to_cepfilter_macro).Data());
@@ -151,6 +151,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
     Int_t barWidth = 70;
     /////////////////////////////
     std::cout << "\nReading events: " << evt_offset << " - " << evt_offset+n_evts_to_read-1 << std::endl;
+    Int_t lhc16_filter = -999;
     for (UInt_t ii(evt_offset); ii<evt_offset+n_evts_to_read; ii++)
     {
         // display purposes only ////////////////////
@@ -186,8 +187,10 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
         cu = 74;
         nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG); 
         // want events that have between 2 and 6 tracks
-        if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) evt_lhc16_filter->Fill(1);
-        else evt_lhc16_filter->Fill(0);
+        if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) lhc16_filter = 1;
+        else lhc16_filter = 0;
+        if (lhc16_filter==0 && filter==1) continue;
+        evt_lhc16_filter->Fill(lhc16_filter);
         
         // initialize charge_sum with 0 for every new event
         Int_t evt_charge_sum_var = 0;
@@ -298,7 +301,6 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
         evt_tot_phos_time->Fill(cep_raw_evt->GetTotalPHOSTime());
 
         evt_n_v0s->Fill(cep_evt->GetnV0());
-
     }
     // cursor of status display has to move to the next line
     std::cout << std::endl;
