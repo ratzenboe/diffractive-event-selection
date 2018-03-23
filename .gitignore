@@ -122,3 +122,6 @@ recurrantNets/RNN/code/modules/load_model_save.py
 # vim temporary files
 .*.swp
 .*.swo
+
+# log files
+*.log
