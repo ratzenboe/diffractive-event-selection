@@ -327,7 +327,7 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
             if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) filter_arr[kk] = 1;
             else filter_arr[kk] = 0;
         }
-        evt_lhc16_filter_hard = filter_arr[0];
+        evt_lhc16_filter_checkSPD_hard = filter_arr[0];
         evt_lhc16_filter_checkSPD_maxnSingle_0 = filter_arr[1];
         evt_lhc16_filter_checkSPD_maxnSingle_1 = filter_arr[2];
         evt_lhc16_filter_checkSPD_maxnSingle_2 = filter_arr[3];
