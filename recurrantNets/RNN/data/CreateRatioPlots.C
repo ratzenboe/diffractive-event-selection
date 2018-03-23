@@ -65,6 +65,11 @@ void CreateRatioPlots(TString fname_1, TString fname_2, TString outpath)
     TFile* file_2 = TFile::Open(fname_2);
     if (!file_1 || !file_2) { std::cout << "<E> File paths not found\n"; gSystem->Exit(1);  }
 
+    // get some info from the file name for the legend 
+    TString leg_string_1, leg_string_2;
+    if (fname_1.Contains("LHC")) { leg_string_1 = "LHC data"; leg_string_2 = "CEP simulation"; }
+    else { leg_string_1 = "CEP simulation"; leg_string_2 = "LHC data"; }
+    
     // file extensions
     // 1: loop through one of the files to get all hists
     SetStyle();
@@ -124,6 +129,12 @@ void CreateRatioPlots(TString fname_1, TString fname_2, TString outpath)
         /* rp->GetLowerRefXaxis()->SetTitleSize(1.2); */
 
         rp->SetSeparationMargin(0.01);
+
+        TLegend* leg = new TLegend(0.62, 0.8, 1., 0.9);
+        leg->AddEntry(clone_hist_1, leg_string_1,"l");
+        leg->AddEntry(clone_hist_2, leg_string_2,"l");
+        leg->SetFillStyle(0);
+        leg->Draw();
 
         c->Update();
         c->SaveAs((outpath+clone_hist_1->GetName()+".pdf").Data());
