@@ -1,0 +1,136 @@
+#!/bin/bash
+
+# initialisations
+ROOTFILESDIR=/media/hdd/train_files/raw_trees_from_grid/old_files/
+EXEDIR=/home/ratzenboe/Documents/ML_master_thesis/ML-repo/recurrantNets/RNN/data/grid_runners/
+OUTPUTDIR=/media/hdd/train_files/raw_trees_from_grid/output_dir/
+nev=100000
+runmode=koala
+nproc=5
+skip=1
+
+# parse command line arguments 
+if [ $# -ne 0 ]; then
+    for i in "$@"
+    do
+    case $i in
+        -rootdir=*)
+        ROOTFILESDIR="${i#*=}"
+        shift # past argument=value
+        ;;
+        -exedir=*)
+        EXEDIR="${i#*=}"
+        shift # past argument=value
+        ;;
+        -outputdir=*)
+        OUTPUTDIR="${i#*=}"
+        shift # past argument=value
+        ;; 
+        -nev=*)
+        nev="${i#*=}"
+        shift # past argument=value
+        ;;
+        -runmode=*)
+        runmode="${i#*=}"
+        shift # past argument=value
+        ;; 
+        -nproc=*)
+        nproc="${i#*=}"
+        shift # past argument=value
+        ;;      
+        -skip=*)
+        skip="${i#*=}"
+        shift # past argument=value
+        ;;      
+    esac
+    done
+fi
+
+export nev
+export runmode
+export nproc
+
+# if the directory was passed without a closing "/" we add it here
+# as we assume it in the next few steps
+if [[ "$ROOTFILESDIR" != */ ]]; then
+    ROOTFILESDIR="${ROOTFILESDIR}/"
+fi
+
+if [[ "$EXEDIR" != */ ]]; then
+    EXEDIR="${EXEDIR}/"
+fi
+
+if [[ "$OUTPUTDIR" != */ ]]; then
+    OUTPUTDIR="${OUTPUTDIR}/"
+fi
+
+if [ ! -d ${OUTPUTDIR} ]; then
+    mkdir ${OUTPUTDIR}
+fi
+
+export ROOTFILESDIR
+export EXEDIR
+export OUTPUTDIR
+
+# we check if all necessary files exist
+if [ ! -f ${EXEDIR}CEPfilters.C ] || [ ! -f ${EXEDIR}GetNEventsInTChain.C ] || [ ! -f ${EXEDIR}CEPBuffersToTTree_tchain.C ] || [ ! -f ${EXEDIR}getNevts.sh ] || [ ! -f ${EXEDIR}treetrafo.sh ] || [ ! -f ${EXEDIR}root2pickle.py ]; then
+    echo "Not all necessary files (GetNEventsInTChain.C, getNevts.sh, CEPfilter.C, CEPBuffersToTTree_tchain.C, treetrafo.sh) can be found in "$EXEDIR
+    exit 1
+fi
+
+nevt_tot=$(${EXEDIR}getNevts.sh 2>&1)
+export nevt_tot
+
+echo "total number of events: " $nevt_tot
+
+# compute number of splits
+nsplits=$(( $nevt_tot / $nev ))
+export nsplits
+echo "number of splits: " $nsplits
+
+# loop over all splits 
+if [ $skip -lt 0 ]; then 
+    for ((ii=0; ii<=$nsplits; ii++))
+    do
+        # compute nskip
+        nskip=$(( $ii * $nev))
+        export nskip
+
+        # create unique label
+        label=`printf %04i $ii`
+        export label
+
+        # submit job
+        ${EXEDIR}treetrafo.sh
+        # qsub -q alice -d $workdir -j eo -e ${CEPDIR}"/macros/IVM/proc/logs/develproc.log" -V develproc.sh
+    done
+fi
+
+nfiles_created=$(ls ${OUTPUTDIR}*.root | wc -l)
+# +1 as we have looped one more time then the actual nb of splits
+nfilesinbatch=$(($nfiles_created / ($nsplits+1)))
+export nfilesinbatch
+
+if [ ! -f ${EXEDIR}data_params.conf ] || [ ! -f ${EXEDIR}root2pickle.py ] || [ ! -f ${EXEDIR}pickle2evtdic.py ] || [ ! -f ${EXEDIR}concat_evt_dics.py ]; then
+    echo "Not all necessary files (data_params.conf, root2pickle.py, root2pickle.py, pickle2evtdic.py, concat_evt_dics.py) can be found in "$EXEDIR
+    exit 1
+fi
+
+for ((ii=0; ii<=$nsplits; ii++))
+do
+    basevalue=$(($ii * $nfilesinbatch))
+    export basevalue
+    ${EXEDIR}root2pickle.sh
+done
+
+nfilesinbatch=$(( ($nsplits+1) / $nproc ))
+nfilesinbatch=$(( $nfilesinbatch+1 ))
+export nfilesinbatch
+for ((ii=0; ii<$nproc; ii++))
+do
+    basevalue=$(($ii * $nfilesinbatch))
+    export basevalue
+    ${EXEDIR}pickle2evtdic.sh
+done
+
+

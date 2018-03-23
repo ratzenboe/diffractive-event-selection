@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# initialisations
+ROOTFILESDIR=/media/hdd/train_files/raw_trees_from_grid/old_files/
+EXEDIR=/home/ratzenboe/Documents/ML_master_thesis/ML-repo/recurrantNets/RNN/data/grid_runners/
+OUTPUTDIR=/media/hdd/train_files/raw_trees_from_grid/output_dir/
+nev=100000
+filter=1
+
+# parse command line arguments 
+if [ $# -ne 0 ]; then
+    for i in "$@"
+    do
+    case $i in
+        -rootdir=*)
+        ROOTFILESDIR="${i#*=}"
+        shift # past argument=value
+        ;;
+        -exedir=*)
+        EXEDIR="${i#*=}"
+        shift # past argument=value
+        ;;
+        -outputdir=*)
+        OUTPUTDIR="${i#*=}"
+        shift # past argument=value
+        ;; 
+        -nev=*)
+        nev="${i#*=}"
+        shift # past argument=value
+        ;;
+        -filter=*)
+        filter="${i#*=}"
+        shift # past argument=value
+        ;;
+    esac
+    done
+fi
+
+export nev
+export filter
+
+# if the directory was passed without a closing "/" we add it here
+# as we assume it in the next few steps
+if [[ "$ROOTFILESDIR" != */ ]]; then
+    ROOTFILESDIR="${ROOTFILESDIR}/"
+fi
+
+if [[ "$EXEDIR" != */ ]]; then
+    EXEDIR="${EXEDIR}/"
+fi
+
+if [[ "$OUTPUTDIR" != */ ]]; then
+    OUTPUTDIR="${OUTPUTDIR}/"
+fi
+
+if [ ! -d ${OUTPUTDIR} ]; then
+    mkdir ${OUTPUTDIR}
+fi
+
+export ROOTFILESDIR
+export EXEDIR
+export OUTPUTDIR
+
+# we check if all necessary files exist
+if [ ! -f ${EXEDIR}CEPfilters.C ] || [ ! -f ${EXEDIR}GetNEventsInTChain.C ] || [ ! -f ${EXEDIR}CEPBuffersToList.C ] || [ ! -f ${EXEDIR}getNevts.sh ]; then
+    echo "Not all necessary files (GetNEventsInTChain.C, getNevts.sh, CEPfilter.C, CEPBuffersToList.C) can be found in "$EXEDIR
+    exit 1
+fi
+
+nevt_tot=$(${EXEDIR}getNevts.sh 2>&1)
+export nevt_tot
+
+echo "total number of events: " $nevt_tot
+
+# compute number of splits
+nsplits=$(( $nevt_tot / $nev ))
+export nsplits
+echo "number of splits: " $nsplits
+
+# loop over all splits 
+for ((ii=0; ii<=$nsplits; ii++))
+do
+    # compute nskip
+    nskip=$(( $ii * $nev))
+    export nskip
+
+    # create unique label
+    label=`printf %04i $ii`
+    export label
+
+    # submit job
+    ${EXEDIR}makeTList.sh -exedir=${EXEDIR} -rootdir=${ROOTFILESDIR} -outputdir=${OUTPUTDIR} -nev=${nev} -label=${label} -filter=${filter}
+    # qsub -q alice -d $workdir -j eo -e ${CEPDIR}"/macros/IVM/proc/logs/develproc.log" -V develproc.sh
+done
+
+# now we have to merge again the files
+${EXEDIR}TListMerger.sh -filesdir=${OUTPUTDIR} 
+
