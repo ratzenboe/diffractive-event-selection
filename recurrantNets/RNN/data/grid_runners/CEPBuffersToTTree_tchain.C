@@ -67,7 +67,10 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
 
     Int_t evt_n_tracks, evt_n_tracklets, evt_n_singles, evt_n_residuals, 
           evt_n_tracks_total, evt_n_tracks_its_only,
-          mc_process_type, evt_is_full_recon, evt_lhc16_filter,
+          mc_process_type, evt_is_full_recon, 
+          evt_lhc16_filter_checkSPD_hard, evt_lhc16_filter_checkSPD_maxnSingle_0,
+          evt_lhc16_filter_checkSPD_maxnSingle_1, evt_lhc16_filter_checkSPD_maxnSingle_2,
+          evt_lhc16_filter_checkSPD_maxnSingle_10000, evt_lhc16_filter_noV0,evt_lhc16_filter_noAD,
           evt_n_v0s, evt_charge_sum;
     Double_t evt_tot_ad_mult, evt_tot_ad_time, evt_tot_ad_charge,
              evt_tot_fmd_mult,
@@ -103,7 +106,13 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     // charge sum, e.g. 2 pi+ = 2, for 2 pi- = -2 and for pi+pi- = 0
     eventTree->Branch("charge_sum", &evt_charge_sum);
     // lhc-16 filer: currently applied to the real data
-    eventTree->Branch("lhc16_filter", &evt_lhc16_filter);
+    eventTree->Branch("lhc16_filter_noV0", &evt_lhc16_filter_noV0);
+    eventTree->Branch("lhc16_filter_noAD", &evt_lhc16_filter_noAD);
+    eventTree->Branch("lhc16_filter_checkSPD_hard", &evt_lhc16_filter_checkSPD_hard);
+    eventTree->Branch("lhc16_filter_checkSPD_maxnSingle_0", &evt_lhc16_filter_checkSPD_maxnSingle_0);
+    eventTree->Branch("lhc16_filter_checkSPD_maxnSingle_1", &evt_lhc16_filter_checkSPD_maxnSingle_1);
+    eventTree->Branch("lhc16_filter_checkSPD_maxnSingle_2", &evt_lhc16_filter_checkSPD_maxnSingle_2);
+    eventTree->Branch("lhc16_filter_checkSPD_maxnSingle_10000", &evt_lhc16_filter_checkSPD_maxnSingle_10000);
 
     TFile* trackFile = new TFile((output_prefix+"track_info"+file_addon_str).Data(), "RECREATE");
     TTree* trackTree = new TTree("track", "high level track info");
@@ -190,8 +199,6 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     trackTree->Branch("eta_on_emc", &track_etaEMC);
     trackTree->Branch("pt_on_emc", &track_ptEMC);
     trackTree->Branch("p_on_emc", &track_pEMC);
-    trackTree->Branch("__test_eta", &rawtrk_eta);
-    trackTree->Branch("__lhc16_filter", &evt_lhc16_filter);
 
 
     TFile* adFile = new TFile((output_prefix+"ad_info"+file_addon_str).Data(), "RECREATE");
@@ -212,7 +219,7 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     TTree* v0Tree = new TTree("v0", "raw V0 info");
     Double_t v0_mult, v0_charge, v0_time, v0_sigwidth;
     v0Tree->Branch("event_id", &event_nb);
-    v0Tree->Branch("multiplicity", &FMD_mult);
+    v0Tree->Branch("multiplicity", &v0_mult);
     v0Tree->Branch("adc_charge", &v0_charge);
     v0Tree->Branch("time", &v0_time);
     v0Tree->Branch("signal_width", &v0_sigwidth);
@@ -266,6 +273,8 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     Int_t barWidth = 70;
     /////////////////////////////
     std::cout << "\nReading events: " << evt_offset << " - " << evt_offset+n_evts_to_read-1 << std::endl;
+    Int_t filter_arr [5] = { };
+    Int_t mode = 0;
     for (UInt_t ii(evt_offset); ii<evt_offset+n_evts_to_read; ii++)
     {
         // display purposes only ////////////////////
@@ -298,16 +307,32 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
          * nseltracks:
          *      ist dann die Anzahl tracks im event 
          */ 
+        // no V0
         cu = 74;
-        nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG); 
-        // want events that have between 2 and 6 tracks
-        if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) evt_lhc16_filter = 1;
-        else evt_lhc16_filter = 0;
-        /* cout << "nseltracks: " << nseltracks; */
-        /* cout << ", isDG: " << isDG; */
-        /* cout << "   --> evt_lhc16_filter: " << evt_lhc16_filter << "\n" << endl; */
-
-       
+        nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
+        if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) evt_lhc16_filter_noV0 = 1;
+        else evt_lhc16_filter_noV0 = 0;
+	
+        // no AD
+        cu = 107;
+        nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
+        if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) evt_lhc16_filter_noAD = 1;
+        else evt_lhc16_filter_noAD = 0;
+        
+        // checkSPD in multiple configurations
+        cu = 65539;
+        for (UInt_t kk(0); kk<5; kk++){
+            mode = kk;
+            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
+            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) filter_arr[kk] = 1;
+            else filter_arr[kk] = 0;
+        }
+        evt_lhc16_filter_hard = filter_arr[0];
+        evt_lhc16_filter_checkSPD_maxnSingle_0 = filter_arr[1];
+        evt_lhc16_filter_checkSPD_maxnSingle_1 = filter_arr[2];
+        evt_lhc16_filter_checkSPD_maxnSingle_2 = filter_arr[3];
+        evt_lhc16_filter_checkSPD_maxnSingle_10000 = filter_arr[4];
+        
         // initialize charge_sum with 0 for every new event
         evt_charge_sum = 0;
         
