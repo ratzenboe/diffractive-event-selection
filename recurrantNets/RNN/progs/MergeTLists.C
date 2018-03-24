@@ -47,7 +47,7 @@ void MergeTLists(TString input_dirname)
         } 
     }
 
-    std::cout << "\nFilenames:\n";
+    std::cout << "\n" << filearray->GetEntries() << " files to merge:\n";
     for (UInt_t ii(0); ii<filearray->GetEntries(); ii++){
         std::cout << ((TFile*)filearray->At(ii))->GetName() << std::endl;
     }
