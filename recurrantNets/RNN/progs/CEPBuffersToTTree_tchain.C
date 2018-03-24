@@ -68,9 +68,9 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     Int_t evt_n_tracks, evt_n_tracklets, evt_n_singles, evt_n_residuals, 
           evt_n_tracks_total, evt_n_tracks_its_only,
           mc_process_type, evt_is_full_recon, 
-          evt_lhc16_filter_checkSPD_hard, evt_lhc16_filter_checkSPD_maxnSingle_0,
-          evt_lhc16_filter_checkSPD_maxnSingle_1, evt_lhc16_filter_checkSPD_maxnSingle_2,
-          evt_lhc16_filter_checkSPD_maxnSingle_10000, evt_lhc16_filter_noV0,evt_lhc16_filter_noAD,
+	  evt_lhc16_filter_checkSPD_hard, evt_lhc16_filter_checkSPD_maxnSingle_0,
+	  evt_lhc16_filter_checkSPD_maxnSingle_1, evt_lhc16_filter_checkSPD_maxnSingle_2,
+	  evt_lhc16_filter_checkSPD_maxnSingle_10000, evt_lhc16_filter_noV0,evt_lhc16_filter_noAD,
           evt_n_v0s, evt_charge_sum;
     Double_t evt_tot_ad_mult, evt_tot_ad_time, evt_tot_ad_charge,
              evt_tot_fmd_mult,
@@ -307,31 +307,31 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
          * nseltracks:
          *      ist dann die Anzahl tracks im event 
          */ 
-        // no V0
+	// no V0
         cu = 74;
         nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
         if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) evt_lhc16_filter_noV0 = 1;
         else evt_lhc16_filter_noV0 = 0;
 	
-        // no AD
+	// no AD
         cu = 107;
         nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
         if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) evt_lhc16_filter_noAD = 1;
         else evt_lhc16_filter_noAD = 0;
         
-        // checkSPD in multiple configurations
+	// checkSPD in multiple configurations
         cu = 65539;
-        for (UInt_t kk(0); kk<5; kk++){
-            mode = kk;
-            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
-            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) filter_arr[kk] = 1;
-            else filter_arr[kk] = 0;
-        }
-        evt_lhc16_filter_checkSPD_hard = filter_arr[0];
-        evt_lhc16_filter_checkSPD_maxnSingle_0 = filter_arr[1];
-        evt_lhc16_filter_checkSPD_maxnSingle_1 = filter_arr[2];
-        evt_lhc16_filter_checkSPD_maxnSingle_2 = filter_arr[3];
-        evt_lhc16_filter_checkSPD_maxnSingle_10000 = filter_arr[4];
+	for (UInt_t kk(0); kk<5; kk++){
+	    mode = kk;
+	    nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
+	    if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) filter_arr[kk] = 1;
+	    else filter_arr[kk] = 0;
+	}
+	evt_lhc16_filter_checkSPD_hard = filter_arr[0];
+	evt_lhc16_filter_checkSPD_maxnSingle_0 = filter_arr[1];
+	evt_lhc16_filter_checkSPD_maxnSingle_1 = filter_arr[2];
+	evt_lhc16_filter_checkSPD_maxnSingle_2 = filter_arr[3];
+	evt_lhc16_filter_checkSPD_maxnSingle_10000 = filter_arr[4];
         
         // initialize charge_sum with 0 for every new event
         evt_charge_sum = 0;
