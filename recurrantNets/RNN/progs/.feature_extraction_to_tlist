@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # initialisations
-ROOTFILESDIR=/media/hdd/train_files/raw_trees_from_grid/old_files/
-EXEDIR=/home/ratzenboe/Documents/ML_master_thesis/ML-repo/recurrantNets/RNN/data/grid_runners/
-OUTPUTDIR=/media/hdd/train_files/raw_trees_from_grid/output_dir/
+ROOTFILESDIR=/data1/pbuehler/alice/Pythia8CEPBuffers/
+EXEDIR=/home/sratzenboeck/progs/
+OUTPUTDIR=/home/sratzenboeck/output_plotTList/
 nev=100000
 filter=1
 
@@ -62,11 +62,14 @@ export EXEDIR
 export OUTPUTDIR
 
 # we check if all necessary files exist
-if [ ! -f ${EXEDIR}CEPfilters.C ] || [ ! -f ${EXEDIR}GetNEventsInTChain.C ] || [ ! -f ${EXEDIR}CEPBuffersToList.C ] || [ ! -f ${EXEDIR}getNevts.sh ]; then
-    echo "Not all necessary files (GetNEventsInTChain.C, getNevts.sh, CEPfilter.C, CEPBuffersToList.C) can be found in "$EXEDIR
+if [ ! -f ${EXEDIR}CEPfilters.C ] || [ ! -f ${EXEDIR}GetNEventsInTChain.C ] || [ ! -f ${EXEDIR}CEPBuffersToList.C ]; then
+    echo "Not all necessary files (GetNEventsInTChain.C, CEPfilters.C, CEPBuffersToList.C) can be found in "$EXEDIR
     exit 1
 fi
-
+if [ ! -f ${EXEDIR}getNevts.sh ] || [ ! -f ${EXEDIR}makeTList.sh ] || [ ! -f ${EXEDIR}TListMerger.sh ]; then
+    echo "Not all necessary files (getNevts.sh, makeTList.sh, TListMerger.sh) can be found in "$EXEDIR
+    exit 1
+fi
 nevt_tot=$(${EXEDIR}getNevts.sh 2>&1)
 export nevt_tot
 
@@ -89,10 +92,8 @@ do
     export label
 
     # submit job
-    ${EXEDIR}makeTList.sh -exedir=${EXEDIR} -rootdir=${ROOTFILESDIR} -outputdir=${OUTPUTDIR} -nev=${nev} -label=${label} -filter=${filter}
-    # qsub -q alice -d $workdir -j eo -e ${CEPDIR}"/macros/IVM/proc/logs/develproc.log" -V develproc.sh
+    qsub -q alice -d $EXEDIR -j eo -e ${EXEDIR}"qsub_hists.log" -V ${EXEDIR}makeTList.sh     
 done
 
 # now we have to merge again the files
-${EXEDIR}TListMerger.sh -filesdir=${OUTPUTDIR} 
-
+# ${EXEDIR}TListMerger.sh -filesdir=${OUTPUTDIR}
