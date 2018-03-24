@@ -137,7 +137,8 @@ def get_evt_id_list(data, cut_dic, event_id_string):
     return list_of_events
 
 
-def event_grouping(inp_data, max_entries_per_evt, evt_id_string, targets, list_of_events, max_tracks=2):
+def event_grouping(inp_data, max_entries_per_evt, evt_id_string, 
+        targets, list_of_events, max_tracks=2, rm_evt_id_string=False):
     """
     Args
 
@@ -170,7 +171,12 @@ def event_grouping(inp_data, max_entries_per_evt, evt_id_string, targets, list_o
         max_tracks:
             int, the maximum number of tracks used to distinguish the modeled background (99)
             from the signal events (0,1)
-    _______________________________________________________________________________________
+        __________________________________________________________________________________
+
+        rm_evt_id_string:
+            bool, after classification is done we want to use the event number to trace back
+            which events we can keep: therefore we save the evt-id in the event array
+     _______________________________________________________________________________________
     
     Operation breakdown
 
@@ -184,9 +190,9 @@ def event_grouping(inp_data, max_entries_per_evt, evt_id_string, targets, list_o
             - y_data     (n_evts,)
 
     """
-    # remove event id from the list of features
-    list_of_features = list(filter(lambda x: x != evt_id_string, list(inp_data.columns)))
-
+    if rm_evt_id_string:
+        list_of_features = list(filter(lambda x: x != evt_id_string, list(inp_data.columns)))
+    
     all_events = []
     y_data = []
     signal_evts = 0
@@ -506,13 +512,19 @@ def main():
             data = pd.read_pickle(filespath + temp_path_dic[key])
             ##############################################################################
             # here the data get transformed into the records array shape
+            if key is 'event':
+                rm_evt_id_string = True
+            else:
+                rm_evt_id_string = False
+
             tmp_evt_dictionary[key], y_data = event_grouping(
                                                         inp_data = data,
                                                         max_entries_per_evt=max_entries_dic[key],
                                                         evt_id_string = evt_id_string,
                                                         targets = target_list,
                                                         list_of_events = list_of_events,
-                                                        max_tracks = max_entries_dic['track'])
+                                                        max_tracks = max_entries_dic['track'],
+                                                        rm_evt_id_string = rm_evt_id_string)
 
             # if the y_data array has a size, then we add the 
             # target information to the tmp_evt_dictionary 
