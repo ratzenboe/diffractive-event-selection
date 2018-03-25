@@ -608,7 +608,7 @@ Int_t PFilter (CEPEventBuffer*& ev, Bool_t isMC, Int_t cu,
   // 0 1 0 1  0  1  0   0   0   0    0    0    0    1     0     0     1  73770
   // 1 1 0 0  0  0  1   0   0   0    0    0    0    1     0     0     1  73795
                    
-Int_t LHC16Filter (CEPEventBuffer*& ev, Bool_t isMC, Int_t cu, Bool_t& isDG, Bool_t& isNDG, Int_t mode)
+Int_t LHC16Filter (CEPEventBuffer*& ev, Bool_t isMC, Int_t cu, Bool_t& isDG, Bool_t& isNDG, Int_t mode=0)
 {
   // initialisation
   TString firedTriggerClasses;
