@@ -124,6 +124,8 @@ def main():
     # TODO
     # function that extracts the evt-id from each 'event'-array and puts it into a list
     # function that removes the evt-id from the 'event'-array
+    evt_dic['event'], evt_id_np = remove_field_name(evt_dic['event'], evt_id_string)
+    evt_id_list = evt_id_np.values.tolist()
     #####################################################################################
 
     print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
@@ -133,7 +135,6 @@ def main():
                                     evt_dic, 
                                     append_array=eta_phi_dist_feature_arr,
                                     flat=flat)[0]
-
 
     ######################################################################################
     # STEP 2:
@@ -169,7 +170,6 @@ def main():
     thefile = open(model_path+outfile, 'w')
     for item in sig_list:
         thefile.write("%s\n" % item)
-    
 
     ######################################################################################
     # ------------------------------------ EOF -------------------------------------------
