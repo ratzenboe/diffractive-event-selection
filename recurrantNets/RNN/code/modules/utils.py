@@ -245,12 +245,15 @@ def remove_field_name(np_recarray, name):
     """
     Remove the column "name" from the record array np_recarray
     """
+    # first save the column
+    name_arr = np_recarray[name]
+    # now create new array without the column
     names = list(np_recarray.dtype.names)
     if name in names:
         names.remove(name)
     new_recarray = np_recarray[names]
 
-    return new_recarray
+    return new_recarray, name_arr
         
 
 def flatten_dictionary(evt_dic, feature_labels_dic=None, skip_list=['target']):
