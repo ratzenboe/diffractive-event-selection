@@ -231,6 +231,14 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
             if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) lhc16_filter = 1;
             else lhc16_filter = 0;
             if (lhc16_filter==0) continue;
+	} else if (filter==3) {
+            cu = 65539;
+	    // mode = 2: maxnSingle = 1
+	    Int_t mode = 2;
+            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
+            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) lhc16_filter = 1;
+            else lhc16_filter = 0;
+            if (lhc16_filter==0) continue;
 	} else {
             cu = 74;
             nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG); 
