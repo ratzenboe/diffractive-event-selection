@@ -218,12 +218,26 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
          * nseltracks:
          *      ist dann die Anzahl tracks im event 
          */ 
-        cu = 74;
-        nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG); 
-        // want events that have between 2 and 6 tracks
-        if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) lhc16_filter = 1;
-        else lhc16_filter = 0;
-        if (lhc16_filter==0 && filter==1) continue;
+	if (filter==1){
+            cu = 74;
+            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG); 
+            // want events that have between 2 and 6 tracks
+            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) lhc16_filter = 1;
+            else lhc16_filter = 0;
+            if (lhc16_filter==0) continue;
+	} else if (filter==2) {
+	    cu = 104;
+            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG); 
+            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) lhc16_filter = 1;
+            else lhc16_filter = 0;
+            if (lhc16_filter==0) continue;
+	} else {
+            cu = 74;
+            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG); 
+            // want events that have between 2 and 6 tracks
+            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) lhc16_filter = 1;
+            else lhc16_filter = 0;
+	} 
         evt_lhc16_filter->Fill(lhc16_filter);
         
         // initialize charge_sum with 0 for every new event
