@@ -163,7 +163,7 @@ void InvMassPlot(TString input_dirname, TString path_to_cepfilter_macro, TString
             evt_charge_sum_var += trk->GetChargeSign();
         }
         if (evt_charge_sum_var!=0) continue;
-        hInvarmass->Fill(
+        hInvarmass->Fill(lor_vec.M());
     }
     // cursor of status display has to move to the next line
     std::cout << std::endl;
