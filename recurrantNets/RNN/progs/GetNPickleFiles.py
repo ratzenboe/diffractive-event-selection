@@ -55,8 +55,9 @@ def main():
         raise IOError('\nThere is no correspondance between the files ' \
                 'provided (elements are not the same)!')
     # number of file-collections (file-collection = ad, fmd, event, track, ...)
+    print(len(list_of_path_ints[0]))
 
-    return len(list_of_path_ints[0])
+    return 
    
 if __name__ == "__main__":
 
