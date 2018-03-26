@@ -38,7 +38,7 @@ We can plot the features in the (raw-)buffers easily by using the following pipe
     The `nev`, number of evts, is the number of events per batch. The `filter` defines if the data plotted will have some active filters (*e.g.* !V0). 
 1. The previous step outputs many individual small plots each only covering `nev`. We now merge the files with
     ```
-    ./TListMerger.sh -filesdir=/path/to/previous/output/
+    ./TListMerger.sh -filesdir=/path/to/previous/output/ -exedir=/exe/dir/
     ```
 
 ### Ratio plots
