@@ -106,6 +106,8 @@ void CreateRatioPlots(TString fname_1, TString fname_2, TString outpath)
         if (endbin > clone_hist_1->GetSize()-2) endbin = clone_hist_1->GetSize()-2;
         clone_hist_1->GetXaxis()->SetRange(startbin, endbin);
 
+        if (!clone_hist_1 || !clone_hist_2) { std::cout << "<E> No histogram found in file\n"; gSystem->Exit(1);  }
+
         TRatioPlot* rp = new TRatioPlot(clone_hist_1, clone_hist_2);
         rp->Draw();
         rp->GetUpperPad()->SetLogy();
