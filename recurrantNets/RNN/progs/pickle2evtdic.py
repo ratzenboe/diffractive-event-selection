@@ -14,8 +14,6 @@ import fnmatch
 import numpy as np
 import pandas as pd
 
-from tqdm import tqdm
-
 try:
     import configparser
 except ImportError:
@@ -192,6 +190,8 @@ def event_grouping(inp_data, max_entries_per_evt, evt_id_string,
     """
     if rm_evt_id_string:
         list_of_features = list(filter(lambda x: x != evt_id_string, list(inp_data.columns)))
+    else:
+        list_of_features = list(inp_data.columns)
     
     all_events = []
     y_data = []
@@ -204,7 +204,7 @@ def event_grouping(inp_data, max_entries_per_evt, evt_id_string,
     
     time_needed_for_loc = []
     time_needed_for_pad_df = []
-    for evt_int in tqdm(list_of_events):
+    for evt_int in list_of_events:
         # get relevant data for one event 
         start_time = time.time()
         evt_dataframe = inp_data.loc[inp_data[evt_id_string] == evt_int, list_of_features]
@@ -610,7 +610,7 @@ if __name__ == "__main__":
                         default=None,
                         type=str)
 
-    parser.add_argument('-run_mode_user', 
+    parser.add_argument('-run_mode_user', '-run_mode',
                         help='string (default: koala): the key word that is found in the config file',
                         action='store',
                         dest='run_mode_user',
