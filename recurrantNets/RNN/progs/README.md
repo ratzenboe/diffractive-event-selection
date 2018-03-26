@@ -47,6 +47,7 @@ If we ran the previous plotting script with multiple cuts selected or over diffe
 ```
 ./ratioplot.sh -file1=/path/to/file1 -file2=/path/to/file2 -outputdir=/out/path/ -exedir=/path/to/exedir/
 ```
+**Warning:** this script may fail in `root-v5` as the `TRatioPlot` class may not be implemented. Execute in `root-v6`
 
 
 
