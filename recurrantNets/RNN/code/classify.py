@@ -102,7 +102,7 @@ def main():
         # have to remove feature from the remove-list that we have engineered!
         remove_features = [x for x in remove_features if x not in list_of_engineered_features]
         for feature_name in remove_features:
-            evt_dictionary[key] = remove_field_name(evt_dictionary[key], feature_name)
+            evt_dictionary[key] = remove_field_name(evt_dictionary[key], feature_name)[0]
         print('Features left in {}: {}'.format(key, list(evt_dictionary[key].dtype.names)))
 
     if plot:
@@ -125,7 +125,7 @@ def main():
     # function that extracts the evt-id from each 'event'-array and puts it into a list
     # function that removes the evt-id from the 'event'-array
     evt_dic['event'], evt_id_np = remove_field_name(evt_dic['event'], evt_id_string)
-    evt_id_list = evt_id_np.values.tolist()
+    evt_id_list = list(map(int, evt_id_np.ravel().tolist()))
     #####################################################################################
 
     print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
