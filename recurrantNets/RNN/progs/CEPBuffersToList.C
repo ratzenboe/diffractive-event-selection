@@ -16,12 +16,9 @@
 #include <TChain.h>
 #include <TTree.h>
 
-void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path_to_cepfilter_macro, 
+void CEPBuffersToList(TString input_dirname, TString output_prefix, 
         Int_t evt_offset, Int_t n_evts_to_read, TString file_addon_str="", Int_t filter=-1)
 {
-    // get the cut-selection info
-    gROOT->ProcessLine((".L " + path_to_cepfilter_macro).Data());
-
     // file extensions
     const char *file_ext = ".root";
     
@@ -186,6 +183,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
     CEPRawV0Buffer* v0      = 0x0;
     CEPRawCaloBuffer* emcal = 0x0;
     CEPRawCaloBuffer* phos  = 0x0;
+    Int_t n_tracks = 2;
     for (UInt_t ii(evt_offset); ii<evt_offset+n_evts_to_read; ii++)
     {
         // display purposes only ////////////////////
@@ -218,42 +216,15 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix, TString path
          * nseltracks:
          *      ist dann die Anzahl tracks im event 
          */ 
-	if (filter==1){
-            cu = 74;
-            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG); 
-            // want events that have between 2 and 6 tracks
-            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) lhc16_filter = 1;
-            else lhc16_filter = 0;
-            if (lhc16_filter==0) continue;
-	} else if (filter==2) {
-	    cu = 104;
-            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG); 
-            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) lhc16_filter = 1;
-            else lhc16_filter = 0;
-            if (lhc16_filter==0) continue;
-	} else if (filter==3) {
-            cu = 65539;
-	    // mode = 2: maxnSingle = 1
-	    Int_t mode = 2;
-            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
-            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) lhc16_filter = 1;
-            else lhc16_filter = 0;
-            if (lhc16_filter==0) continue;
-	} else if (filter==4) {
-            cu = 65539;
-	    // mode = 2: maxnSingle = 1
-	    Int_t mode = 0;
-            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
-            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) lhc16_filter = 1;
-            else lhc16_filter = 0;
-            if (lhc16_filter==0) continue;	
-	} else {
-            cu = 74;
-            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG); 
-            // want events that have between 2 and 6 tracks
-            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) lhc16_filter = 1;
-            else lhc16_filter = 0;
-	} 
+        if (filter==0)      { cu=74; mode=0; }     // !V0
+        else if (filter==1) { cu=65539; mode=0; }  // checkSPD hard
+        else if (filter==2) { cu=65539; mode=1; }  // maxdnclu=maxdnfchips=maxdnfFOchips=1e5
+        else if (filter==3) { cu=65539; mode=2; }  // maxnSingle=1
+        else if (filter==4) { cu=65539; mode=3; }  // maxnSingle=2
+        else                { cu=99; mode=0;}      // !AD (-1: keep all, >5 keep only passing)
+        nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
+        if ((filter>=0) && (isDG==kFALSE || nseltracks!=n_tracks)) continue;
+
         evt_lhc16_filter->Fill(lhc16_filter);
         
         // initialize charge_sum with 0 for every new event
