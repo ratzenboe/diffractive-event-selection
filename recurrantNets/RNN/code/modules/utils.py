@@ -410,7 +410,3 @@ def engineer_features(evt_dic, replace=False):
         evt_dic = evt_dic_copy
 
     return evt_dic_copy, list_of_engineered_features
-
-
-
-
