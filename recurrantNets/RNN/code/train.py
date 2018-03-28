@@ -62,10 +62,8 @@ def main():
     try:
         # ----------- data-parameters --------------
         branches_dic      = data_params['branches']
-        target_list       = data_params['target']
         evt_id_string     = data_params['evt_id']
         cut_dic           = data_params['cut_dic']
-        event_string      = data_params['event_string']
         missing_vals_dic  = data_params['missing_values']
         remove_features   = data_params['remove_features']
         # ------------ run-parameters --------------
@@ -158,9 +156,9 @@ def main():
 
     print('\n::  Standarad scaling...')
     # returns a numpy array (due to fit_transform function)
-    preprocess(evt_dic_train, branches_dic, out_path, load_fitted_attributes=False)
-    preprocess(evt_dic_test,  branches_dic, out_path, load_fitted_attributes=True)
-    preprocess(evt_dic_val,   branches_dic, out_path, load_fitted_attributes=True)
+    preprocess(evt_dic_train, out_path, load_fitted_attributes=False)
+    preprocess(evt_dic_test,  out_path, load_fitted_attributes=True)
+    preprocess(evt_dic_val,   out_path, load_fitted_attributes=True)
 
     if plot:
         print('\n::  Plotting the standard scaled features...')
