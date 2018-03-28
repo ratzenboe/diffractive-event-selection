@@ -6,8 +6,9 @@
 #include <TROOT.h>
 #include "TSystem.h" 
 
-/* #include <CEPEventBuffer.h> */
-/* #include <CEPfilters.h> */
+#include "CEPEventBuffer.h"
+#include "CEPfilters.h"
+
 #define BIT(n) (1ULL << (n))
 
 //-----------------------------------------------------------------------------
@@ -608,8 +609,10 @@ Int_t PFilter (CEPEventBuffer*& ev, Bool_t isMC, Int_t cu,
   // 0 1 0 1  0  1  0   0   0   0    0    0    0    1     0     0     1  73770
   // 1 1 0 0  0  0  1   0   0   0    0    0    0    1     0     0     1  73795
                    
-Int_t LHC16Filter (CEPEventBuffer*& ev, Bool_t isMC, Int_t cu, Bool_t& isDG, Bool_t& isNDG, Int_t mode=0)
+Int_t LHC16Filter (CEPEventBuffer*& ev, Bool_t isMC, Int_t cu, Bool_t& isDG, Bool_t& isNDG, Int_t mode)
 {
+  // print
+  /* printf("Filter beginning...\n"); */  
   // initialisation
   TString firedTriggerClasses;
   Bool_t DGtested = kFALSE;
@@ -831,7 +834,7 @@ Int_t LHC16Filter (CEPEventBuffer*& ev, Bool_t isMC, Int_t cu, Bool_t& isDG, Boo
 
   // clean up
   delete goodinds;
-  
+  /* printf("End of filter...\n"); */
   return nTrackAccept;
   
 }
@@ -880,7 +883,7 @@ Int_t LHC16Filter (CEPEventBuffer*& ev, Bool_t isMC, Int_t cu, Bool_t& isDG, Boo
 //    maxnSingle = maxdnclu = maxdnfchips = maxdnfFOchips = 0
 // larger values will lead to increased level of contamination (to be tested)
 //
-Bool_t checkSPD (CEPEventBuffer *ev, UInt_t tomatch, Bool_t verbose, Int_t mode=0)
+Bool_t checkSPD (CEPEventBuffer *ev, UInt_t tomatch, Bool_t verbose, Int_t mode)
 {
   
   // define some thresholds
