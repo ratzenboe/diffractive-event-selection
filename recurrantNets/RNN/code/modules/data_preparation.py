@@ -571,9 +571,9 @@ def get_sub_dictionary(evt_dic, branches_dic):
         dict, containing the desired features
 
     """
-    new_evt_dic = {}
+    new_evt_dic = {'target': evt_dic['target']}
     for key in branches_dic.keys():
-        new_evt_dic[key] = evt_dic[branches_dic[key]]
+        new_evt_dic[key] = evt_dic[key][branches_dic[key]]
 
     return new_evt_dic
 
