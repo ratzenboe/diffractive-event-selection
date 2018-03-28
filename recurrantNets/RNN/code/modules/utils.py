@@ -245,11 +245,12 @@ def remove_field_name(np_recarray, name):
     """
     Remove the column "name" from the record array np_recarray
     """
-    # first save the column
-    name_arr = np_recarray[name]
+    name_arr = []
     # now create new array without the column
     names = list(np_recarray.dtype.names)
     if name in names:
+        # first save the column
+        name_arr = np_recarray[name]
         names.remove(name)
     new_recarray = np_recarray[names]
 
