@@ -28,7 +28,8 @@ from modules.control                            import config_file_to_dict
 from modules.logger                             import logger
 from modules.load_model                         import train_model
 from modules.data_preparation                   import get_data_dictionary, preprocess, \
-                                                       fix_missing_values, shape_data
+                                                       fix_missing_values, shape_data, \
+                                                       get_sub_dictionary
 from modules.utils                              import print_dict, split_dictionary, \
                                                        pause_for_input, get_subsample, \
                                                        print_array_in_dictionary_stats, \
@@ -59,10 +60,7 @@ def main():
     # here is a collection of variables extracted from the config files
     try:
         # ----------- data-parameters --------------
-        path_dic          = data_params['path']
         branches_dic      = data_params['branches']
-        max_entries_dic   = data_params['max_entries']
-        std_scale_dic     = data_params['std_scale']
         target_list       = data_params['target']
         evt_id_string     = data_params['evt_id']
         cut_dic           = data_params['cut_dic']
@@ -107,40 +105,48 @@ def main():
         # uncomment the next line if we want to produce the evt-dictionary with the
         # saved pickle files (the event.pkl, etc)
         # raise TypeError('We want to produce the evt_dic again')
-        evt_dictionary = get_data_dictionary(output_path + 'evt_dic.pkl')
+        evt_dictionary = get_data_dictionary(inpath)
         print('\n:: Event dictionary loaded from file: {}'.format(
             output_path + 'evt_dic.pkl'))
+        evt_dictionary = get_sub_dictionary(evt_dictionary, branches_dic)
     except(OSError, IOError, TypeError, ValueError):
-        raise IOError('The event dictionary cannot be loaded from {}!'.format(
-            output_path+'evt_dic.pkl'))
+        raise IOError('The event dictionary cannot be loaded from {}!'.format(inpath))
 
     evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
-    evt_dictionary = engineer_features(evt_dictionary)[0]
+    evt_dictionary, list_of_engineered_features = engineer_features(evt_dictionary, replace=False)
     
-    list_of_engineered_features = engineer_features(evt_dictionary, replace=False)[1]
-
     # remove a feature if it is in the cut_dic and contains no further info 
+    remove_features.append(evt_id_string)
+    print(remove_features)
     for key in evt_dictionary.keys():
         if key == 'target':
             continue
         # if the loaded data contains features that are no longer in the list of 
         # desired features (in the config files) we add them to the remove_features-list
-        remove_features.extend(list(set(evt_dictionary[key].dtype.names) - set(branches_dic[key])))
         # remove possible duplicate entries
         remove_features = list(set(remove_features))
         # have to remove feature from the remove-list that we have engineered!
         remove_features = [x for x in remove_features if x not in list_of_engineered_features]
         for feature_name in remove_features:
-            evt_dictionary[key] = remove_field_name(evt_dictionary[key], feature_name)
+            print('key: {}'.format(key))
+            evt_dictionary[key] = remove_field_name(evt_dictionary[key], feature_name)[0]
         print('Features left in {}: {}'.format(key, list(evt_dictionary[key].dtype.names)))
+
+    if evt_id_string in evt_dictionary['event'].dtype.names:
+        raise KeyError('Attention, the event id key is still in the data! '\
+                'By not removing it the machine will treat it as a feature') 
 
     if plot:
         print('\n::  Plotting the features...')
         plot_all_features(evt_dictionary, std_scale_dic, out_path, real_bg=False)
+
+    print_dict(evt_dictionary)
+    sys.exit(0)
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
     ######################################################################################
+
     print('\n:: Splitting data in training and test sample')
     # output type is the same as input type!
     evt_dic, evt_dic_val = split_dictionary(evt_dictionary, split_size=frac_val_sample)
@@ -148,17 +154,13 @@ def main():
     evt_dic_train, evt_dic_test  = split_dictionary(evt_dic, split_size=frac_test_sample)
     del evt_dic
 
-    # generates a subsample of the original event dictionary containing
-    # 10 signal-samples and 10-bg samples
-    # evt_dic_train = get_subsample(evt_dic_train, 1000)
-    # evt_dic_test = get_subsample(evt_dic_test, 100)
-        
     print('\n::  Standarad scaling...')
     # returns a numpy array (due to fit_transform function)
-    preprocess(evt_dic_train, std_scale_dic, out_path, load_fitted_attributes=False)
-    preprocess(evt_dic_test,  std_scale_dic, out_path, load_fitted_attributes=True)
-    preprocess(evt_dic_val,   std_scale_dic, out_path, load_fitted_attributes=True)
+    preprocess(evt_dic_train, branches_dic, out_path, load_fitted_attributes=False)
+    preprocess(evt_dic_test,  branches_dic, out_path, load_fitted_attributes=True)
+    preprocess(evt_dic_val,   branches_dic, out_path, load_fitted_attributes=True)
 
+    
     # if plot:
     #     print('\n::  Plotting the standard scaled features...')
     #     plot_all_features(evt_dic_train, std_scale_dic, out_path, 
@@ -202,12 +204,7 @@ def main():
     # if we want cross validation (in most cases we do) we can in turn easily evaluate the
     # models by passing which metrics should be looked into
 
-    if 'anomaly' in run_mode_user:
-        # use only bg events for validation
-        X_val_data = {'feature_matrix': 
-            evt_dic_val['feature_matrix'][np.array(np.where(evt_dic_val['target']==0)).ravel()]}
-        y_val_data = X_val_data['feature_matrix']
-    elif 'koala' in run_mode_user:
+    if 'koala' in run_mode_user:
         y_val_data[(y_val_data==1) | (y_val_data==0)] = 1
         y_val_data[y_val_data==99] = 0
         if aux:
@@ -234,32 +231,29 @@ def main():
 
     # to predict the labels we have to ged rid of the target:
     start_time_training = time.time()
-    if not load:
-        print('\nFitting the model...')
-        pause_for_input('\n\n:: The model will be trained anew '\
-                'if this is not desired please hit enter', timeout=5)
-        history = train_model(evt_dic_train,
-                            run_mode_user, 
-                            val_data    = (X_val_data, y_val_data),
-                            batch_size  = batch_size,
-                            n_epochs    = n_epochs,
-                            rnn_layer   = rnn_layer,
-                            out_path    = out_path,
-                            dropout     = dropout,
-                            class_weight = class_weight,
-                            n_layers    = n_layers,
-                            layer_nodes = layer_nodes, 
-                            batch_norm  = batch_norm,
-                            activation  = activation,
-                            flat        = flat,
-                            aux         = aux)
 
-        plot_model_loss(history, out_path)
-        print('\n:: Finished training!')
-        load_model_path = out_path + 'best_model.h5'
-    else:
-        # this is the path where the current best model is located
-        load_model_path = './output/load_model_path/best_model.h5'
+    print('\nFitting the model...')
+    pause_for_input('\n\n:: The model will be trained anew '\
+            'if this is not desired please hit enter', timeout=5)
+    history = train_model(evt_dic_train,
+                          run_mode_user, 
+                          val_data    = (X_val_data, y_val_data),
+                          batch_size  = batch_size,
+                          n_epochs    = n_epochs,
+                          rnn_layer   = rnn_layer,
+                          out_path    = out_path,
+                          dropout     = dropout,
+                          class_weight = class_weight,
+                          n_layers    = n_layers,
+                          layer_nodes = layer_nodes, 
+                          batch_norm  = batch_norm,
+                          activation  = activation,
+                          flat        = flat,
+                          aux         = aux)
+
+    plot_model_loss(history, out_path)
+    print('\n:: Finished training!')
+    load_model_path = out_path + 'best_model.h5'
 
     end_time_training = time.time()
 
@@ -355,12 +349,19 @@ if __name__ == "__main__":
 
     # commend line parser (right now not a own function as only 2 elements are used)
     parser = argparse.ArgumentParser()
+    parser.add_argument('-inpath', '-evtdicpath', '-evtdic',
+                        help='path to the event dictionary',
+                        action='store',
+                        dest='inpath',
+                        default='output/evt_dic.pkl',
+                        type=str)
+
     parser.add_argument('-run_mode', '-run_setting',
                         help='keyword to identify which run settings to \
 			      choose from the config file (default: "run_params")',
                         action='store',
                         dest='run_mode',
-                        default='SimpleGrid',
+                        default='NN',
                         type=str)
 
     parser.add_argument('-plot', 
@@ -384,18 +385,16 @@ if __name__ == "__main__":
                         dest='aux',
                         default=False)
 
-    parser.add_argument('-load', 
-                        help='bool: if model should be loaded instead of fitted newly',
-                        action='store_true',
-                        dest='load',
-                        default=False)
-
     command_line_args = parser.parse_args(user_argv)
 
     run_mode_user = command_line_args.run_mode
     plot = command_line_args.plot
     flat = command_line_args.flat
     aux = command_line_args.aux
-    load = command_line_args.load
+    inpath = command_line_args.inpath
+
+    if not os.path.isfile(inpath) or not inpath.endswith('.pkl'):
+        raise IOError('No valid "inpath" for the event dictionary provided!\nPlease do so via ' \
+                'command line argument: -inpath /path/to/evt_dic_folder/evt_dic.pkl')
 
     main()
