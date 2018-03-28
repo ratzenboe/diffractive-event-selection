@@ -14,6 +14,7 @@
 #include <TList.h>
 #include <TString.h>
 #include <TFile.h>
+/* #include <TRatioPlot.h> */
 
 void SetStyle(Bool_t graypalette=kFALSE) 
 {
@@ -67,8 +68,10 @@ void CreateRatioPlots(TString fname_1, TString fname_2, TString outpath)
 
     // get some info from the file name for the legend 
     TString leg_string_1, leg_string_2;
-    if (fname_1.Contains("LHC")) { leg_string_1 = "LHC data"; leg_string_2 = "CEP simulation"; }
-    else { leg_string_1 = "CEP simulation"; leg_string_2 = "LHC data"; }
+    /* if (fname_1.Contains("LHC")) { leg_string_1 = "LHC data"; leg_string_2 = "CEP simulation"; } */
+    if (fname_1.Contains("LHC")) { leg_string_1 = "LHC !V0"; leg_string_2 = "LHC checkSPD"; }
+    else { leg_string_2 = "LHC !V0"; leg_string_1 = "LHC checkSPD"; }
+    /* else { leg_string_1 = "CEP simulation"; leg_string_2 = "LHC data"; } */
     
     // file extensions
     // 1: loop through one of the files to get all hists
@@ -106,7 +109,7 @@ void CreateRatioPlots(TString fname_1, TString fname_2, TString outpath)
         if (endbin > clone_hist_1->GetSize()-2) endbin = clone_hist_1->GetSize()-2;
         clone_hist_1->GetXaxis()->SetRange(startbin, endbin);
 
-        if (!clone_hist_1 || !clone_hist_2) { std::cout << "<E> No histogram found in file\n"; gSystem->Exit(1);  }
+        if (!clone_hist_1->InheritsFrom("TH1") || !clone_hist_2->InheritsFrom("TH1")) { std::cout << "<E> No histogram found in file\n"; gSystem->Exit(1);  }
 
         TRatioPlot* rp = new TRatioPlot(clone_hist_1, clone_hist_2);
         rp->Draw();
