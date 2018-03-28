@@ -120,10 +120,7 @@ def main():
     # which we will (is needed for the koala mode)
     eta_phi_dist_feature_arr = evt_dic['event']['eta_phi_diff'].ravel()
  
-    #####################################################################################
-    # TODO
     # function that extracts the evt-id from each 'event'-array and puts it into a list
-    # function that removes the evt-id from the 'event'-array
     evt_dic['event'], evt_id_np = remove_field_name(evt_dic['event'], evt_id_string)
     evt_id_list = list(map(int, evt_id_np.ravel().tolist()))
     #####################################################################################
