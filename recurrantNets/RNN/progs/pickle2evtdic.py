@@ -512,10 +512,12 @@ def main():
             data = pd.read_pickle(filespath + temp_path_dic[key])
             ##############################################################################
             # here the data get transformed into the records array shape
-            if key is 'event':
+            if str(key) == 'event':
                 rm_evt_id_string = False
+                print('rm: False, key={}'.format(key))
             else:
                 rm_evt_id_string = True
+                print('rm: True, key={}'.format(key))
 
             tmp_evt_dictionary[key], y_data = event_grouping(
                                                         inp_data = data,
