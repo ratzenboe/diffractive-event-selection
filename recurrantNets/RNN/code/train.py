@@ -29,12 +29,13 @@ from modules.logger                             import logger
 from modules.load_model                         import train_model
 from modules.data_preparation                   import get_data_dictionary, preprocess, \
                                                        fix_missing_values, shape_data, \
-                                                       get_sub_dictionary
+                                                       get_sub_dictionary, save_data_dictionary
 from modules.utils                              import print_dict, split_dictionary, \
                                                        pause_for_input, get_subsample, \
                                                        print_array_in_dictionary_stats, \
                                                        remove_field_name, flatten_dictionary, \
-                                                       special_preprocessing, engineer_features
+                                                       special_preprocessing, engineer_features, \
+                                                       flatten_feature
 from modules.file_management                    import OutputManager
 from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAoutput, \
                                                        plot_cut_efficiencies, plot_all_features, \
@@ -117,13 +118,11 @@ def main():
     
     # remove a feature if it is in the cut_dic and contains no further info 
     remove_features.append(evt_id_string)
+    branches_dic['event'].remove(evt_id_string)
     print(remove_features)
     for key in evt_dictionary.keys():
         if key == 'target':
             continue
-        # if the loaded data contains features that are no longer in the list of 
-        # desired features (in the config files) we add them to the remove_features-list
-        # remove possible duplicate entries
         remove_features = list(set(remove_features))
         # have to remove feature from the remove-list that we have engineered!
         remove_features = [x for x in remove_features if x not in list_of_engineered_features]
@@ -136,12 +135,15 @@ def main():
         raise KeyError('Attention, the event id key is still in the data! '\
                 'By not removing it the machine will treat it as a feature') 
 
-    if plot:
-        print('\n::  Plotting the features...')
-        plot_all_features(evt_dictionary, std_scale_dic, out_path, real_bg=False)
+    # if plot:
+    #     print('\n::  Plotting the features...')
+    #     plot_all_features(evt_dictionary, out_path, real_bg=False)
 
-    print_dict(evt_dictionary)
-    sys.exit(0)
+    if 'koala' not in run_mode_user:
+        not_99_indices = np.arange(evt_dictionary['target'].shape[0])[evt_dictionary['target']!=99]
+        for key in evt_dictionary.keys():
+            evt_dictionary[key] = evt_dictionary[key][not_99_indices]
+
     ######################################################################################
     # STEP 1:
     # ------------------------------- Preprocessing --------------------------------------
@@ -160,11 +162,9 @@ def main():
     preprocess(evt_dic_test,  branches_dic, out_path, load_fitted_attributes=True)
     preprocess(evt_dic_val,   branches_dic, out_path, load_fitted_attributes=True)
 
-    
-    # if plot:
-    #     print('\n::  Plotting the standard scaled features...')
-    #     plot_all_features(evt_dic_train, std_scale_dic, out_path, 
-    #                       post_fix='_std_scaled', real_bg=True)
+    if plot:
+        print('\n::  Plotting the standard scaled features...')
+        plot_all_features(evt_dic_train, out_path, post_fix='_std_scaled', real_bg=False)
 
     # before we lose track of the column names we save the eta-phi-diff columns
     # which we will (is needed for the koala mode)
@@ -177,21 +177,23 @@ def main():
     shape_data(evt_dic_test)
     shape_data(evt_dic_val)
 
-    evt_dic_train, feature_lst = special_preprocessing(run_mode_user, 
-                                                       evt_dic_train, 
-                                                       labels_dic=feature_names_dic,
-                                                       append_array=eta_phi_dist_feature_arr_train,
-                                                       flat = flat)
+    if 'NN' in run_mode_user:
+        flatten_feature(evt_dic_train, 'track')
+        evt_dic_train['feature_matrix'] = np.c_[evt_dic_train.pop('track'), 
+                                                evt_dic_train.pop('event')]
+       
+        flatten_feature(evt_dic_test, 'track')
+        evt_dic_test['feature_matrix'] = np.c_[evt_dic_test.pop('track'), 
+                                               evt_dic_test.pop('event')]
+       
+        flatten_feature(evt_dic_val, 'track')
+        evt_dic_val['feature_matrix'] = np.c_[evt_dic_val.pop('track'), 
+                                              evt_dic_val.pop('event')]
+  
+    print_dict(evt_dic_train)
+
     # saveing the feature_list to do shap predictions
-    om.save(feature_lst, 'feature_list')
-    evt_dic_test = special_preprocessing(run_mode_user, 
-                                         evt_dic_test, 
-                                         append_array=eta_phi_dist_feature_arr_test,
-                                         flat=flat)[0]
-    evt_dic_val  = special_preprocessing(run_mode_user, 
-                                         evt_dic_val,
-                                         append_array=eta_phi_dist_feature_arr_val,
-                                         flat=flat)[0]
+    # om.save(feature_lst, 'feature_list')
 
     print_array_in_dictionary_stats(evt_dic_train, 'Training data info:')
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
