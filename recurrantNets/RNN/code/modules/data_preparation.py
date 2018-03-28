@@ -549,6 +549,34 @@ def get_data_dictionary(infile):
     return evt_dic
 
 
+def get_sub_dictionary(evt_dic, branches_dic):
+    """
+    Args
+        evt_dic:
+            the main data-dictionary containing the necessary data
+        ________________________________________________________________________
+
+        branches_dic:
+            the features which should remain in the final event dictionary
+    ____________________________________________________________________________
+
+    Operation breakdown
+
+        the branches_dic is looped over creating a new event dictionary with 
+        the desired (sub-set of) features
+    ____________________________________________________________________________
+
+    Return
+        
+        dict, containing the desired features
+
+    """
+    new_evt_dic = {}
+    for key in branches_dic.keys():
+        new_evt_dic[key] = evt_dic[branches_dic[key]]
+
+    return new_evt_dic
+
 
 def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
     """
@@ -615,12 +643,13 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
 
                     evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)] -= mean
                     evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)] /= std
+
+                    # cannot save only the column, but we also have to 
+                    # save the key, as some columns appear in different keys
+                    # e.g. time in fmd, ad, v0
+                    scaling_attr[key][col] = {'mean': mean, 'std': std}
                 except KeyError:
                     print('Warning: Feature {} not found in the data!'.format(col))
-                # cannot save only the column, but we also have to 
-                # save the key, as some columns appear in different keys
-                # e.g. time in fmd, ad, v0
-                scaling_attr[key][col] = {'mean': mean, 'std': std}
 
         np.save(load_save_file, scaling_attr)
 
@@ -639,7 +668,6 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
                         evt_dic[key][key_inner] != -999.0)] /= values_inner['std']
                 except KeyError:
                     print('Warning: Feature {} not found in the data!'.format(key_inner))
-
 
     return evt_dic 
 
