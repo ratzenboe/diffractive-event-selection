@@ -578,7 +578,7 @@ def get_sub_dictionary(evt_dic, branches_dic):
     return new_evt_dic
 
 
-def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
+def preprocess(evt_dic, out_path, load_fitted_attributes=False):
     """
     Args
         evt_dic:
@@ -586,10 +586,6 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
             structure predefined in the config files
         __________________________________________________________________________
         
-        std_scale_dic:
-            dictionary containing the branches which will be standard scaled
-        __________________________________________________________________________
-
         out_path:
             string, path to where the file will be saved and read
         __________________________________________________________________________
@@ -619,8 +615,10 @@ def preprocess(evt_dic, std_scale_dic, out_path, load_fitted_attributes=False):
         # std_scale looks like:
         #   {'event': ['a', 'b',...], 'track': [...], ...}
         scaling_attr = {}
-        for key in std_scale_dic.keys():
-            columns = std_scale_dic[key]
+        for key in evt_dic.keys():
+            if str(key) == 'target': 
+                continue
+            columns = list(evt_dic[key].dtype.names)
             # we have to fit new scaling attributes
             scaling_attr[key] = {}
             for col in columns:
