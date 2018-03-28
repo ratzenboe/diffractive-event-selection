@@ -133,13 +133,6 @@ def main():
                                     append_array=eta_phi_dist_feature_arr,
                                     flat=flat)[0]
 
-    ######################################################################################
-    # STEP 2:
-    # ------------------------------- Fitting the model -----------------------------------
-    ######################################################################################
-    # if we want cross validation (in most cases we do) we can in turn easily evaluate the
-    # models by passing which metrics should be looked into
-
     # Get the best model
     model = load_model(model_path + 'best_model.h5')
     ######################################################################################
@@ -149,8 +142,6 @@ def main():
     # save the test dictionary for easy testing later on
 
     print('\nEvaluating the model on the training sample...')
-    # returns the poped element
-    # evt_dic_train['target'][evt_dic_train['target']==99] = 0
     evt_dic.pop('target')
     y_score = model.predict(evt_dic_train)
     if isinstance(y_score, list):
