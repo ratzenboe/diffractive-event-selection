@@ -513,9 +513,9 @@ def main():
             ##############################################################################
             # here the data get transformed into the records array shape
             if key is 'event':
-                rm_evt_id_string = True
-            else:
                 rm_evt_id_string = False
+            else:
+                rm_evt_id_string = True
 
             tmp_evt_dictionary[key], y_data = event_grouping(
                                                         inp_data = data,
