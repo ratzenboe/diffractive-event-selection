@@ -39,7 +39,7 @@ def plot_model_loss(history, out_path):
 
 
 
-def plot_all_features(evt_dic, branches_dic, outpath, post_fix='', real_bg=False, normed=None):
+def plot_all_features(evt_dic, outpath, post_fix='', real_bg=False, normed=None):
     """
     Plot all features of the event dictionary comparing fully reconstructed events
     with background (feed-down) events
@@ -59,10 +59,10 @@ def plot_all_features(evt_dic, branches_dic, outpath, post_fix='', real_bg=False
     index_sig = np.where(target_array == sig_value)
     index_bg  = np.where(target_array == bg_value)
 
-    for key in branches_dic.keys():
+    for key in evt_dic.keys():
         if key == 'target':
             continue
-        for list_val in branches_dic[key]:
+        for list_val in list(evt_dic[key].dtype.names):
             x_sig = np.array(evt_dic[key][index_sig][list_val].ravel())
             x_bg  = np.array(evt_dic[key][index_bg][list_val].ravel())
             print('::   Creating the feature plot for {} in {}.'.format(list_val, key))
