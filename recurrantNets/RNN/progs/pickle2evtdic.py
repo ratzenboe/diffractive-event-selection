@@ -554,8 +554,9 @@ def main():
         evt_dictionary[key] = np.array(evt_dictionary[key]) 
 
     # # saveing the record array only works in python 3
-    outfile = outpath + 'evt_dic' + suffix + '.pkl'
-    if outfile_usr:
+    if not outfile_usr:
+        outfile = outpath + 'evt_dic' + suffix + '.pkl'
+    else:
         outfile = outfile_usr
     print('\n::  Saving the data in {}'.format(outfile))
     with open(outfile, 'wb') as f:
