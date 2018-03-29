@@ -162,6 +162,14 @@ def main():
             else:
                 feed_down += 1
 
+    num_trueSignal, num_trueBackgr = plot_MVAoutput(y_target, y_score, 
+                                                    model_path, label='classify')
+    MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path, 'classify')
+    del num_trueSignal, num_trueBackgr
+
+    plot_ROCcurve(y_train_truth, y_train_score, out_path, label='train')
+
+
     print('::  Cut quality:')
     print('   Signal events after cut: {}/{}'.format(full_recon, full_recon+feed_down))
     print('   Signal efficiency: {}'.format(full_recon/(full_recon+feed_down)))

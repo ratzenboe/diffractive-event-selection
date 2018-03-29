@@ -226,7 +226,7 @@ def event_grouping(inp_data, max_entries_per_evt, evt_id_string,
                 y = evt_dataframe[trgt].iloc[-1]
                 
                 # if the target is in the columns we have to drop it
-                evt_dataframe = evt_dataframe.drop(trgt, axis=1)
+                # evt_dataframe = evt_dataframe.drop(trgt, axis=1)
                 target_list.append(y)
 
             ###################################################################
@@ -475,14 +475,15 @@ def main():
     else:
         num_paths = base + nfiles
 
-    if file_suffix and not all_files:
-        suffix = '_' + str(int(base/(num_paths-base))) + '_' + file_suffix
-    elif not all_files:
-        suffix = '_' + str(int(base/(num_paths-base)))
-    elif not file_suffix:
-        suffix = ''
-    else:
-        suffix = '_' + file_suffix
+    if not outfile_usr:
+        if file_suffix and not all_files:
+            suffix = '_' + str(int(base/(num_paths-base))) + '_' + file_suffix
+        elif not all_files:
+            suffix = '_' + str(int(base/(num_paths-base)))
+        elif not file_suffix:
+            suffix = ''
+        else:
+            suffix = '_' + file_suffix
     # 
     #########################################################################################
 
@@ -554,6 +555,8 @@ def main():
 
     # # saveing the record array only works in python 3
     outfile = outpath + 'evt_dic' + suffix + '.pkl'
+    if outfile_usr:
+        outfile = outfile_usr
     print('\n::  Saving the data in {}'.format(outfile))
     with open(outfile, 'wb') as f:
         pickle.dump(evt_dictionary, f)
@@ -619,6 +622,14 @@ if __name__ == "__main__":
                         default='koala',
                         type=str)
 
+    parser.add_argument('-outfile', 
+                        help='string (default: None): if specified this is the output file',
+                        action='store',
+                        dest='outfile_usr',
+                        default=None,
+                        type=str)
+
+
     command_line_args = parser.parse_args(user_argv)
 
     base = command_line_args.base
@@ -628,6 +639,11 @@ if __name__ == "__main__":
     file_suffix = command_line_args.file_suffix
     config_path = command_line_args.config_path
     run_mode_user = command_line_args.run_mode_user
+    outfile_usr = command_line_args.outfile_usr
+
+    if outfile_usr:
+        if not outfile_usr.endswith('.pkl')
+            outfile_usr += '.pkl'
 
     if file_suffix:
         file_suffix = str(file_suffix)
