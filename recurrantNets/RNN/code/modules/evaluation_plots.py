@@ -285,12 +285,15 @@ def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
     return n_truePos, n_trueNeg
 
 
-def plot_cut_efficiencies(num_signal, num_background, out_path):
+def plot_cut_efficiencies(num_signal, num_background, out_path, label=''):
     """
     Calculates signal and background efficiencies as well as significance for each value
     of MVA output and determines the optimal MVA cut as the maximum of the significance
     distribution. Returns the optimized MVA cut value.
     """
+
+    if label != '':
+        label = '_'+label
 
     nbins = num_signal.shape[0]
     
@@ -327,7 +330,8 @@ def plot_cut_efficiencies(num_signal, num_background, out_path):
                                             math.sqrt(np.sum(num_signal[i:num_signal.shape[0]] + \
                                                              num_background[i:num_background.shape[0]])))
 
-    l3 = ax2.plot(MVAcut, significance_per_MVAcut, label='significance', color='blue', alpha=.65)
+    l3 = ax2.plot(MVAcut, significance_per_MVAcut, label='significance'+label, 
+                  color='blue', alpha=.65)
 
     pos_max = np.argmax(significance_per_MVAcut)
     MVAcut_opt = pos_max/(nbins*1.0)
@@ -348,8 +352,8 @@ def plot_cut_efficiencies(num_signal, num_background, out_path):
 
     plt.tight_layout()
 
-    plt.savefig(out_path + 'significance_vs_MVAcut.png')
-    plt.savefig(out_path + 'significance_vs_MVAcut.pdf')
+    plt.savefig(out_path + 'significance_vs_MVAcut'+label+'.png')
+    plt.savefig(out_path + 'significance_vs_MVAcut'+label+'.pdf')
 
     return MVAcut_opt
 
