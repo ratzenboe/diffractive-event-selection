@@ -642,7 +642,7 @@ if __name__ == "__main__":
     outfile_usr = command_line_args.outfile_usr
 
     if outfile_usr:
-        if not outfile_usr.endswith('.pkl')
+        if not outfile_usr.endswith('.pkl'):
             outfile_usr += '.pkl'
 
     if file_suffix:
