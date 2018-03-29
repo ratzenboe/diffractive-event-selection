@@ -132,6 +132,7 @@ def main():
         flatten_feature(evt_dictionary, 'track')
         evt_dictionary['feature_matrix'] = np.c_[evt_dictionary.pop('track'), 
                                                  evt_dictionary.pop('event')]
+    print_array_in_dictionary_stats(evt_dictionary, 'Training data info:')
     # Get the best model
     model = load_model(model_path + 'best_model.h5')
     ######################################################################################
@@ -141,7 +142,7 @@ def main():
     # save the test dictionary for easy testing later on
 
     print('\nEvaluating the model on the training sample...')
-    evt_dictionary.pop('target')
+    y_target = evt_dictionary.pop('target')
     y_score = model.predict(evt_dictionary)
     if isinstance(y_score, list):
         # if one or several aux-outputs exist the main output is on the
@@ -149,15 +150,27 @@ def main():
         y_score = y_score[0]
 
     print('type(y_score): {}'.format(type(y_score)))
+    full_recon = 0
+    feed_down = 0
     sig_list = []
     for idx, val in enumerate(y_score):
         if val >= mva_cut:
             # evt_id_list is created in a function that will be created in the near future
             sig_list.append(evt_id_list[idx])
+            if y_target[idx] == 1:
+                full_recon += 1
+            else:
+                feed_down += 1
 
+    print('::  Cut quality:')
+    print('   Signal events after cut: {}/{}'.format(full_recon, full_recon+feed_down))
+    print('   Signal efficiency: {}'.format(full_recon/(full_recon+feed_down)))
+
+    print('::  Saving the predicted signal evts in {}...'.format(model_path+outfile))
     thefile = open(model_path+outfile, 'w')
     for item in sig_list:
         thefile.write("%s\n" % item)
+
     
 if __name__ == "__main__":
 
