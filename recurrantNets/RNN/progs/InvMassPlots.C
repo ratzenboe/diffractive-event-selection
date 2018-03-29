@@ -32,6 +32,15 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
     }
     if (evt_id_vec.size() == 0 && evts_from_file) gSystem->Exit(0);
 
+    if (!evts_from_file){
+        if (filter==0)      output_prefix = "noV0_"+output_prefix;                  // !V0
+        else if (filter==1) output_prefix = "checkSPD-hard_"+output_prefix;         // checkSPD hard
+        else if (filter==2) output_prefix = "checkSPD_maxnSingle0_"+output_prefix;  // maxdnclu=maxdnfchips=maxdnfFOchips=1e5
+        else if (filter==3) output_prefix = "checkSPD_maxnSingle1_"+output_prefix;  // maxnSingle=1
+        else if (filter==4) output_prefix = "checkSPD_maxnSingle2_"+output_prefix;  // maxnSingle=2
+        else                output_prefix = "noAD_"+output_prefix;                  // !AD
+    }
+    else output_prefix = "ML_"+output_prefix;
     // file extensions
     const char *file_ext = ".root";
     
