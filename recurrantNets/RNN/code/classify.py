@@ -83,6 +83,11 @@ def main():
     evt_dictionary, list_of_engineered_features = engineer_features(evt_dictionary, replace=False)
     
     # function that extracts the evt-id from each 'event'-array and puts it into a list
+    if 'koala' not in run_mode_user:
+        not_99_indices = np.arange(evt_dictionary['target'].shape[0])[evt_dictionary['target']!=99]
+        for key in evt_dictionary.keys():
+            evt_dictionary[key] = evt_dictionary[key][not_99_indices]
+
     evt_dictionary['event'], evt_id_np = remove_field_name(evt_dictionary['event'], evt_id_string)
     evt_id_list = list(map(int, evt_id_np.ravel().tolist()))
     # remove a feature if it is in the cut_dic and contains no further info 
@@ -106,11 +111,6 @@ def main():
     # if plot:
     #     print('\n::  Plotting the features...')
     #     plot_all_features(evt_dictionary, out_path, real_bg=False)
-
-    if 'koala' not in run_mode_user:
-        not_99_indices = np.arange(evt_dictionary['target'].shape[0])[evt_dictionary['target']!=99]
-        for key in evt_dictionary.keys():
-            evt_dictionary[key] = evt_dictionary[key][not_99_indices]
 
     ######################################################################################
     # STEP 1:
@@ -164,10 +164,10 @@ def main():
 
     num_trueSignal, num_trueBackgr = plot_MVAoutput(y_target, y_score, 
                                                     model_path, label='classify')
-    MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path, 'classify')
+    MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, model_path, 'classify')
     del num_trueSignal, num_trueBackgr
 
-    plot_ROCcurve(y_train_truth, y_train_score, out_path, label='train')
+    plot_ROCcurve(y_target, y_score, model_path, label='classify')
 
 
     print('::  Cut quality:')
