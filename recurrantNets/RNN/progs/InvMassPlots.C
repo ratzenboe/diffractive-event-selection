@@ -31,6 +31,7 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
     	while (txtfile >> inp_int) evt_id_vec.push_back(inp_int);
     }
     if (evt_id_vec.size() == 0 && evts_from_file) gSystem->Exit(0);
+    if (evt_id_vec.size()>0) std::cout << evt_id_vec.size() << " events in txt file" << std::endl;
 
     if (!evts_from_file){
         if (filter==0)      output_prefix = "noV0_"+output_prefix;                  // !V0
@@ -75,8 +76,8 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
     TFile* outfile=new TFile((output_prefix+"invar_mass_plot.root").Data(), "RECREATE");
 
     // event level features:
-    TH1F* hInvarmass = new TH1F("invar_mass_full_recon", "", 150, 0, 2.8);
-    TH1F* hInvarmass_fd = new TH1F("invar_mass_feed_down", "", 150, 0, 2.8);
+    TH1F* hInvarmass = new TH1F("invar_mass_full_recon", "", 150, 0, 2.5);
+    TH1F* hInvarmass_fd = new TH1F("invar_mass_feed_down", "", 150, 0, 2.5);
     TList* hist_list = new TList();
 
     // LHC16-filter
@@ -144,8 +145,6 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
         
         // HL track info
         CEPTrackBuffer* trk = 0x0;
-        TVector3 v;
-        UInt_t hlt_kk(0);
         TLorentzVector lor_vec;  // initialized by (0.,0.,0.,0.)
         TLorentzVector tot_lor_vec;  // initialized by (0.,0.,0.,0.)
         for (UInt_t kk(0); kk<cep_evt->GetnTracks(); kk++)
