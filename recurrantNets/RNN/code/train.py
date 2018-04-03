@@ -63,7 +63,6 @@ def main():
         # ----------- data-parameters --------------
         branches_dic      = data_params['branches']
         evt_id_string     = data_params['evt_id']
-        cut_dic           = data_params['cut_dic']
         missing_vals_dic  = data_params['missing_values']
         remove_features   = data_params['remove_features']
         # ------------ run-parameters --------------
@@ -281,12 +280,6 @@ def main():
                                                         out_path, label='train')
         MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
         del num_trueSignal, num_trueBackgr
-    else:
-        y_train_truth, y_train_score = plot_autoencoder_output(y_train_score, 
-                                                               evt_dic_train['feature_matrix'],
-                                                               y_train_truth,
-                                                               out_path,
-                                                               label='train')
 
     plot_ROCcurve(y_train_truth, y_train_score, out_path, label='train')
 
