@@ -169,7 +169,6 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
                 if ( charge_sum==0 && abs(pid_0)==211 && abs(pid_1)==211 ) break;
             }
         }
-        printf("pid_0: %i, pid_1: %i\n", pid_0, pid_1);
         // we only want 2 tracks
         for (UInt_t kk(0); kk<2; kk++)
         {
@@ -177,7 +176,7 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
             else track_nb = kk;
             trk = cep_evt->GetTrack(track_nb);
             if (!trk) { evt_charge_sum_var=1; break; }
-            if (abs(trk->GetMCPID())!=211) { printf("Particle pid: %i\n",trk->GetMCPID()); evt_charge_sum_var=1; break; }
+            if (abs(trk->GetMCPID())!=211) { evt_charge_sum_var=1; break; }
             // momentum 
             v = trk->GetMomentum(); 
             lor_vec.SetPtEtaPhiM(v.Pt(),v.Eta(),v.Phi(),trk->GetMCMass());
