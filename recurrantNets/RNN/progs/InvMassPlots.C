@@ -151,21 +151,33 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
         TLorentzVector tot_lor_vec;  // initialized by (0.,0.,0.,0.)
         std::vector<Int_t> part_vec;
         part_vec.resize(cep_evt->GetnTracks());
+        Bool_t kPiPlus(false), kPiMinus(false);
+        for (UInt_t kk(0); kk<cep_evt->GetnTracks(); kk++){
+            if (cep_evt->GetTrack(kk)->GetMCPID() == 211) kPiPlus=true;
+            if (cep_evt->GetTrack(kk)->GetMCPID() == -211) kPiMinus=true;
+        }
         if (evts_from_file && cep_evt->GetnTracks()>2) {
+            if (!kPiPlus || !kPiMinus) continue;
             // create a vector with lenght cep_evt->GetnTracks()
             for (UInt_t kk(0); kk<part_vec.size(); kk++) part_vec[kk] = kk;
             while(true){
                 std::random_shuffle( part_vec.begin(), part_vec.end() );
-                if ( (cep_evt->GetTrack(part_vec[0])->GetChargeSign() + cep_evt->GetTrack(part_vec[1])->GetChargeSign()) == 0 ) break;
+                Int_t charge_sum = cep_evt->GetTrack(part_vec[0])->GetChargeSign() + cep_evt->GetTrack(part_vec[1])->GetChargeSign();
+                Int_t pid_0, pid_1;
+                pid_0 = cep_evt->GetTrack(part_vec[0])->GetMCPID();
+                pid_1 = cep_evt->GetTrack(part_vec[1])->GetMCPID();
+                if ( charge_sum==0 && abs(pid_0)==211 && abs(pid_1)==211 ) break;
             }
         }
+        printf("pid_0: %i, pid_1: %i\n", pid_0, pid_1);
         // we only want 2 tracks
         for (UInt_t kk(0); kk<2; kk++)
         {
             if (evts_from_file && cep_evt->GetnTracks()>2) track_nb = part_vec[kk];
             else track_nb = kk;
             trk = cep_evt->GetTrack(track_nb);
-            if (!trk) break;
+            if (!trk) { evt_charge_sum_var=1; break; }
+            if (abs(trk->GetMCPID())!=211) { printf("Particle pid: %i\n",trk->GetMCPID()); evt_charge_sum_var=1; break; }
             // momentum 
             v = trk->GetMomentum(); 
             lor_vec.SetPtEtaPhiM(v.Pt(),v.Eta(),v.Phi(),trk->GetMCMass());
