@@ -5,6 +5,8 @@
 #include <stdlib.h> 
 #include <sys/stat.h>
 #include <time.h>
+#include <algorithm>    // std::random_shuffle
+#include <vector>   
 
 #include <TROOT.h>
 #include <TSystem.h>
@@ -91,7 +93,7 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
     /////////////////////////////
     // Number of evts in TChain
     UInt_t nevts = cep_tree->GetEntries();
-    UInt_t event_nb(0);
+    UInt_t event_nb, track_nb;
     if (!evts_from_file) evt_id_vec.resize(nevts,0);
     for (UInt_t ii(0); ii<evt_id_vec.size(); ii++)
     {
@@ -147,9 +149,22 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
         CEPTrackBuffer* trk = 0x0;
         TLorentzVector lor_vec;  // initialized by (0.,0.,0.,0.)
         TLorentzVector tot_lor_vec;  // initialized by (0.,0.,0.,0.)
-        for (UInt_t kk(0); kk<cep_evt->GetnTracks(); kk++)
+        std::vector<Int_t> part_vec;
+        part_vec.resize(cep_evt->GetnTracks());
+        if (evts_from_file && cep_evt->GetnTracks()>2) {
+            // create a vector with lenght cep_evt->GetnTracks()
+            for (UInt_t kk(0); kk<part_vec.size(); kk++) part_vec[kk] = kk;
+            while(true){
+                std::random_shuffle( part_vec.begin(), part_vec.end() );
+                if ( (cep_evt->GetTrack(part_vec[0])->GetChargeSign() + cep_evt->GetTrack(part_vec[1])->GetChargeSign()) == 0 ) break;
+            }
+        }
+        // we only want 2 tracks
+        for (UInt_t kk(0); kk<2; kk++)
         {
-            trk = cep_evt->GetTrack(kk);
+            if (evts_from_file && cep_evt->GetnTracks()>2) track_nb = part_vec[kk];
+            else track_nb = kk;
+            trk = cep_evt->GetTrack(track_nb);
             if (!trk) break;
             // momentum 
             v = trk->GetMomentum(); 
@@ -168,7 +183,7 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
         }
         if (evt_charge_sum_var!=0) continue;
 
-        if (is_full_recon(cep_evt)==1) hInvarmass->Fill(tot_lor_vec.M());
+        if (cep_evt->GetnTracks()==2 && is_full_recon(cep_evt)==1) hInvarmass->Fill(tot_lor_vec.M());
         else hInvarmass_fd->Fill(tot_lor_vec.M());
     }
     // cursor of status display has to move to the next line
