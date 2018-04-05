@@ -20,7 +20,7 @@
 #include <TTree.h>
 
 void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=-1,
-        TString path_to_evt_id_txt="")
+        TString path_to_evt_id_txt="", Bool_t use_bayes_proba=false)
 {
     // first we check if there is a file behind the path_to_evt_id_txt
     Bool_t evts_from_file = kFALSE;
@@ -68,6 +68,7 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
             }
         }
     }
+    else { printf("<E> No files found in %s", input_dirname.Data()); gSystem->Exit(1); }
 
     CEPRawEventBuffer* cep_raw_evt = 0x0;
     CEPEventBuffer* cep_evt = 0x0;
@@ -141,7 +142,6 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
             nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
             if (isDG==kFALSE || nseltracks!=n_tracks) continue;
         }
-
         // initialize charge_sum with 0 for every new event
         Int_t evt_charge_sum_var = 0;
         
@@ -151,16 +151,20 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
         TLorentzVector tot_lor_vec;  // initialized by (0.,0.,0.,0.)
         std::vector<Int_t> part_vec;
         part_vec.resize(cep_evt->GetnTracks());
-        Bool_t kPiPlus(false), kPiMinus(false);
-        for (UInt_t kk(0); kk<cep_evt->GetnTracks(); kk++){
-            if (cep_evt->GetTrack(kk)->GetMCPID() == 211) kPiPlus=true;
-            if (cep_evt->GetTrack(kk)->GetMCPID() == -211) kPiMinus=true;
-        }
         if (evts_from_file && cep_evt->GetnTracks()>2) {
+            Bool_t kPiPlus(false), kPiMinus(false);
+            for (UInt_t kk(0); kk<cep_evt->GetnTracks(); kk++){
+                if (!use_bayes_proba && cep_evt->GetTrack(kk)->GetMCPID() == 211) kPiPlus=true;
+                if (!use_bayes_proba && cep_evt->GetTrack(kk)->GetMCPID() == -211) kPiMinus=true;
+                if (use_bayes_proba && cep_evt->GetTrack(kk)->GetPIDBayesProbability(AliPID::kPion) > 0.9 ) {
+                    if (cep_evt->GetTrack(kk)->GetChargeSign() > 0) kPiPlus=true;
+                    if (cep_evt->GetTrack(kk)->GetChargeSign() < 0) kPiMinus=true;
+                }
+            }
             if (!kPiPlus || !kPiMinus) continue;
             // create a vector with lenght cep_evt->GetnTracks()
             for (UInt_t kk(0); kk<part_vec.size(); kk++) part_vec[kk] = kk;
-            while(true){
+            while(true) {
                 std::random_shuffle( part_vec.begin(), part_vec.end() );
                 Int_t charge_sum = cep_evt->GetTrack(part_vec[0])->GetChargeSign() + cep_evt->GetTrack(part_vec[1])->GetChargeSign();
                 Int_t pid_0, pid_1;
@@ -170,16 +174,21 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
             }
         }
         // we only want 2 tracks
+        TVector3 v;
         for (UInt_t kk(0); kk<2; kk++)
         {
             if (evts_from_file && cep_evt->GetnTracks()>2) track_nb = part_vec[kk];
             else track_nb = kk;
             trk = cep_evt->GetTrack(track_nb);
             if (!trk) { evt_charge_sum_var=1; break; }
-            if (abs(trk->GetMCPID())!=211) { evt_charge_sum_var=1; break; }
+            printf("bayes PID for pion: %f", cep_evt->GetTrack(kk)->GetPIDBayesProbability(AliPID::kPion));
+            if (use_bayes_proba && cep_evt->GetTrack(kk)->GetPIDBayesProbability(AliPID::kPion) < 0.9 ) { evt_charge_sum_var=1; break; }
+            if (!use_bayes_proba && abs(trk->GetMCPID())!=211) { evt_charge_sum_var=1; break; }
             // momentum 
+            Int_t pdg_code = 211;
+
             v = trk->GetMomentum(); 
-            lor_vec.SetPtEtaPhiM(v.Pt(),v.Eta(),v.Phi(),trk->GetMCMass());
+            lor_vec.SetPtEtaPhiM(v.Pt(),v.Eta(),v.Phi(),TDatabasePDG::Instance()->GetParticle(pdg_code)->Mass());
             tot_lor_vec += lor_vec;
             // Bayes
             /* trk->GetPIDBayesStatus(); */
@@ -194,8 +203,9 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
         }
         if (evt_charge_sum_var!=0) continue;
 
-        if (cep_evt->GetnTracks()==2 && is_full_recon(cep_evt)==1) hInvarmass->Fill(tot_lor_vec.M());
+        if (!use_bayes_proba && cep_evt->GetnTracks()==2 && is_full_recon(cep_evt)==1) hInvarmass->Fill(tot_lor_vec.M());
         else hInvarmass_fd->Fill(tot_lor_vec.M());
+        
     }
     // cursor of status display has to move to the next line
     std::cout << std::endl;
