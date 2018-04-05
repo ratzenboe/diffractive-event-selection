@@ -164,10 +164,11 @@ def main():
 
     num_trueSignal, num_trueBackgr = plot_MVAoutput(y_target, y_score, 
                                                     model_path, label='classify')
-    MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, model_path, 'classify')
+    if num_trueSignal:
+        MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, model_path, 'classify')
+        plot_ROCcurve(y_target, y_score, model_path, label='classify')
     del num_trueSignal, num_trueBackgr
 
-    plot_ROCcurve(y_target, y_score, model_path, label='classify')
 
 
     print('::  Cut quality:')
