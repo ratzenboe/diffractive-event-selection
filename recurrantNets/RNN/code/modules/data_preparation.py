@@ -626,6 +626,7 @@ def preprocess(evt_dic, out_path, load_fitted_attributes=False):
                     # here we can access the columns directly (due to record array) 
                     # and exclude the masking value of -999 from the mean calculation
                     # evt_dic[key] is accessing the record array, col the right column
+                    evt_dic[key][col] = evt_dic[key][col].astype(float)
                     mean_std_array = evt_dic[key][col][np.where(evt_dic[key][col] != -999.0)]
                     # if only -999 in the array then we get nans for mean and std-dev
                     # hence we check the lenght of the non-(-999) data
@@ -660,6 +661,7 @@ def preprocess(evt_dic, out_path, load_fitted_attributes=False):
             for key_inner in values_dic.keys():
                 values_inner = values_dic[key_inner]
                 try: 
+                    evt_dic[key][key_inner] = evt_dic[key][key_inner].astype(float)
                     evt_dic[key][key_inner][np.where(
                         evt_dic[key][key_inner] != -999.0)] -= values_inner['mean']
                     evt_dic[key][key_inner][np.where(
