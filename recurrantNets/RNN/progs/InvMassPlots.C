@@ -166,11 +166,14 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
             for (UInt_t kk(0); kk<part_vec.size(); kk++) part_vec[kk] = kk;
             while(true) {
                 std::random_shuffle( part_vec.begin(), part_vec.end() );
-                Int_t charge_sum = cep_evt->GetTrack(part_vec[0])->GetChargeSign() + cep_evt->GetTrack(part_vec[1])->GetChargeSign();
-                Int_t pid_0, pid_1;
-                pid_0 = cep_evt->GetTrack(part_vec[0])->GetMCPID();
-                pid_1 = cep_evt->GetTrack(part_vec[1])->GetMCPID();
-                if ( charge_sum==0 && abs(pid_0)==211 && abs(pid_1)==211 ) break;
+                Int_t charge_sum = cep_evt->GetTrack(part_vec[0])->GetChargeSign() + 
+                    cep_evt->GetTrack(part_vec[1])->GetChargeSign();
+                Int_t pid_0_pi, pid_1_pi;
+                pid_0_pi = !use_bayes_proba ? (cep_evt->GetTrack(part_vec[0])->GetMCPID()==211) : 
+                    (cep_evt->GetTrack(part_vec[0])->GetPIDBayesProbability(AliPID::kPion) > 0.9);
+                pid_1_pi = !use_bayes_proba ? (cep_evt->GetTrack(part_vec[1])->GetMCPID()==211) : 
+                    (cep_evt->GetTrack(part_vec[1])->GetPIDBayesProbability(AliPID::kPion) > 0.9);
+                if ( charge_sum==0 && pid_1_pi && pid_1_pi ) break;
             }
         }
         // we only want 2 tracks
