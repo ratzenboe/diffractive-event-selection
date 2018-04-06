@@ -149,7 +149,6 @@ def main():
         # first position in the list
         y_score = y_score[0]
 
-    print('type(y_score): {}'.format(type(y_score)))
     full_recon = 0
     feed_down = 0
     sig_list = []
