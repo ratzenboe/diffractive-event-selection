@@ -184,6 +184,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
     CEPRawCaloBuffer* emcal = 0x0;
     CEPRawCaloBuffer* phos  = 0x0;
     Int_t n_tracks = 2;
+    if (filter==99) n_tracks=3;
     for (UInt_t ii(evt_offset); ii<evt_offset+n_evts_to_read; ii++)
     {
         // display purposes only ////////////////////
@@ -223,10 +224,32 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
         else if (filter==4) { cu=65539; mode=3; }  // maxnSingle=2
         else                { cu=99; mode=0;}      // !AD (-1: keep all, >5 keep only passing)
         nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
-        if ((filter>=0) && (isDG==kFALSE || nseltracks!=n_tracks)) continue;
+        if ((filter>=0) && (filter!=99) && (isDG==kFALSE || nseltracks!=n_tracks)) continue;
+        if ((filter==99) && (isDG==kFALSE || nseltracks<n_tracks)) continue;
 
         evt_lhc16_filter->Fill(lhc16_filter);
-        
+        if (filter==99 && cep_evt->GetnTracks()>2) {
+            Bool_t kPiPlus(false), kPiMinus(false);
+            for (UInt_t kk(0); kk<cep_evt->GetnTracks(); kk++){
+                if (cep_evt->GetTrack(kk)->GetMCPID() == 211) kPiPlus=true;
+                if (cep_evt->GetTrack(kk)->GetMCPID() == -211) kPiMinus=true;
+            }
+            if (!kPiPlus || !kPiMinus) continue;
+            // create a vector with lenght cep_evt->GetnTracks()
+            for (UInt_t kk(0); kk<part_vec.size(); kk++) part_vec[kk] = kk;
+            while(true) {
+                std::random_shuffle( part_vec.begin(), part_vec.end() );
+                Int_t charge_sum = cep_evt->GetTrack(part_vec[0])->GetChargeSign() + 
+                    cep_evt->GetTrack(part_vec[1])->GetChargeSign();
+                Int_t pid_0_pi, pid_1_pi;
+                pid_0_pi = !use_bayes_proba ? (cep_evt->GetTrack(part_vec[0])->GetMCPID()==211) : 
+                    (cep_evt->GetTrack(part_vec[0])->GetPIDBayesProbability(AliPID::kPion) > 0.9);
+                pid_1_pi = !use_bayes_proba ? (cep_evt->GetTrack(part_vec[1])->GetMCPID()==211) : 
+                    (cep_evt->GetTrack(part_vec[1])->GetPIDBayesProbability(AliPID::kPion) > 0.9);
+                if ( charge_sum==0 && pid_1_pi && pid_1_pi ) break;
+            }
+        }
+  
         // initialize charge_sum with 0 for every new event
         Int_t evt_charge_sum_var = 0;
         
@@ -235,9 +258,12 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
         CEPRawTrackBuffer* rawTrack = 0x0;
         TVector3 v;
         UInt_t hlt_kk(0);
-        for (UInt_t kk(0); kk<cep_evt->GetnTracks(); kk++)
+        Int_t track_nb(0);
+        for (UInt_t kk(0); kk<n_tracks; kk++)
         {
-            trk = cep_evt->GetTrack(kk);
+            if (filter==99) track_nb=part_vec[kk];
+            else track_nb = kk;
+            trk = cep_evt->GetTrack(track_nb);
             if (!trk) break;
             // put here all track info
             trk_tof_bunch_crossing->Fill(trk->GetTOFBunchCrossing());
