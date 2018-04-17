@@ -168,11 +168,11 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
                 std::random_shuffle( part_vec.begin(), part_vec.end() );
                 Int_t charge_sum = cep_evt->GetTrack(part_vec[0])->GetChargeSign() + 
                     cep_evt->GetTrack(part_vec[1])->GetChargeSign();
-                Int_t pid0pi, pid1pi;
+                Bool_t pid0pi, pid1pi;
                 pid0pi = !use_bayes_proba ? (abs(cep_evt->GetTrack(part_vec[0])->GetMCPID())==211)
-                   : (cep_evt->GetTrack(part_vec[0])->GetPIDBayesProbability(AliPID::kPion) > 0.9);
+                   : (cep_evt->GetTrack(part_vec[0])->GetPIDBayesProbability(AliPID::kPion)=>0.9);
                 pid1pi = !use_bayes_proba ? (abs(cep_evt->GetTrack(part_vec[1])->GetMCPID())==211)
-                   : (cep_evt->GetTrack(part_vec[1])->GetPIDBayesProbability(AliPID::kPion) > 0.9);
+                   : (cep_evt->GetTrack(part_vec[1])->GetPIDBayesProbability(AliPID::kPion)=>0.9);
                 if ( charge_sum==0 && pid0pi && pid1pi ) break;
             }
         }
@@ -184,7 +184,7 @@ void InvMassPlots(TString input_dirname, TString output_prefix="", Int_t filter=
             else track_nb = kk;
             trk = cep_evt->GetTrack(track_nb);
             if (!trk) { evt_charge_sum_var=1; break; }
-            printf("bayes PID for pion: %f", cep_evt->GetTrack(kk)->GetPIDBayesProbability(AliPID::kPion));
+            /* printf("bayes PID for pion: %f", cep_evt->GetTrack(kk)->GetPIDBayesProbability(AliPID::kPion)); */
             if (use_bayes_proba && cep_evt->GetTrack(kk)->GetPIDBayesProbability(AliPID::kPion) < 0.9 ) { evt_charge_sum_var=1; break; }
             if (!use_bayes_proba && abs(trk->GetMCPID())!=211) { evt_charge_sum_var=1; break; }
             // momentum 
