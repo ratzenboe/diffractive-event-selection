@@ -71,7 +71,7 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
 	  evt_lhc16_filter_checkSPD_hard, evt_lhc16_filter_checkSPD_maxnSingle_0,
 	  evt_lhc16_filter_checkSPD_maxnSingle_1, evt_lhc16_filter_checkSPD_maxnSingle_2,
 	  evt_lhc16_filter_checkSPD_maxnSingle_10000, evt_lhc16_filter_noV0,evt_lhc16_filter_noAD,
-          evt_n_v0s, evt_charge_sum;
+          evt_n_v0s, evt_charge_sum, evt_is_pipi_evt_mc, evt_is_pion_evt_bayes;
     Double_t evt_tot_ad_mult, evt_tot_ad_time, evt_tot_ad_charge,
              evt_tot_fmd_mult,
              evt_tot_v0_mult, evt_tot_v0_time, evt_tot_v0_charge, evt_tot_v0_sig_width,
@@ -113,6 +113,9 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     eventTree->Branch("lhc16_filter_checkSPD_maxnSingle_1", &evt_lhc16_filter_checkSPD_maxnSingle_1);
     eventTree->Branch("lhc16_filter_checkSPD_maxnSingle_2", &evt_lhc16_filter_checkSPD_maxnSingle_2);
     eventTree->Branch("lhc16_filter_checkSPD_maxnSingle_10000", &evt_lhc16_filter_checkSPD_maxnSingle_10000);
+    // pion infos
+    eventTree->Branch("is_pipi_evt_mc", &evt_is_pipi_evt_mc);
+    eventTree->Branch("is_pion_evt_bayes", &evt_is_pion_evt_bayes);
 
     TFile* trackFile = new TFile((output_prefix+"track_info"+file_addon_str).Data(), "RECREATE");
     TTree* trackTree = new TTree("track", "high level track info");
@@ -307,31 +310,31 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
          * nseltracks:
          *      ist dann die Anzahl tracks im event 
          */ 
-	// no V0
-        cu = 74;
-        nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
-        if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) evt_lhc16_filter_noV0 = 1;
-        else evt_lhc16_filter_noV0 = 0;
-	
-	// no AD
-        cu = 107;
-        nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
-        if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) evt_lhc16_filter_noAD = 1;
-        else evt_lhc16_filter_noAD = 0;
+        // no V0
+            cu = 74;
+            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
+            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) evt_lhc16_filter_noV0 = 1;
+            else evt_lhc16_filter_noV0 = 0;
         
-	// checkSPD in multiple configurations
-        cu = 65539;
-	for (UInt_t kk(0); kk<5; kk++){
-	    mode = kk;
-	    nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
-	    if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) filter_arr[kk] = 1;
-	    else filter_arr[kk] = 0;
-	}
-	evt_lhc16_filter_checkSPD_hard = filter_arr[0];
-	evt_lhc16_filter_checkSPD_maxnSingle_0 = filter_arr[1];
-	evt_lhc16_filter_checkSPD_maxnSingle_1 = filter_arr[2];
-	evt_lhc16_filter_checkSPD_maxnSingle_2 = filter_arr[3];
-	evt_lhc16_filter_checkSPD_maxnSingle_10000 = filter_arr[4];
+        // no AD
+            cu = 107;
+            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
+            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) evt_lhc16_filter_noAD = 1;
+            else evt_lhc16_filter_noAD = 0;
+            
+        // checkSPD in multiple configurations
+            cu = 65539;
+        for (UInt_t kk(0); kk<5; kk++){
+            mode = kk;
+            nseltracks = LHC16Filter(cep_evt,kFALSE,cu,isDG,isNDG,mode); 
+            if (isDG==kTRUE && nseltracks>=2 && nseltracks<=6) filter_arr[kk] = 1;
+            else filter_arr[kk] = 0;
+        }
+        evt_lhc16_filter_checkSPD_hard = filter_arr[0];
+        evt_lhc16_filter_checkSPD_maxnSingle_0 = filter_arr[1];
+        evt_lhc16_filter_checkSPD_maxnSingle_1 = filter_arr[2];
+        evt_lhc16_filter_checkSPD_maxnSingle_2 = filter_arr[3];
+        evt_lhc16_filter_checkSPD_maxnSingle_10000 = filter_arr[4];
         
         // initialize charge_sum with 0 for every new event
         evt_charge_sum = 0;
@@ -341,6 +344,7 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
         CEPRawTrackBuffer* rawTrack = 0x0;
         TVector3 v;
         UInt_t hlt_kk(0);
+        Bool_t kPiPlus(false), kPiMinus(false), kIsPionEvtBayes(true);
         for (UInt_t kk(0); kk<cep_evt->GetnTracks(); kk++)
         {
             trk = cep_evt->GetTrack(kk);
@@ -397,6 +401,11 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
             hlt_n_trd_cls = trk->GetTRDncls();
             hlt_n_tpc_shared_cls = trk->GetTPCnclsS();
 
+            // check evt particles
+            if (trk->GetMCPID() == 211)  kPiPlus=true;
+            if (trk->GetMCPID() == -211) kPiMinus=true;
+            kIsPionEvtBayes = kIsPionEvtBayes & (hlt_pid_bayes_proba_pion>=0.9);
+
             // now we get the low level features from the CEP-raw buffer
             // the hl-track has the information of the index it is stored in
             // we extract that information and use it to get the low-level features
@@ -433,6 +442,8 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
             rawtrk_eta = rawTrack->GetEta(); 
             trackTree->Fill();
         }
+        evt_is_pipi_evt_mc = (kPiPlus && kPiMinus) ? 1 : 0;
+        evt_is_pion_evt_bayes = kIsPionEvtBayes ? 1 : 0;
         // Event  
         // event info contains charge sum, hence we have to first loop
         // over the tracks to gain this information
