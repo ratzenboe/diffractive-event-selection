@@ -60,7 +60,8 @@ void SetStyle(Bool_t graypalette=kFALSE)
 
 void CreateRatioPlots(TString fname_1, TString fname_2, TString outpath)
 {
-    if (!outpath.EndsWith("/")) outpath+="/";
+    if ((outpath != "") && !outpath.EndsWith("/")) outpath+="/";
+    printf("outpath: %s\n", outpath.Data());
 
     TFile* file_1 = TFile::Open(fname_1);
     TFile* file_2 = TFile::Open(fname_2);
@@ -69,10 +70,16 @@ void CreateRatioPlots(TString fname_1, TString fname_2, TString outpath)
     // get some info from the file name for the legend 
     TString leg_string_1, leg_string_2;
     /* if (fname_1.Contains("LHC")) { leg_string_1 = "LHC data"; leg_string_2 = "CEP simulation"; } */
-    if (fname_1.Contains("LHC")) { leg_string_1 = "LHC !V0"; leg_string_2 = "LHC checkSPD"; }
-    else { leg_string_2 = "LHC !V0"; leg_string_1 = "LHC checkSPD"; }
+    /* if (fname_1.Contains("LHC")) { leg_string_1 = "LHC !V0"; leg_string_2 = "LHC checkSPD"; } */
+    /* else { leg_string_2 = "LHC !V0"; leg_string_1 = "LHC checkSPD"; } */
     /* else { leg_string_1 = "CEP simulation"; leg_string_2 = "LHC data"; } */
-    
+    /* if (fname_1.Contains("99")) { leg_string_1 = "3+ tracks bg"; leg_string_2 = "Feed Down"; } */
+    /* else { leg_string_1 = "Feed down"; leg_string_2 = "3+ tracks bg"; } */
+    /* if (fname_1.Contains("1")) { leg_string_1 = "Signal"; leg_string_2 = "Feed Down"; } */
+    /* else { leg_string_1 = "Feed down"; leg_string_2 = "Signal"; } */
+    if (fname_1.Contains("with")) { leg_string_1 = "w/ correction"; leg_string_2 = "no correction"; }
+    else { leg_string_1 = "no correction"; leg_string_2 = "w/ correction"; }
+      
     // file extensions
     // 1: loop through one of the files to get all hists
     SetStyle();
@@ -90,8 +97,12 @@ void CreateRatioPlots(TString fname_1, TString fname_2, TString outpath)
         else std::cout << "Histo name: " << obj->GetName() << std::endl;
         // at first we clone the histogram to which we then add the remaining hists 
         // the Remove(0,5) removes the "full_"-chars in front of the histogram name
-        TH1F* clone_hist_1 = (TH1F*)obj->Clone((TString(obj->GetName()).Remove(0,5)).Data());
-        TH1F* clone_hist_2 = (TH1F*)((TH1F*)file_2->Get(obj->GetName()))->Clone((TString(obj->GetName()).Remove(0,5)+"_2").Data());
+        /* TH1F* clone_hist_1 = (TH1F*)obj->Clone((TString(obj->GetName()).Remove(0,5)).Data()); */
+        TH1F* clone_hist_1 = (TH1F*)obj->Clone((TString(obj->GetName())+" ").Data());
+        /* TH1F* clone_hist_1 = (TH1F*)obj->Clone((TString(obj->GetName())).Data()); */
+        /* TH1F* clone_hist_1 = (TH1F*)obj->Clone("M_{#pi#pi} [GeV]"); */
+        TH1F* clone_hist_2 = (TH1F*)((TH1F*)file_2->Get(obj->GetName()))->Clone((TString(obj->GetName())+"_2").Data());
+        if (clone_hist_1->GetEntries()==0 || clone_hist_2->GetEntries()==0) continue;
         Double_t integral_1 = clone_hist_1->Integral(1,clone_hist_1->GetSize()-2); 
         Double_t integral_2 = clone_hist_2->Integral(1,clone_hist_2->GetSize()-2); 
         clone_hist_1->Sumw2();
@@ -102,12 +113,6 @@ void CreateRatioPlots(TString fname_1, TString fname_2, TString outpath)
         clone_hist_1->SetLineWidth(2);
         clone_hist_2->SetLineWidth(2);
         clone_hist_1->GetXaxis()->SetTitle(clone_hist_1->GetName());
-
-        Int_t startbin = clone_hist_1->FindFirstBinAbove()-4;
-        Int_t endbin = clone_hist_1->FindLastBinAbove()+4;
-        if (startbin < 1) startbin = 1;
-        if (endbin > clone_hist_1->GetSize()-2) endbin = clone_hist_1->GetSize()-2;
-        clone_hist_1->GetXaxis()->SetRange(startbin, endbin);
 
         if (!clone_hist_1->InheritsFrom("TH1") || !clone_hist_2->InheritsFrom("TH1")) { std::cout << "<E> No histogram found in file\n"; gSystem->Exit(1);  }
 
@@ -121,12 +126,17 @@ void CreateRatioPlots(TString fname_1, TString fname_2, TString outpath)
         rp->GetUpperRefYaxis()->SetTitle("entries");
         rp->GetUpperRefYaxis()->SetTitleSize(0.05);
         rp->GetUpperRefYaxis()->SetTitleOffset(1.2);
+        Double_t minimum, maximum;
+        minimum = TMath::Min(clone_hist_1->GetBinCenter(clone_hist_1->FindFirstBinAbove()), clone_hist_2->GetBinCenter(clone_hist_2->FindFirstBinAbove()));
+        maximum = TMath::Min(clone_hist_1->GetBinCenter(clone_hist_1->FindLastBinAbove()), clone_hist_2->GetBinCenter(clone_hist_2->FindLastBinAbove()));
+        rp->GetUpperRefXaxis()->SetRangeUser(minimum*0.9, maximum*1.1);
 
         rp->GetLowYaxis()->SetNdivisions(505);
         rp->GetLowerRefYaxis()->SetTitle("ratio");
         rp->GetLowerRefYaxis()->SetTitleSize(0.05);
         rp->GetLowerRefYaxis()->SetTitleOffset(1.2);
         rp->GetLowerRefYaxis()->SetRangeUser(0.5,1.5);
+        rp->GetLowerRefXaxis()->SetRangeUser(minimum*0.9, maximum*1.1);
 
         rp->SetLowBottomMargin(0.40);
         rp->GetLowerRefXaxis()->SetLabelOffset(0.01);
@@ -135,14 +145,16 @@ void CreateRatioPlots(TString fname_1, TString fname_2, TString outpath)
 
         rp->SetSeparationMargin(0.01);
 
-        TLegend* leg = new TLegend(0.62, 0.8, 1., 0.9);
-        leg->AddEntry(clone_hist_1, leg_string_1,"l");
-        leg->AddEntry(clone_hist_2, leg_string_2,"l");
+        TLegend* leg = new TLegend(0.66, 0.76, 0.89, 0.89);
+        /* leg->SetHeader(("Factor: "+(TString)Form("%.1f",norm)).Data()); */
+        leg->AddEntry(clone_hist_1, leg_string_1, "l");
+        leg->AddEntry(clone_hist_2, leg_string_2, "l");
         leg->SetFillStyle(0);
         leg->Draw();
 
         c->Update();
-        c->SaveAs((outpath+clone_hist_1->GetName()+".pdf").Data());
+        c->SaveAs((outpath+TString(clone_hist_1->GetName()).Chop()+".pdf").Data());
+        /* c->SaveAs("ratioplot.pdf"); */
     }
 
     std::cout << "\nEverything successful!" << std::endl;
