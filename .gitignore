@@ -114,6 +114,10 @@ venv.bak/
 # ignore the save copy
 recurrantNets/RNN/code/modules/load_model_save.py
 
+# ignore old programs and unrelated grid-scripts
+recurrantNets/RNN/progs/old_progs
+recurrantNets/RNN/progs/grid_scripts
+
 # jupyter notebooks 
 *.ipynb
 # .pyc files 
