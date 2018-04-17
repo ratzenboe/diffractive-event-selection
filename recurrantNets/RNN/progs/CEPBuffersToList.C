@@ -159,7 +159,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
     TH1F* cc_chi2 = new TH1F("calo_cluster_chi2", "", 10, -2, 2);
     TH1F* cc_cpvdist = new TH1F("calo_cluster_cpvdist", "", 1000, 0, 1500);
 
-    Int_t cu;
+    Int_t cu, mode;
     Bool_t isDG, isNDG;
     Int_t nseltracks;
     if (n_evts_to_read + evt_offset >= cep_tree->GetEntries()) {
