@@ -115,7 +115,6 @@ def main():
     
     # remove a feature if it is in the cut_dic and contains no further info 
     remove_features.append(evt_id_string)
-    branches_dic['event'].remove(evt_id_string)
     print(remove_features)
     for key in evt_dictionary.keys():
         if key == 'target':
@@ -132,9 +131,17 @@ def main():
         raise KeyError('Attention, the event id key is still in the data! '\
                 'By not removing it the machine will treat it as a feature') 
 
-    # if plot:
-    #     print('\n::  Plotting the features...')
-    #     plot_all_features(evt_dictionary, out_path, real_bg=False)
+    # lets remove some features to check if we get a worse performance 
+    evt_dictionary.pop('fmd', None)
+    evt_dictionary.pop('ad', None)
+    evt_dictionary.pop('v0', None)
+    evt_dictionary.pop('calo_cluster', None)
+    evt_dictionary.pop('phos', None)
+    evt_dictionary.pop('emcal', None)
+
+    if plot:
+        print('\n::  Plotting the features...')
+        plot_all_features(evt_dictionary, out_path, real_bg=False)
 
     if 'koala' not in run_mode_user:
         not_99_indices = np.arange(evt_dictionary['target'].shape[0])[evt_dictionary['target']!=99]
@@ -159,22 +166,16 @@ def main():
     preprocess(evt_dic_test,  out_path, load_fitted_attributes=True)
     preprocess(evt_dic_val,   out_path, load_fitted_attributes=True)
 
-    if plot:
-        print('\n::  Plotting the standard scaled features...')
-        plot_all_features(evt_dic_train, out_path, post_fix='_std_scaled', real_bg=False)
+    # if plot:
+    #     print('\n::  Plotting the standard scaled features...')
+    #     plot_all_features(evt_dic_train, out_path, post_fix='_std_scaled', real_bg=False)
 
-    # before we lose track of the column names we save the eta-phi-diff columns
-    # which we will (is needed for the koala mode)
-    eta_phi_dist_feature_arr_train = evt_dic_train['event']['eta_phi_diff'].ravel()
-    eta_phi_dist_feature_arr_val   = evt_dic_val['event']['eta_phi_diff'].ravel()
-    eta_phi_dist_feature_arr_test  = evt_dic_test['event']['eta_phi_diff'].ravel()
- 
     print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
     evt_dic_train, feature_names_dic = shape_data(evt_dic_train)
     shape_data(evt_dic_test)
     shape_data(evt_dic_val)
 
-    if 'NN' in run_mode_user:
+    if flat:
         flatten_feature(evt_dic_train, 'track')
         evt_dic_train['feature_matrix'] = np.c_[evt_dic_train.pop('track'), 
                                                 evt_dic_train.pop('event')]
@@ -204,13 +205,20 @@ def main():
     # models by passing which metrics should be looked into
 
     if 'koala' in run_mode_user:
+        y_val_data = evt_dic_val['target']
         y_val_data[(y_val_data==1) | (y_val_data==0)] = 1
         y_val_data[y_val_data==99] = 0
         if aux:
             y_val_data = {
                           'main_output': evt_dic_val['target'], 
-                          'aux_output': evt_dic_val['target']
+                          'aux_evt_trk': evt_dic_val['target'],
+                         # 'aux_output': evt_dic_val['target']
                          }
+            if 'emcal' in list(evt_dic_train.keys()):
+                y_val_data['aux_calos'] =  evt_dic_val['target']
+            if 'v0' in list(evt_dic_train.keys()):
+                y_val_data['aux_veto_dets'] = evt_dic_val['target']
+
             evt_dic_val.pop('target')
         else: 
             y_val_data = evt_dic_val.pop('target')
@@ -220,8 +228,14 @@ def main():
         if aux:
             y_val_data = {
                           'main_output': evt_dic_val['target'], 
-                          'aux_output': evt_dic_val['target']
+                          'aux_evt_trk': evt_dic_val['target'],
+                         # 'aux_output': evt_dic_val['target']
                          }
+            if 'emcal' in list(evt_dic_train.keys()):
+                y_val_data['aux_calos'] =  evt_dic_val['target']
+            if 'v0' in list(evt_dic_train.keys()):
+                y_val_data['aux_veto_dets'] = evt_dic_val['target']
+
             evt_dic_val.pop('target')
         else:
             y_val_data = evt_dic_val.pop('target')
@@ -234,6 +248,7 @@ def main():
     print('\nFitting the model...')
     pause_for_input('\n\n:: The model will be trained anew '\
             'if this is not desired please hit enter', timeout=5)
+    y_train_truth_save = evt_dic_train['target'].copy()
     history = train_model(evt_dic_train,
                           run_mode_user, 
                           val_data    = (X_val_data, y_val_data),
@@ -268,18 +283,21 @@ def main():
     print('\nEvaluating the model on the training sample...')
     # returns the poped element
     # evt_dic_train['target'][evt_dic_train['target']==99] = 0
-    y_train_truth = evt_dic_train.pop('target')
+    y_train_truth = y_train_truth_save
     y_train_score = model.predict(evt_dic_train)
     if isinstance(y_train_score, list):
         # if one or several aux-outputs exist the main output is on the
         # first position in the list
         y_train_score = y_train_score[0]
 
-    if not 'anomaly' in run_mode_user:
-        num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, 
-                                                        out_path, label='train')
-        MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
-        del num_trueSignal, num_trueBackgr
+    num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, 
+                                                    out_path, label='train')
+    MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
+    del num_trueSignal, num_trueBackgr
+
+    if 'koala' in run_mode_user:
+        y_train_truth[y_train_truth==1] = 1
+        y_train_truth[(y_train_truth==99) | (y_train_truth==0)] = 0
 
     plot_ROCcurve(y_train_truth, y_train_score, out_path, label='train')
 
@@ -297,17 +315,14 @@ def main():
     if isinstance(y_test_score, list):
         y_test_score = y_test_score[0]
 
-    if not 'anomaly' in run_mode_user:
-        num_trueSignal, num_trueBackgr = plot_MVAoutput(y_test_truth, y_test_score, 
-                                                        out_path, label='test')
-        MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
-        del num_trueSignal, num_trueBackgr
-    else:
-        y_test_truth, y_test_score = plot_autoencoder_output(y_test_score, 
-                                                             evt_dic_test['feature_matrix'],
-                                                             y_test_truth,
-                                                             out_path,
-                                                             label='test')
+    num_trueSignal, num_trueBackgr = plot_MVAoutput(y_test_truth, y_test_score, 
+                                                    out_path, label='test')
+    MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
+    del num_trueSignal, num_trueBackgr
+
+    if 'koala' in run_mode_user:
+        y_test_truth[y_test_truth==1] = 1
+        y_test_truth[(y_test_truth==99) | (y_test_truth==0)] = 0
 
     plot_ROCcurve(y_test_truth, y_test_score, out_path, label='test')
 
