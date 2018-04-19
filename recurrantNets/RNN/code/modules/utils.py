@@ -371,13 +371,57 @@ def eta_phi_dist(arr):
     return np.sqrt(np.power(arr['phi'][0]-arr['phi'][1],2) + 
                    np.power(arr['eta'][0]-arr['eta'][1],2))
 
+def unit_vector(vector):
+    """ Returns the unit vector of the vector.  """
+    return vector / np.linalg.norm(vector)
+
+def angle_between(v1, v2):
+    """ 
+    Returns the angle in radians between vectors 'v1' and 'v2'
+    """
+    v1_u = unit_vector(v1)
+    v2_u = unit_vector(v2)
+    return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+
+def opang(arr):
+    """
+    returns the opening angle between the particles (only 2 allowed)
+    """
+
+    v1 = np.array([arr['pt'][0] * np.cos(arr['phi'][0]), 
+                   arr['pt'][0] * np.sin(arr['phi'][0]), 
+                   arr['pt'][0] * np.sinh(arr['eta'][0])])
+    v2 = np.array([arr['pt'][1] * np.cos(arr['phi'][1]), 
+                   arr['pt'][1] * np.sin(arr['phi'][1]), 
+                   arr['pt'][1] * np.sinh(arr['eta'][1])])
+
+    return angle_between(v1,v2)
+
+
 def get_eta_phi_dist_array(evt_dic):
     """
-    returns an numpy array that can be added to the features at any point in the program
+    returns an numpy array of the distance of the particles in the eta-phi space that can 
+    be added to the features at any point in the program
     """
     try:
         track_arr = evt_dic['track']
         new_feature = np.apply_along_axis(eta_phi_dist, 1, track_arr)
+
+        return new_feature
+
+    except KeyError:
+        raise KeyError('The key "track" is not in among the evt dictionary keys: ' \
+                '{}'.format(list(evt_dic.keys())))
+
+
+def get_opang_dist_array(evt_dic):
+    """
+    returns an numpy array of the opening angle that can be added to the features 
+    at any point in the program
+    """
+    try:
+        track_arr = evt_dic['track']
+        new_feature = np.apply_along_axis(opang, 1, track_arr)
 
         return new_feature
 
@@ -394,7 +438,7 @@ def engineer_features(evt_dic, replace=False):
     # therefore we take a save route via a pandas dataframe 
     # the read-out of the record arr is done by looping over them, writing each 
     # feature into the datafreame
-    list_of_engineered_features = ['eta_phi_diff']
+    list_of_engineered_features = ['eta_phi_diff', 'opang']
 
     # return a copy because we dont want to modify the original dictionary
     evt_dic_copy = evt_dic.copy()
@@ -404,6 +448,7 @@ def engineer_features(evt_dic, replace=False):
         df[name] = evt_dic_copy['event'][name].ravel() 
 
     df['eta_phi_diff'] = get_eta_phi_dist_array(evt_dic_copy)
+    df['opang']        = get_opang_dist_array(evt_dic_copy)
 
     evt_dic_copy['event'] = df.to_records(index=False) 
 
