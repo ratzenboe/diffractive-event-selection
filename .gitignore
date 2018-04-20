@@ -145,3 +145,5 @@ recurrantNets/RNN/progs/grid_scripts
 *.cb2
 *.lb
 *.bak
+*.nav
+*.snm
