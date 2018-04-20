@@ -2,6 +2,17 @@
  
 \usepackage[utf8]{inputenc}
 \usepackage{etoolbox}
+\usepackage{tikz}
+\tikzset{
+  treenode/.style = {shape=rectangle, rounded corners,
+                     draw, align=center,
+                     top color=white, bottom color=blue!20},
+  root/.style     = {treenode, font=\Large, bottom color=green!30},
+  env/.style      = {treenode, font=\ttfamily\normalsize},
+  dummy/.style    = {circle,draw}
+}
+
+
 \usetheme{Copenhagen}
  
  
@@ -85,10 +96,11 @@ Stefan Meyer Institut\\
     \begin{columns}[T] % align columns
         \begin{column}{.48\textwidth}
             % \color{red}\rule{\linewidth}{4pt}
+            \vspace*{-3mm}
             \begin{block}{Machine learning}
                 \begin{itemize}
                     \item<1-> Alorithms that learn from \emph{data} \& make predictions on \emph{data}
-                    \item<2-> Automatic methods (no human needed)
+                    \item<2-> Automatic methods\\$\to$ no human needed
                     \item<3-> Human work required for defining problem \& assessing the data
                 \end{itemize}
             \end{block}
@@ -132,9 +144,90 @@ Stefan Meyer Institut\\
 \section{Recap: rectangular cuts} %
 \begin{frame}
     \frametitle{Rectangular cuts}
+    \begin{columns}[T] % align columns        
+        \begin{column}{.48\textwidth}
+            % \color{red}\rule{\linewidth}{4pt}
+            \vspace*{-10mm}
+            Standard cut in one variable
+            \begin{itemize}
+                \item<1-> Cuts only in lower-dimensional subspaces
+                \item<2-> Ignores possible dependencies between the input variables
+                \item<3-> Signal might behave like BG in several observables $\to$ misclassification
+            \end{itemize}
+        \end{column}%
+        \hfill%
+        \begin{column}{.48\textwidth}
+            % \color{blue}\rule{\linewidth}{4pt}
+            \vspace*{-10mm}
+            \hspace*{-10mm}
+            \includegraphics[height=4.5cm,keepaspectratio]{pics/mva_cuts_rectangular.png}%
+            
+        \end{column}%
+    \end{columns}
+
 \end{frame}
 
 %------------------------------------------------ 
+
+\subsection{Decision Trees}
+\begin{frame}
+    \frametitle{Rectangular cuts with \emph{decision trees}}
+    \vspace*{-7mm}
+    \begin{itemize}
+        \item Simple \& rather old model (\emph{60s, 70s})
+        \item Tree-like graph $\to$ flowchart
+        \item Easy to understand
+        \item Either be manually modelled by experts or learned from training data
+    \end{itemize}
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Rectangular cuts with \emph{decision trees}}
+    \begin{tikzpicture}
+        [
+            grow                    = right,
+            sibling distance        = 6em,
+            level distance          = 10em,
+            edge from parent/.style = {draw, -latex},
+            every node/.style       = {font=\footnotesize},
+            sloped
+        ]
+	\node [root] {Student?}
+        child { node [dummy] {Exam?}
+                child { node [env] {Beer}
+                        edge from parent node [above] {No} }
+                child { node [env] {No Beer}
+                        edge from parent node [above] {Yes} }                
+                edge from parent node [above] {Yes} }
+        child { node [dummy] {Weekday?}
+                child { node [env] {No Beer}
+                        edge from parent node [above] {Yes} }
+                child { node [env] {Beer}
+                        edge from parent node [above] {No} }                
+                edge from parent node [above] {No} };
+	
+
+        % \node [root] {Student?}
+        %     child { node [dummy] {Exam?}
+        %         edge from parent node [above] {Yes}
+        %         child { node [env] {Beer} 
+        %             edge from parent node [above] {No}}
+        %         child { node [env] {No Beer} 
+        %             edge from parent node [above] {Yes}}}
+        %     child { node [dummy] {Weekday?}
+        %         edge from parent node [above] {No}
+        %         child { node [env] {No Beer} 
+        %             edge from parent node [above] {No}}
+        %         child { node [env] {Beer} 
+        %             edge from parent node [above] {Yes}}};
+    \end{tikzpicture}
+\end{frame}
+
+%------------------------------------------------ 
+
+
 
 
  
