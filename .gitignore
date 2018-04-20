@@ -143,4 +143,4 @@ recurrantNets/RNN/progs/grid_scripts
 *.fot
 *.cb
 *.cb2
-.*.lb
+*.lb
