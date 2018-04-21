@@ -2,7 +2,14 @@
  
 \usepackage[utf8]{inputenc}
 \usepackage{etoolbox}
+\setbeamercovered{transparent}
+
+\usepackage{lmodern}
 \usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
+\usetikzlibrary{shapes}
+
 \tikzset{
   treenode/.style = {shape=rectangle, rounded corners,
                      draw, align=center,
@@ -10,20 +17,28 @@
   root/.style     = {treenode, font=\Large, bottom color=green!30},
   env/.style      = {treenode, font=\ttfamily\normalsize},
   dummy/.style    = {circle,draw}
+  invisible/.style={opacity=0},
+  visible on/.style={alt={#1{}{invisible}}},
+  alt/.code args={<#1>#2#3}{%
+      \alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}} % \pgfkeysalso doesn't change the path
+  },
 }
 
-
-\usetheme{Copenhagen}
+% \usetheme{Copenhagen}
+\usetheme{EastLansing}
+\usecolortheme{dolphin}
  
  
 %Information to be included in the title page:
 
-\logo{%
-    \makebox[0.95\paperwidth]{%
-        \includegraphics[height=1.1cm,keepaspectratio]{pics/oeaw-logo.jpg}%
+\titlegraphic{%
+    \vspace*{10mm}
+    \makebox[0.9\paperwidth]{%
+        \raggedleft\includegraphics[height=1.1cm,keepaspectratio]{pics/oeaw-logo.jpg}%
         \hfill%
-        \includegraphics[height=1.1cm,keepaspectratio]{pics/smi-logo.jpg}%
-        \hspace*{3mm}
+        % \hspace*{-10mm}
+        \raggedright\includegraphics[height=1.1cm,keepaspectratio]{pics/smi-logo.jpg}%
+        % \hspace*{3mm}
     }%
 }
 
@@ -91,27 +106,14 @@ Stefan Meyer Institut\\
 
 \begin{frame}
     \frametitle{ML: an overview}
-    \vspace*{-7mm}
     In general ML represents a contrast to a \emph{rule based systems}
-    \begin{columns}[T] % align columns
-        \begin{column}{.48\textwidth}
-            % \color{red}\rule{\linewidth}{4pt}
-            \vspace*{-3mm}
-            \begin{block}{Machine learning}
-                \begin{itemize}
-                    \item<1-> Alorithms that learn from \emph{data} \& make predictions on \emph{data}
-                    \item<2-> Automatic methods\\$\to$ no human needed
-                    \item<3-> Human work required for defining problem \& assessing the data
-                \end{itemize}
-            \end{block}
-        \end{column}%
-        \hfill%
-        \begin{column}{.48\textwidth}
-            % \color{blue}\rule{\linewidth}{4pt}
-            \includegraphics[height=5cm,keepaspectratio]{pics/machine_learning.png}%
-            
-        \end{column}%
-    \end{columns}
+    \begin{block}{Machine learning}
+        \begin{itemize}
+            \item<1-> Alorithms that learn from \emph{data} \& make predictions on \emph{data}
+            \item<2-> Automatic methods $\to$ no human needed
+            \item<3-> Human work required for defining problem \& assessing the data
+        \end{itemize}
+    \end{block}
 \end{frame}
 
 %------------------------------------------------ 
@@ -119,29 +121,31 @@ Stefan Meyer Institut\\
 \begin{frame}
     \frametitle{Types of ML}
     \begin{columns}[T] % align columns
-        \begin{column}{.35\textwidth}
+        \begin{column}{.48\textwidth}
             % \color{red}\rule{\linewidth}{4pt}
+
             \begin{itemize}
-                \item Supervised 
+                \item <1->Supervised 
                 \begin{itemize}
                     \item Classification
                     \item Regression
                 \end{itemize}
-                \item Unsupervised
+                \item<2-> Unsupervised
             \end{itemize}
         \end{column}%
         \hfill%
-        \begin{column}{.7\textwidth}
-            % \color{blue}\rule{\linewidth}{4pt}
-            \includegraphics[height=3cm,keepaspectratio]{pics/supervised_vs_unsupervised.png}%
-            
+        \begin{column}{.48\textwidth}
+            \includegraphics<1>[height=4.5cm,keepaspectratio]{pics/supervised.png}%
+            \includegraphics<2>[height=4.5cm,keepaspectratio]{pics/UNsupervised.png}%
+            % \includegraphics<1>[height=3.5cm,keepaspectratio]{pics/supervised.png}\\%
+            % \includegraphics<2>[height=3.5cm,keepaspectratio]{pics/UNsupervised.png}%
         \end{column}%
     \end{columns}
 \end{frame}
 
 %------------------------------------------------ 
 
-\section{Recap: rectangular cuts} %
+\section{Rectangular cuts} %
 \begin{frame}
     \frametitle{Rectangular cuts}
     \begin{columns}[T] % align columns        
@@ -152,15 +156,15 @@ Stefan Meyer Institut\\
             \begin{itemize}
                 \item<1-> Cuts only in lower-dimensional subspaces
                 \item<2-> Ignores possible dependencies between the input variables
-                \item<3-> Signal might behave like BG in several observables $\to$ misclassification
+                \item<3-> Signal might behave like BG in several observables\\ $\to$ misclassification
             \end{itemize}
         \end{column}%
         \hfill%
         \begin{column}{.48\textwidth}
             % \color{blue}\rule{\linewidth}{4pt}
             \vspace*{-10mm}
-            \hspace*{-10mm}
-            \includegraphics[height=4.5cm,keepaspectratio]{pics/mva_cuts_rectangular.png}%
+            % \hspace*{-10mm}
+            \raggedright\includegraphics[height=4.3cm,keepaspectratio]{pics/mva_cuts_rectangular.png}%
             
         \end{column}%
     \end{columns}
@@ -174,7 +178,7 @@ Stefan Meyer Institut\\
     \frametitle{Rectangular cuts with \emph{decision trees}}
     \vspace*{-7mm}
     \begin{itemize}
-        \item Simple \& rather old model (\emph{60s, 70s})
+        % \item Simple \& rather old model (\emph{60s, 70s})
         \item Tree-like graph $\to$ flowchart
         \item Easy to understand
         \item Either be manually modelled by experts or learned from training data
@@ -207,21 +211,214 @@ Stefan Meyer Institut\\
                 child { node [env] {Beer}
                         edge from parent node [above] {No} }                
                 edge from parent node [above] {No} };
-
-    \draw (7.7,0) node[rectangle, dashed, color=red, minimum height=6cm,minimum width=2cm,draw, thick] {};
+    \pause
+    \node (rectroot) at (0,0) [rectangle, dashed, color=red, minimum height=2cm,minimum width=3cm,draw, thick] {};
+    \node (rootbottom) [below=1mm of rectroot, color=red]  {Root node};
+    \pause
+    \node (rectinner) at (3.8,0) [rectangle, dashed, color=red, minimum height=6cm,minimum width=2cm,draw, thick] {};
+    \node (innerbottom) [below=1mm of rectinner, color=red]  {Inner nodes};
+    \node (innertop) [above=1mm of rectinner, color=red]  {Decisions};
+    \pause
+    \node (rectleaf) at (7.7,0) [rectangle, dashed, color=red, minimum height=6cm,minimum width=2cm,draw, thick] {};
+    \node (leafbottom) [below=1mm of rectleaf, color=red]  {Leaf nodes};
+    \node (leaftop) [above=1mm of rectleaf, color=red]  {Class prediction};
 
     \end{tikzpicture}
-
-    
 \end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Decision tree learning}
+    \vspace*{-7mm}
+    \begin{block}{Training}
+        \emph{Recursively} split feature space into sub-spaces at each step\\
+        $\to$ Measures to evaluate split
+        \begin{itemize}
+            \item Error rate
+            \item Information gain
+            \item Gini index
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+%------------------------------------------------ 
+
+\subsection{Example}
+\begin{frame}
+    \frametitle{Decision tree learning}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (featspace) at (0,0)
+            {\includegraphics[height=3cm,keepaspectratio]{pics/DT-feature-space.png}};
+        \node (featspaceTop) [above=1mm of featspace, color=black]  {Feature space};
+        \node[inner sep=0pt] (nodes) at (3,-3.5)
+            {\includegraphics[height=3.3cm,keepaspectratio]{pics/DT-fullygrown_nodes.png}};%
+        \node (nodesTxt) [above=1mm of nodes, color=black]  {Decision tree};
+        \node[inner sep=0pt] (DTapply) at (-3,-3.5)
+            {\includegraphics[height=3.3cm,keepaspectratio]{pics/DT-fullygrown_feature_space.png}};
+        \node (DTTxt) [above=1mm of DTapply, color=black]  {Classification};
+
+        \draw[->,thick] (featspace.east) to [out=0,in=90] (nodesTxt.north) node[midway,above] {};
+        \draw[->,thick] (featspace.west) to [out=180,in=90] (DTTxt.north) node[midway,above] {};
+    \end{tikzpicture}
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Decision tree learning}
+    1) We compute a measure for \emph{each possible split} in each feature\\\hspace*{5mm}$\to$ here \textbf{absolute error rate} (AER)
+    \\
+    \vspace*{3mm}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt, visible on=<1>] (feat1) at (0,0)
+            {\includegraphics[height=4.5cm,keepaspectratio]{pics/DT-ER-y.png}};
+        \node (feat1Txt) [above=1mm of feat1, color=black]  {\emph{y} split AER};
+        % \node[inner sep=0pt, visible on=<2>] (feat2) at (0,0)
+        %     {\includegraphics[height=4.5cm,keepaspectratio]{pics/DT-ER-x.png}};
+        % \node (feat2Txt) [above=1mm of feat1, color=black,visible on=<2>]  {\emph{x}-\emph{y} split AER};
+    \end{tikzpicture}
+ 
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Decision tree learning}
+    1) We compute a measure for \emph{each possible split} in each feature\\\hspace*{5mm}$\to$ here \textbf{absolute error rate} (AER)
+    \\
+    \vspace*{3mm}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (feat2) at (0,0)
+            {\includegraphics[height=4.5cm,keepaspectratio]{pics/DT-ER-x.png}};
+        \node (feat2Txt) [above=1mm of feat1, color=black]  {\emph{x}-\emph{y} split AER};
+        \pause
+        \node (el) at (-0.53,-1.8) [ellipse, color=red, minimum height=5mm,minimum width=10mm,draw, ultra thick] {};
+        \node (txt) at (3.5,-1.8) [color=red, ultra thick] {Minimum AER};
+        \draw[->, color=red, ultra thick] (txt) to [out=160, in=20] (el);
+
+    \end{tikzpicture}
+ 
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Decision tree learning}
+    1) We compute a measure for \emph{each possible split} in each feature\\\hspace*{5mm}$\to$ here \textbf{absolute error rate} (AER)\\
+    2) Recursively repead step (1) for each subspace until AER $\to 0$
+    \\
+    \vspace*{3mm}
+    \centering\includegraphics<1>[height=4.3cm,keepaspectratio]{pics/DT_1_split.png}%
+    \centering\includegraphics<2>[height=4.6cm,keepaspectratio]{pics/DT_2_split.png}%
+    \centering\includegraphics<3>[height=4.6cm,keepaspectratio]{pics/DT_3_split.png}%
+    \centering\includegraphics<4>[height=4.6cm,keepaspectratio]{pics/DT_4_split.png}%
+    \centering\includegraphics<5>[height=4.6cm,keepaspectratio]{pics/DT_5_split.png}%
+    \centering\includegraphics<6>[height=4.3cm,keepaspectratio]{pics/DT_final.png}%
+     
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Decision tree classification}
+    3) Classification
+    \\
+    \vspace*{3mm}
+    \includegraphics[height=4.3cm,keepaspectratio]{pics/DT_classification.png}%
+ 
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Decision tree improvements I}
+    \begin{itemize}
+        \item Use more sophisticated split measures 
+            \begin{itemize}
+                \item \emph{Information gain} $\leftrightarrow$ (im-)purity of splitted sub-sets
+                \item Gini index
+            \end{itemize}
+        \item Pruning 
+    \end{itemize}
+    \vspace*{3mm}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (IG) at (3,0)
+            {\includegraphics[height=3.5cm,keepaspectratio]{pics/DT_info-gain.png}};
+        \node (IGtxt) [below=1mm of IG, color=black]  {Information gain};
+        \node[inner sep=0pt] (AER) at (-3,0)
+            {\includegraphics[height=3.5cm,keepaspectratio]{pics/DT_AER.png}};
+        \node (AERtxt) [below=1mm of AER, color=black]  {Absolute error rate};
+        \draw[->, color=red, ultra thick] (AER) to [out=0, in=180] (IG);
+    \end{tikzpicture}
+ 
+\end{frame}
+
+%------------------------------------------------ 
+
+\subsection{Improvements}
+\begin{frame}
+    \frametitle{Decision tree improvements II}
+    \begin{columns}[T] % align columns        
+        \begin{column}{.48\textwidth}
+            \begin{block}{Random forest}
+                \begin{itemize}
+                    \item<1-> Ensemble of DTs
+                    \item<2-> For each tree use:
+                    \begin{itemize}
+                        \item<3-> Random sub-sample (=\emph{bootstrapping})
+                        \item<4-> Random number of the original features\\
+                                  $\to$ large number of rather shallow trees
+                    \end{itemize}
+                    \item<5-> Classify data by majority voting of individual trees
+                \end{itemize}
+            \end{block}
+        \end{column}%
+        \hfill%
+        \begin{column}{.48\textwidth}
+            \begin{block}{Boosted DT}
+                \begin{itemize}
+                    \item<6-> Sequential ensemble of evolving DTs
+                    \item<7-> Output of each tree is given weight relative to accuracy
+                    \item<8-> $\to$ Subsequent predictors learn from the mistakes of the previous predictors
+                \end{itemize}
+            \end{block}            
+        \end{column}%
+    \end{columns}
+
+\end{frame}
+
+%------------------------------------------------ 
+
+\section{Linear cuts}
+
+\begin{frame}
+    \frametitle{Linear cuts}
+    \begin{columns}[T] % align columns        
+        \begin{column}{.48\textwidth}
+            % \color{red}\rule{\linewidth}{4pt}
+            More flexible than rectangular cut
+            \begin{itemize}
+                \item<1-> Simple white box methods 
+                \item<2-> Can become very powerful by using \emph{kernel trick}
+            \end{itemize}
+        \end{column}%
+        \hfill%
+        \begin{column}{.48\textwidth}
+            % \color{blue}\rule{\linewidth}{4pt}
+            % \hspace*{-10mm}
+            \raggedright\includegraphics[height=4.3cm,keepaspectratio]{pics/mva_cut_linear.png}%
+            
+        \end{column}%
+    \end{columns}
+
+\end{frame} 
 
 %------------------------------------------------ 
 
 
 
 
- 
+
 \end{document}
-
-
 
