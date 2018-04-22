@@ -4,12 +4,22 @@
 \usepackage{etoolbox}
 \setbeamercovered{transparent}
 
+% \usepackage{bm}
+\usepackage{mathtools}          %loads amsmath as well
 \usepackage{lmodern}
+\usepackage{flexisym}
+\usepackage[absolute,overlay]{textpos}
+
 \usepackage{tikz}
 \usetikzlibrary{positioning}
 \usetikzlibrary{arrows}
 \usetikzlibrary{shapes}
+\usetikzlibrary{decorations.pathreplacing}
 
+\tikzset{basic/.style={draw,fill=blue!20,text width=1em,text badly centered}}
+\tikzset{input/.style={basic,circle}}
+\tikzset{weights/.style={basic,rectangle}}
+\tikzset{functions/.style={basic,circle,fill=blue!10}}
 \tikzset{
   treenode/.style = {shape=rectangle, rounded corners,
                      draw, align=center,
@@ -379,8 +389,9 @@ Stefan Meyer Institut\\
             \begin{block}{Boosted DT}
                 \begin{itemize}
                     \item<6-> Sequential ensemble of evolving DTs
-                    \item<7-> Output of each tree is given weight relative to accuracy
-                    \item<8-> $\to$ Subsequent predictors learn from the mistakes of the previous predictors
+                    \item<7-> Assign weights to training samples $\to$ initially equal weights
+                    \item<8-> Adjust weights \& give more importance to misclassified samples
+                    \item<9-> Subsequent predictors thus should focus on those 
                 \end{itemize}
             \end{block}            
         \end{column}%
@@ -397,10 +408,11 @@ Stefan Meyer Institut\\
     \begin{columns}[T] % align columns        
         \begin{column}{.48\textwidth}
             % \color{red}\rule{\linewidth}{4pt}
-            More flexible than rectangular cut
+            More degrees of freedom than rectangular cut
             \begin{itemize}
                 \item<1-> Simple white box methods 
-                \item<2-> Can become very powerful by using \emph{kernel trick}
+                \item<2-> Very fast classification
+                \item<3-> Can become very powerful by using \emph{kernel trick}
             \end{itemize}
         \end{column}%
         \hfill%
@@ -416,7 +428,127 @@ Stefan Meyer Institut\\
 
 %------------------------------------------------ 
 
+\begin{frame}
+    \frametitle{Linear models}
+    Takes a \emph{linear function} of its inputs $\boldsymbol{x} = (x_{1},\dots x_{j})$ to base its decision on.\\
+    % $$ y = f ( \boldsymbol{w} \cdot \boldsymbol{x}) = f \left\( \sum_{j}w_{j}x_{j} \right\) $$
+    $$ y = f (\boldsymbol{w} \cdot \boldsymbol{x}) = f (\sum_{j}w_{j}x_{j}) $$
+    
+    $\boldsymbol{w}\dots$ weight vector\\ 
+    \vspace*{4mm}
 
+    \pause
+    Simplest case
+    \[ 
+         y = f(x)=\Theta(x)=
+         \begin{cases} 
+             0 & x < 0 \hspace*{5mm}\text{signal}\\
+             1  & x \geq 0 \hspace*{5mm}\text{background}
+        \end{cases} 
+    \] 
+    \pause
+    \hspace*{5mm}$\to$ Function can be approximated by \textbf{single layer perceptron}
+     % Maps all values above certain threshold to \emph{signal} and all others to \emph{background}
+    
+\end{frame} 
+
+%------------------------------------------------ 
+\section{Single layer perceptron}
+\begin{frame}
+    \frametitle{Single layer perceptron (SLP)}
+
+    \centering\begin{tikzpicture}
+        \node[functions] (center) {};
+        \node[below of=center,font=\scriptsize,text width=4em] {Activation function $\Theta$};
+        \draw[thick] (0.5em,0.5em) -- (0,0.5em) -- (0,0) -- (-0.5em,0);
+        \draw (0em,0.75em) -- (0em,-0.15em);
+        \draw (0.75em,0em) -- (-0.75em,0em);
+        \node[right of=center] (right) {};
+            \path[draw,->] (center) -- (right);
+        \node[functions,left=3em of center] (left) {$\sum$};
+            \path[draw,->] (left) -- (center);
+        \node[weights,left=3em of left] (2) {$w_{2}$} -- (2) node[input,left of=2] (l2) {$x_{2}$};
+            \path[draw,->] (l2) -- (2);
+            \path[draw,->] (2) -- (left);
+        \node[below of=2] (dots) {$\vdots$} -- (dots) node[left of=dots] (ldots) {$\vdots$};
+        \node[weights,below of=dots] (n) {$w_{n}$} -- (n) node[input,left of=n] (ln) {$x_{n}$};
+            \path[draw,->] (ln) -- (n);
+            \path[draw,->] (n) -- (left);
+        \node[weights,above of=2] (1) {$w_{1}$} -- (1) node[input,left of=1] (l1) {$x_{1}$};
+            \path[draw,->] (l1) -- (1);
+            \path[draw,->] (1) -- (left);
+        % \node[weights,above of=1] (0) {$w_{0}$} -- (0) node[input,left of=0] (l0) {$1$};
+        %     \path[draw,->] (l0) -- (0);
+        %     \path[draw,->] (0) -- (left);
+        \node[above of=l1,font=\scriptsize] {Inputs};
+        \node[above of=1,font=\scriptsize] {Weights};
+        \draw [decorate,decoration={brace,mirror,amplitude=15pt},xshift=0pt,yshift=0pt]
+            (-5,-2.7) -- (1,-2.7) node [black,midway,yshift=-1.0cm] 
+            {\Large $y = \Theta(\sum_{j}w_{j}x_{j})$};
+        \draw [decorate,decoration={brace,amplitude=5pt},xshift=0pt,yshift=0pt]
+            (1,-0.5) -- (1,0.5) node [text width=5em,black,midway,xshift=1.2cm] 
+            {\footnotesize Signal Background};
+    \end{tikzpicture}
+    
+\end{frame} 
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{SLP training}
+    \begin{columns}[T] % align columns        
+        \begin{column}{.48\textwidth}
+            % \color{red}\rule{\linewidth}{4pt}
+            \begin{block}{Algorithm} 
+                \begin{enumerate}
+                    \item<1-> Initialize weights $\boldsymbol{w}_{init}$
+                    \item<2-> Repeat until $y=y_{target}$:
+                    \begin{enumerate}
+                        \item<3,7,10-> Present training sample $\boldsymbol{x}$
+                        \item<4,8,10-> Predict sample label $y=\Theta(\boldsymbol{x}\boldsymbol{w}_{init})$ and compute error $\Delta=y_{target}-y$
+                        \item<5,9-> If $\Delta \neq 0~\to$ update weights\\$\boldsymbol{w}\textprime=\boldsymbol{w} + \alpha \Delta \boldsymbol{x}$
+                    \end{enumerate}
+                \end{enumerate}
+            \end{block}
+        \end{column}%
+        \hfill%
+        \begin{column}{.48\textwidth}
+            % \color{blue}\rule{\linewidth}{4pt}
+            % \hspace*{-10mm}
+            \raggedright\includegraphics<1,2>[height=4.3cm,keepaspectratio]{pics/PCT_init_weights.png}%
+            \raggedright\includegraphics<3>[height=4.3cm,keepaspectratio]{pics/PCT_0.png}%
+            \raggedright\includegraphics<4,5>[height=4.3cm,keepaspectratio]{pics/PCT_1.png}%
+            \raggedright\includegraphics<6,7,8>[height=4.3cm,keepaspectratio]{pics/PCT_2.png}%
+            \raggedright\includegraphics<9>[height=4.3cm,keepaspectratio]{pics/PCT_3.png}%
+            \raggedright\includegraphics<10>[height=4.3cm,keepaspectratio]{pics/PCT_final_0.png}%
+            \only<1> {
+                \begin{textblock}{3.5}(10,13)
+                    $y = w_{1}x_{1} + w_{2}x_{2}$
+                \end{textblock}
+            }
+            \only<5-> {
+                \begin{textblock}{5}(2,13)
+                    $\alpha \dots$~learning rate
+                \end{textblock}
+            }
+                 
+        \end{column}%
+    \end{columns}
+
+    
+
+   
+\end{frame} 
+
+%------------------------------------------------ 
+
+% next: kernel methods to get non linear DB
+% then: MLP how does it get non linear boundary: http://colah.github.io/posts/2014-03-NN-Manifolds-Topology/
+%                                                https://cs.stanford.edu/people/karpathy/convnetjs//demo/classify2d.html
+%       - show a little how back propergation works -> how weights are adjusted 
+%       - state importance that training sample has to represented the unknown samples later on!
+% then: measures to quantify MVA performance ROC-AUC etc
+% last: show my own analysis
 
 
 
