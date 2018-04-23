@@ -6,15 +6,23 @@
 
 % \usepackage{bm}
 \usepackage{mathtools}          %loads amsmath as well
+\usepackage{amssymb}
 \usepackage{lmodern}
 \usepackage{flexisym}
+\usepackage{graphicx}
 \usepackage[absolute,overlay]{textpos}
+
+
+
 
 \usepackage{tikz}
 \usetikzlibrary{positioning}
 \usetikzlibrary{arrows}
 \usetikzlibrary{shapes}
 \usetikzlibrary{decorations.pathreplacing}
+
+\tikzstyle{inputNode}=[draw,circle,minimum size=10pt,inner sep=0pt]
+\tikzstyle{stateTransition}=[-stealth, thick]
 
 \tikzset{basic/.style={draw,fill=blue!20,text width=1em,text badly centered}}
 \tikzset{input/.style={basic,circle}}
@@ -430,9 +438,9 @@ Stefan Meyer Institut\\
 
 \begin{frame}
     \frametitle{Linear models}
-    Takes a \emph{linear function} of its inputs $\boldsymbol{x} = (x_{1},\dots x_{j})$ to base its decision on.\\
+    Takes a \emph{linear function} of its inputs $\boldsymbol{x} = (x_{1},\dots x_{n})$ to base its decision on.\\
     % $$ y = f ( \boldsymbol{w} \cdot \boldsymbol{x}) = f \left\( \sum_{j}w_{j}x_{j} \right\) $$
-    $$ y = f (\boldsymbol{w} \cdot \boldsymbol{x}) = f (\sum_{j}w_{j}x_{j}) $$
+    $$ y: \mathbb{R}^{n} \to \mathbb{R}~|~\boldsymbol{x} \mapsto y = f (\boldsymbol{w} \cdot \boldsymbol{x}) = f (\sum_{j}w_{j}x_{j}) $$
     
     $\boldsymbol{w}\dots$ weight vector\\ 
     \vspace*{4mm}
@@ -459,7 +467,7 @@ Stefan Meyer Institut\\
 
     \centering\begin{tikzpicture}
         \node[functions] (center) {};
-        \node[below of=center,font=\scriptsize,text width=4em] {Activation function $\Theta$};
+        \node[below of=center,font=\scriptsize,text width=4em] {Activation function $\sigma~=~\Theta$};
         \draw[thick] (0.5em,0.5em) -- (0,0.5em) -- (0,0) -- (-0.5em,0);
         \draw (0em,0.75em) -- (0em,-0.15em);
         \draw (0.75em,0em) -- (-0.75em,0em);
@@ -484,7 +492,9 @@ Stefan Meyer Institut\\
         \node[above of=1,font=\scriptsize] {Weights};
         \draw [decorate,decoration={brace,mirror,amplitude=15pt},xshift=0pt,yshift=0pt]
             (-5,-2.7) -- (1,-2.7) node [black,midway,yshift=-1.0cm] 
-            {\Large $y = \Theta(\sum_{j}w_{j}x_{j})$};
+            {\Large $y = \sigma(\sum_{j}w_{j}x_{j})$};
+            % {\Large $y: \boldsymbol{x} \mapsto y = \Theta(\sum_{j}w_{j}x_{j})$};
+            % {$y: \mathbb{R}^{n} \to \mathbb{R}$};
         \draw [decorate,decoration={brace,amplitude=5pt},xshift=0pt,yshift=0pt]
             (1,-0.5) -- (1,0.5) node [text width=4.5em,black,midway,xshift=1cm] 
             {\footnotesize Signal Background};
@@ -535,17 +545,394 @@ Stefan Meyer Institut\\
         \end{column}%
     \end{columns}
 
-    
-
-   
 \end{frame} 
 
 %------------------------------------------------ 
+\begin{frame}
+    \frametitle{SLP bias term}
+    \begin{columns}[T] % align columns        
+        \begin{column}{.48\textwidth}
+            \pause
+            \begin{tikzpicture}
+                \node[functions] (center) {};
+                \node[below of=center,font=\scriptsize,text width=4em] {Activation function $\sigma$};
+                \draw[thick] (0.5em,0.5em) -- (0,0.5em) -- (0,0) -- (-0.5em,0);
+                \draw (0em,0.75em) -- (0em,-0.15em);
+                \draw (0.75em,0em) -- (-0.75em,0em);
+                \node[right of=center] (right) {};
+                    \path[draw,->] (center) -- (right);
+                \node[functions,left=3em of center] (left) {$\sum$};
+                    \path[draw,->] (left) -- (center);
+                \node[weights,left=3em of left] (2) {$w_{2}$} -- (2) node[input,left of=2] (l2) {$x_{2}$};
+                    \path[draw,->] (l2) -- (2);
+                    \path[draw,->] (2) -- (left);
+                \node[below of=2] (dots) {$\vdots$} -- (dots) node[left of=dots] (ldots) {$\vdots$};
+                \node[weights,below of=dots] (n) {$w_{n}$} -- (n) node[input,left of=n] (ln) {$x_{n}$};
+                    \path[draw,->] (ln) -- (n);
+                    \path[draw,->] (n) -- (left);
+                \node[weights,above of=2] (1) {$w_{1}$} -- (1) node[input,left of=1] (l1) {$x_{1}$};
+                    \path[draw,->] (l1) -- (1);
+                    \path[draw,->] (1) -- (left);
+                % \node[weights,above of=1] (0) {$w_{0}$} -- (0) node[input,left of=0] (l0) {$1$};
+                %     \path[draw,->] (l0) -- (0);
+                %     \path[draw,->] (0) -- (left);
+                \node[above of=l1,font=\scriptsize] {Inputs};
+                \node[above of=1,font=\scriptsize] {Weights};
+            \end{tikzpicture}
+        \end{column}%
+        \hfill%
+        \begin{column}{.48\textwidth}
+            \hspace*{2mm}
+            \raggedright\includegraphics[height=4.3cm,keepaspectratio]{pics/PCT_no_bias.png}%            
+        \end{column}% 
+    \end{columns}
+\end{frame}
 
-% next: kernel methods to get non linear DB
-% then: MLP how does it get non linear boundary: http://colah.github.io/posts/2014-03-NN-Manifolds-Topology/
-%                                                https://cs.stanford.edu/people/karpathy/convnetjs//demo/classify2d.html
-%       - show a little how back propergation works -> how weights are adjusted 
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{SLP bias term}
+    \begin{columns}[T] % align columns        
+        \begin{column}{.48\textwidth}
+            \vspace*{-10mm}
+            \begin{tikzpicture}
+                \node[functions] (center) {};
+                \node[below of=center,font=\scriptsize,text width=4em] {Activation function $\sigma$};
+                \draw[thick] (0.5em,0.5em) -- (0,0.5em) -- (0,0) -- (-0.5em,0);
+                \draw (0em,0.75em) -- (0em,-0.15em);
+                \draw (0.75em,0em) -- (-0.75em,0em);
+                \node[right of=center] (right) {};
+                    \path[draw,->] (center) -- (right);
+                \node[functions,left=3em of center] (left) {$\sum$};
+                    \path[draw,->] (left) -- (center);
+                \node[weights,left=3em of left] (2) {$w_{2}$} -- (2) node[input,left of=2] (l2) {$x_{2}$};
+                    \path[draw,->] (l2) -- (2);
+                    \path[draw,->] (2) -- (left);
+                \node[below of=2] (dots) {$\vdots$} -- (dots) node[left of=dots] (ldots) {$\vdots$};
+                \node[weights,below of=dots] (n) {$w_{n}$} -- (n) node[input,left of=n] (ln) {$x_{n}$};
+                    \path[draw,->] (ln) -- (n);
+                    \path[draw,->] (n) -- (left);
+                \node[weights,above of=2] (1) {$w_{1}$} -- (1) node[input,left of=1] (l1) {$x_{1}$};
+                    \path[draw,->] (l1) -- (1);
+                    \path[draw,->] (1) -- (left);
+                \node[weights,above of=1] (0) {$w_{0}$} -- (0) node[input,left of=0] (l0) {$1$};
+                    \path[draw,->] (l0) -- (0);
+                    \path[draw,->] (0) -- (left);
+                \node[above of=l0,font=\scriptsize] {Inputs};
+                \node[above of=0,font=\scriptsize] {Weights};
+            \end{tikzpicture}
+        \end{column}%
+        \hfill%
+        \begin{column}{.48\textwidth}
+            \hspace*{2mm}
+            \raggedright\includegraphics[height=4.3cm,keepaspectratio]{pics/PCT_with_bias.png}%            
+        \end{column}% 
+    \end{columns}
+    \only<3-> {
+        \begin{textblock}{10}(3,13)
+            Bias weight $w_{0}$ learned just as the other weights\\\vspace*{1mm}
+            \centering$ y = \sigma ( w_{0} + \sum_{j=1}^{n}w_{j}x_{j} ) $
+
+        \end{textblock}
+    }   
+
+\end{frame}
+% -----------------------------------------------
+
+\subsection{Activation functions}
+\begin{frame}
+    \frametitle{SLP activation functions}
+    \vspace*{-5mm}
+    \begin{tikzpicture}
+        \node[functions] (center) {};
+        \node[below of=center,font=\scriptsize,text width=4em] {Activation function $\sigma$};
+        \draw[thick] (0.5em,0.5em) -- (0,0.5em) -- (0,0) -- (-0.5em,0);
+        \draw (0em,0.75em) -- (0em,-0.15em);
+        \draw (0.75em,0em) -- (-0.75em,0em);
+        \node[right of=center] (right) {};
+            \path[draw,->] (center) -- (right);
+        \node[functions,left=3em of center] (left) {$\sum$};
+            \path[draw,->] (left) -- (center);
+        \node[weights,left=3em of left] (2) {$w_{2}$} -- (2) node[input,left of=2] (l2) {$x_{2}$};
+            \path[draw,->] (l2) -- (2);
+            \path[draw,->] (2) -- (left);
+        \node[below of=2] (dots) {$\vdots$} -- (dots) node[left of=dots] (ldots) {$\vdots$};
+        \node[weights,below of=dots] (n) {$w_{n}$} -- (n) node[input,left of=n] (ln) {$x_{n}$};
+            \path[draw,->] (ln) -- (n);
+            \path[draw,->] (n) -- (left);
+        \node[weights,above of=2] (1) {$w_{1}$} -- (1) node[input,left of=1] (l1) {$x_{1}$};
+            \path[draw,->] (l1) -- (1);
+            \path[draw,->] (1) -- (left);
+        \node[weights,above of=1] (0) {$w_{0}$} -- (0) node[input,left of=0] (l0) {$1$};
+            \path[draw,->] (l0) -- (0);
+            \path[draw,->] (0) -- (left);
+        \node[above of=l0,font=\scriptsize] {Inputs};
+        \node[above of=0,font=\scriptsize] {Weights};
+
+        \node (el) at (0,0) [ellipse, color=red, minimum height=10mm,minimum width=10mm,draw, ultra thick, dashed] {};
+        \node[inner sep=0pt] (actfunc) at (4,0)
+            {\includegraphics[height=3.3cm,keepaspectratio]{pics/activation_functions.png}};
+        \draw[->, color=red, ultra thick] (actfunc) to [out=160, in=20] (el);
+    \end{tikzpicture}
+
+    \only<2-> {
+        \begin{textblock}{10}(4,13)
+            Often used: \emph{sigmoid} $\to$ output $\in (0,1)$
+        \end{textblock}
+    }   
+\end{frame}
+
+% -----------------------------------------------
+
+\begin{frame}
+    \frametitle{SLP improvement INon-linear activation functions output}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (actpic) at (0,0)
+            {\includegraphics[height=1.5cm,keepaspectratio]{pics/plot_activation.png}};
+        \node[below=1cm of actpic,inner sep=0pt] (dist) {\includegraphics[height=4.1cm,keepaspectratio]{pics/MVAoutput_distr_train_log.pdf}};
+        \draw[->, color=black, ultra thick] (2,-0.8) to [out=270,in=90] (dist.north);
+    \end{tikzpicture}
+     
+
+\end{frame}
+
+% -----------------------------------------------
+
+\subsection{Kernel trick}
+\begin{frame}
+    \frametitle{Improving linear methods}
+    \begin{block}{Kernel trick}
+        Map data to a higher dimensional space where linear hyperplane can again be found
+    \end{block}
+    \begin{columns}[T] % align columns
+        \begin{column}{.48\textwidth}
+            \raggedleft\includegraphics<2->[height=4.3cm,keepaspectratio]{pics/kernel_trick_r2.png}%            
+        \end{column}
+        \begin{column}{.48\textwidth}
+            \raggedright\includegraphics<3->[height=4.3cm,keepaspectratio]{pics/kernel_trick_r3.png}%            
+        \end{column}
+    \end{columns}
+    
+\end{frame}
+
+% -----------------------------------------------
+
+\section{Non-linear cuts}
+\begin{frame}
+    \frametitle{Non-linear models}
+    \begin{block}{Assumtion}
+        Take \emph{kernel trick} idea: map inputs $\boldsymbol{x} = (x_{1},\dots x_{n})$ to higher dimensional space $\mathbb{R}^{m}$ with $m~>~n$
+        where linear seperation is possible:
+        \vspace*{3mm}
+        \begin{align*} 
+              % y: \mathbb{R}^{n} \to \mathbb{R}^{m} \to \mathbb{R}~|~\boldsymbol{x} \mapsto y  &= 
+              %   \sigma (w^{(2)}_{0} + \boldsymbol{w^{(2)}} \cdot \sigma (w^{(1)}_{0} + \boldsymbol{w^{(1)}} \cdot \boldsymbol{x}) )\\ 
+              % y: \mathbb{R}^{n} \to \mathbb{R}^{m}  &=  \sigma (w^{(2)}_{0} + \boldsymbol{w^{(2)}} \cdot \sigma (w^{(1)}_{0} + \boldsymbol{w^{(1)}} \cdot \boldsymbol{x}) )\\ 
+            y: \mathbb{R}^{n} \to \mathbb{R}^{m} \to \mathbb{R} &= \sigma \left( w_{0}^{2} + \sum_{i=1}^{m} \left[ w_{i}^{(2)} + \sigma \left( w_{0,i}^{(1)} + \sum_{k=1}^{n} w_{k,i}^{(1)}~x_{k} \right) \right] \right)\\
+            &=  \sigma \left[ w^{(2)}_{0} + \boldsymbol{w}^{(2)} \cdot \sigma(\boldsymbol{w}^{(1)}_{0}+ \boldsymbol{W}^{(1)} \cdot \boldsymbol{x})\right]
+        \end{align*}
+        \vspace*{3mm}
+        $\to$ $m$ \emph{single layer perceptrons}
+    \end{block}
+\end{frame} 
+
+% -----------------------------------------------
+
+\begin{frame}
+    \frametitle{Visualisaion}
+    \centering\begin{tikzpicture}[scale=0.7, every node/.style={scale=0.6}]
+
+        \node[draw,circle,minimum size=25pt,inner sep=0pt] (x) at (0,0) {$\Sigma$ $\sigma$};
+        \node[align=center] (formula) at (4, 5){\LARGE$y = \sigma [  w^{(2)}_{0} + \overbrace{ \boldsymbol{w}^{(2)} }^{\mathbb{R}^{m}} \cdot \underbrace{\sigma(\overbrace{\boldsymbol{w}^{(1)}_{0}}^{\mathbb{R}^{m}}+ \overbrace{\boldsymbol{W}^{(1)}}^{\mathbb{R}^{m\times n}} \cdot \boldsymbol{x})}_{\text{Output of hidden layer:}~\mathbb{R}^{m}}]$};
+
+        \node[inputNode] (x0) at (-2, 1.5) {$\tiny 1$};
+        \node[inputNode] (x1) at (-2, 0.75) {$\tiny x_1$};
+        \node[inputNode] (x2) at (-2, 0) {$\tiny x_2$};
+        \node[inputNode] (x3) at (-2, -0.75) {$\tiny x_3$};
+        \node[inputNode] (xn) at (-2, -1.75) {$\tiny x_n$};
+
+        \draw[stateTransition] (x0) to[out=0,in=120] node [midway, sloped, above] {$w_0$} (x);
+        \draw[stateTransition] (x1) to[out=0,in=150] node [midway, sloped, above] {$w_1$} (x);
+        \draw[stateTransition] (x2) to[out=0,in=180] node [midway, sloped, above] {$w_2$} (x);
+        \draw[stateTransition] (x3) to[out=0,in=210] node [midway, sloped, above] {$w_3$} (x);
+        \draw[stateTransition] (xn) to[out=0,in=240] node [midway, sloped, above] {$w_n$} (x);
+        \draw[stateTransition] (x) -- (3,0) node [midway,above] {$\sigma\left(w_0 + \sum\limits_{i=1}^{n}{w_ix_i}\right)$};
+        \draw[dashed] (0,-0.43) -- (0,0.43);
+        \node (dots) at (-2, -1.15) {$\vdots$};
+
+        \draw[<->, color=black, thick] (1.5, 1.5) to [out=90,in=225, xshift=2mm] (formula.south);
+
+        \pause
+        \node[inputNode, thick] (i1) at (6, 0.75) {};
+        \node[inputNode, thick] (i2) at (6, 0) {};
+        \node[inputNode, thick] (i3) at (6, -1.25) {};
+        
+        \node[inputNode, thick] (h1) at (8, 1.5) {};
+        \node[inputNode, thick] (h2) at (8, 0.75) {};
+        \node[inputNode, thick] (h3) at (8, 0) {};
+        \node[inputNode, thick] (h4) at (8, -0.75) {};
+        \node[inputNode, thick] (h5) at (8, -1.5) {};
+        
+        \node[inputNode, thick] (o1) at (10, 0) {};
+        
+        \draw[stateTransition] (5, 0.75) -- node[above] {$x_{1}$} (i1);
+        \draw[stateTransition] (5, 0) -- node[above] {$x_{2}$} (i2);
+        \draw[stateTransition] (5, -1.25) -- node[above] {$x_{n}$} (i3);
+        \node (dots) at (5.5, -0.25) {$\vdots$};
+        
+        \draw[stateTransition] (i1) -- (h1);
+        \draw[stateTransition] (i1) -- (h2);
+        \draw[stateTransition] (i1) -- (h3);
+        \draw[stateTransition] (i1) -- (h4);
+        \draw[stateTransition] (i1) -- (h5);
+        \draw[stateTransition] (i2) -- (h1);
+        \draw[stateTransition] (i2) -- (h2);
+        \draw[stateTransition] (i2) -- (h3);
+        \draw[stateTransition] (i2) -- (h4);
+        \draw[stateTransition] (i2) -- (h5);
+        \draw[stateTransition] (i3) -- (h1);
+        \draw[stateTransition] (i3) -- (h2);
+        \draw[stateTransition] (i3) -- (h3);
+        \draw[stateTransition] (i3) -- (h4);
+        \draw[stateTransition] (i3) -- (h5);
+        
+        \draw[stateTransition] (h1) -- (o1);
+        \draw[stateTransition] (h2) -- (o1);
+        \draw[stateTransition] (h3) -- (o1);
+        \draw[stateTransition] (h4) -- (o1);
+        \draw[stateTransition] (h5) -- (o1);
+        
+        \node[above=of i1, align=center] (l1) {Input \\ layer};
+        \node[right=1.7em of l1, align=center] (l2) {Hidden \\ layer};
+        \node[right=1.7em of l2, align=center] (l3) {Output \\ layer};
+        
+        \draw[stateTransition] (o1) -- node[above] {$y$} (11, 0);
+        
+        \path[dashed, double, ultra thick, gray, opacity=0.5] (x.north) edge[bend left=0] (h5.north);
+        \path[dashed, double, ultra thick, gray, opacity=0.5] (x.south) edge[bend right=0] (h5.south);
+
+        \pause
+        \node[align=center] (txt) at (4, -2.8) {\LARGE$\to$ The hidden layer \emph{learns} a representation so that the data is linearly separable};
+    \end{tikzpicture}
+
+\end{frame}
+
+% -----------------------------------------------
+
+\begin{frame}
+    \frametitle{Visualising the hidden layer}
+    \begin{block}{Effects of adding a hidden layer}
+        Input vector $\boldsymbol{x}$ undergoes \emph{linear transformation} by multiplication with weight matrix $\boldsymbol{W}$. The bias term $\boldsymbol{w}_{0}$ causes a \emph{translation}.\\
+    \end{block}
+    \vspace*{5mm}
+    \centering\begin{tikzpicture}
+        \node<1>[align=center] (formula) at (1, 2){$y = \sigma [  w^{(2)}_{0} + \boldsymbol{w}^{(2)} \cdot \underbrace{\sigma(\boldsymbol{w}^{(1)}_{0} + \boldsymbol{W}^{(1)}
+            \cdot \boldsymbol{x})}_{\mathbb{\boldsymbol{\tilde{x}}}}]$};
+
+        \node<2->[align=center] (formula) at (1, 2){$\boldsymbol{\tilde{x}} = \sigma(\boldsymbol{w}^{(1)}_{0}+ \boldsymbol{W}^{(1)} \cdot \boldsymbol{x})~\text{ with \emph{e.g.}}~\boldsymbol{W}= \begin{pmatrix} w_{1}^{1} & w_{1}^{2} \\ w_{2}^{1} & w_{2}^{2} \end{pmatrix} $ };
+
+        \pause
+        \node[inputNode, thick] (i1) at (0, 1) {};
+        \node[inputNode, thick] (i2) at (0, -1) {};
+        
+        \node[inputNode, thick] (h1) at (2, 1) {};
+        \node[inputNode, thick] (h2) at (2, -1) {};
+
+        \draw[stateTransition] (-1, 1) -- node[left, xshift=-4mm] {$x_{1}$} (i1);
+        \draw[stateTransition] (-1, -1) -- node[left,xshift=-4mm] {$x_{2}$} (i2);
+       
+        \draw[stateTransition] (i1) -- node[midway,fill=white] {\tiny$w_{1}^{1}$} (h1);
+        \draw[stateTransition] (i1) -- node[midway,fill=white, xshift=-4mm, yshift=4mm] {\tiny$w_{1}^{2}$} (h2);
+
+        \draw[stateTransition] (i2) -- node[midway,fill=white, xshift=-4mm, yshift=-4mm] {\tiny$w_{2}^{1}$} (h1);
+        \draw[stateTransition] (i2) -- node[midway,fill=white] {\tiny$w_{2}^{2}$} (h2);
+
+        \draw[stateTransition] (h1) -- node[right, xshift=4mm] {$x_{1}\textprime$} (3, 1);
+        \draw[stateTransition] (h2) -- node[right, xshift=4mm] {$x_{2}\textprime$} (3, -1);
+
+        % \path[dashed, double, ultra thick, gray, opacity=0.5] (x.north) edge[bend left=0] (h5.north);
+        % \path[dashed, double, ultra thick, gray, opacity=0.5] (x.south) edge[bend right=0] (h5.south);
+    \end{tikzpicture}
+\end{frame}
+
+% -----------------------------------------------
+
+\begin{frame}
+    \frametitle{Visualising the hidden layer}
+    \begin{columns}[T] % align columns        
+        \begin{column}{.48\textwidth}
+            \vspace*{-5mm}
+            \begin{enumerate}
+                \item<2-> Linear transformation:~$\boldsymbol{W}\boldsymbol{x}$\\
+                \item<3-> Translation:~$\boldsymbol{w}_{0}$\\
+                \item<4-> Non-linear activation:~$\sigma$
+            \end{enumerate}
+            \vspace*{2mm}
+            \begin{tikzpicture}
+                \node<1-4>[align=center] (formula) at (1, 1.8){$\boldsymbol{\tilde{x}} = \only<1>{\boldsymbol{x}} \only<4>{\sigma}\only<2-4>{(}\only<3-4>{\boldsymbol{w}^{(1)}_{0}+} \only<2-4>{\boldsymbol{W}^{(1)} \cdot \boldsymbol{x})}$\\ };
+                \node<5->[align=center] (formula) at (1, 1.8){$y = \sigma(w^{(2)}_{0} + \boldsymbol{w}^{(2)} \cdot \boldsymbol{\tilde{x}})$\\ };
+
+                \pause
+                \node[inputNode, thick] (i1) at (0, 1) {};
+                \node[inputNode, thick] (i2) at (0, -1) {};
+                
+                \node[inputNode, thick] (h1) at (2, 1) {};
+                \node[inputNode, thick] (h2) at (2, -1) {};
+
+                \draw[stateTransition] (-1, 1) -- node[left, xshift=-4mm] {$x_{1}$} (i1);
+                \draw[stateTransition] (-1, -1) -- node[left,xshift=-4mm] {$x_{2}$} (i2);
+               
+                \draw[stateTransition] (i1) -- node[midway,fill=white] {\tiny$w_{1}^{1}$} (h1);
+                \draw[stateTransition] (i1) -- node[midway,fill=white, xshift=-4mm, yshift=4mm] {\tiny$w_{1}^{2}$} (h2);
+
+                \draw[stateTransition] (i2) -- node[midway,fill=white, xshift=-4mm, yshift=-4mm] {\tiny$w_{2}^{1}$} (h1);
+                \draw[stateTransition] (i2) -- node[midway,fill=white] {\tiny$w_{2}^{2}$} (h2);
+
+                \draw<1-3>[stateTransition] (h1) -- node[right, xshift=4mm] {$x_{1}\textprime$} (3, 1);
+                \draw<1-3>[stateTransition] (h2) -- node[right, xshift=4mm] {$x_{2}\textprime$} (3, -1);
+
+                \node<3->[inputNode, thick] (b) at (0, -2) {1};
+                \draw<3->[stateTransition] (b) -- node[midway,fill=white, xshift=-7mm, yshift=-10mm] {\tiny$w_{0}^{1}$} (h1);
+                \draw<3->[stateTransition] (b) -- node[midway,fill=white] {\tiny$w_{0}^{2}$} (h2);
+
+                \draw<4>[stateTransition] (h1) -- node[right, xshift=4mm] {$\sigma(x_{1}\textprime)$} (3, 1);
+                \draw<4>[stateTransition] (h2) -- node[right, xshift=4mm] {$\sigma(x_{2}\textprime)$} (3, -1);
+
+                \node<5->[inputNode, thick] (o) at (3, 0) {};
+                \draw<5->[stateTransition] (h1) -- (o) {};
+                \draw<5->[stateTransition] (h2) -- (o) {};
+                \draw<5->[stateTransition] (o) -- node[above] {$y$} (4,0);
+ 
+            \end{tikzpicture}
+        \end{column}
+        \hfill%
+        \begin{column}{.48\textwidth}
+            \vspace*{8mm}
+            \raggedright\includegraphics<1>[height=4.8cm,keepaspectratio]{pics/MLP_featspace_inital_state}%            
+            \raggedright\includegraphics<2>[height=4.8cm,keepaspectratio]{pics/MLP_featspace_matmul}%            
+            \raggedright\includegraphics<3>[height=4.8cm,keepaspectratio]{pics/MLP_featspace_translation}%            
+            \raggedright\includegraphics<4>[height=4.8cm,keepaspectratio]{pics/MLP_featspace_final_state}%            
+            \raggedright\includegraphics<5>[height=4.8cm,keepaspectratio]{pics/MLP_featspace_final_state_cut}%            
+        \end{column}% 
+    \end{columns}
+
+\end{frame}
+
+\begin{frame}
+    \frametitle{Update weights via backpropergation}
+    \begin{block}{Backpropergation}
+        Adapt weights by going backwards in the network
+        \begin{itemize}
+            \item<1-> Initialize weigts
+            \item<2-> Evaluate $y_{predict} = f(\boldsymbol{x})$ and calculate $\Delta = (y_{true} - y_{predict})$
+            \item<2-> Update weights: Weight adaption often denoted via loss $L \propto \Delta$\\\hspace*{5mm} $\to$ minimize loss $\to$ find best fit
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+
+
+%       - show a little more how back propergation works -> how weights are adjusted 
 %       - state importance that training sample has to represented the unknown samples later on!
 % then: measures to quantify MVA performance ROC-AUC etc
 % last: show my own analysis
