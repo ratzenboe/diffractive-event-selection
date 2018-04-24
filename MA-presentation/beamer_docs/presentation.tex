@@ -91,6 +91,244 @@ Stefan Meyer Institut\\
 \end{frame}
 
 %------------------------------------------------ 
+
+\section{Central exclusive production at ALICE} %
+\begin{frame}
+    \frametitle{Diffractive events}
+    Diffractive events are reactions where no quantum numbers are exchanged\\
+    \vspace*{5mm}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (diffr) at (0,0)
+            {\includegraphics[height=4cm,keepaspectratio]{pics/diffraction_wo}};
+        \node (nonD) at (-4.2,0) [text width=3cm] {\small Incident hadrons aquire color\\ $\to$~break apart};
+        \node (D) at (4.5,0) [text width=3cm] {\small Colorless exchange with \emph{vacuum}\\quantum numbers};
+        \node (nonDbelow) at (-2.5,-3) [text width=6cm] {\small$\eta$~gap exponentially supressed};
+        \node (Dbelow) at (4,-3) [text width=6cm] {\small$\eta$~ gap not supressed};
+        \draw[->] (-3,-2.6) to [out=90,in=270] (-1.5,-2.1) ;
+        \draw[->] (3,-2.6) to [out=90,in=270] (1.5,-2.1) ;
+     \end{tikzpicture}
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Diffractive processes}
+    Different types of diffractive events are distinguished\\
+    \vspace*{5mm}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (sd) at (-3.5,0) {\includegraphics[height=3cm,keepaspectratio]{pics/SD1.pdf}};
+        \node[inner sep=0pt] (dd) at (0,0) {\includegraphics[height=3cm,keepaspectratio]{pics/DD1.pdf}};
+        \node[inner sep=0pt] (cep) at (3.5,0) {\includegraphics[height=3cm,keepaspectratio]{pics/CEP1.pdf}};
+        \node[align = center, below = of sd, yshift=15mm] {\small Single diffractive};
+        \node[align = center, below = of dd, yshift=15mm] {\small Double diffractive};
+        \node[align = center, below = of cep, yshift=15mm] {\small CEP};
+        \node[align = center, below = of cep, xshift=15mm,yshift=30mm] {\small \emph{X}};
+
+        \draw [decorate,decoration={brace,mirror,amplitude=15pt},xshift=0pt,yshift=0pt]
+            (-4,-2) -- (4,-2) node [black,midway,yshift=-1.0cm] 
+            {Described by \emph{Regge} theory};
+ 
+    \end{tikzpicture}
+    
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Regge theory - short overview}
+    \begin{itemize}
+        \item<1-> Reactions characterized by a color neutral \emph{t}~-channel exchange carrying vacuum quantum numbers
+        \item<2-> t-channel process governed by exchange of resonances sitting on \emph{Regge trajectory} $\alpha(t) = \alpha + \alpha\textprime t$
+        \item<3-> Resonance of mass $m$ sitting on the trajectory at $t = m^{2}$ has angular momentum of value $\alpha(m^{2})$
+        \item<4-> Trajectory makes contribution to total inelastic cross section $\sigma_{tot}(s) \propto s^{\alpha -1}$
+    \end{itemize}
+   
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Regge theory - short overview}
+    \begin{itemize}
+        \item<1-> Pomeron $\mathbb{P}$ represents special Regge trajectory \& is a color singlet state of gluons \& has vacuum quantum numbers
+        \item<2-> Contribution to $\sigma_{tot}$ grows with increasing energy
+        \item<3-> Double Pomeron exchange = production mechanism to study glueballs in the mass region below $2~$MeV
+        \item<4-> Pomeron exchange leads to restriction of quantum numbers of $X$\\\hspace*{4mm}$\to J^{PC}=($even$)^{++}$
+    \end{itemize}
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Event topology}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (sd) at (-3.5,0) {\includegraphics[height=3cm,keepaspectratio]{pics/SD1.pdf}};
+        \node[inner sep=0pt] (dd) at (0,0) {\includegraphics[height=3cm,keepaspectratio]{pics/DD1.pdf}};
+        \node[inner sep=0pt] (cep) at (3.5,0) {\includegraphics[height=3cm,keepaspectratio]{pics/CEP1.pdf}};
+        \node[align = center, above = of sd, yshift=-15mm] {\small Single diffractive};
+        \node[align = center, above = of dd, yshift=-15mm] {\small Double diffractive};
+        \node[align = center, above = of cep, yshift=-15mm] {\small CEP};
+ 
+        \node[inner sep=0pt] (sdtop) at (-3.5,-2.5) {\includegraphics[height=1.1cm,keepaspectratio]{pics/SD_eta}};
+        \node[inner sep=0pt] (ddtop) at (0,-2.5) {\includegraphics[height=1.1cm,keepaspectratio]{pics/DD_eta}};
+        \node[inner sep=0pt] (ceptop) at (3.5,-2.5) {\includegraphics[height=1.1cm,keepaspectratio]{pics/CEP_eta}};
+        \node[below=of sdtop, node distance=0cm, yshift=10mm, xshift=11mm] {\small$\eta$};
+        \node[left=of sdtop, node distance=0cm, rotate=0, anchor=center,yshift=4mm, xshift=8mm] {\small$\phi$};
+        \node[below=of ddtop, node distance=0cm, yshift=10mm, xshift=11mm] {\small$\eta$};
+        \node[left=of ddtop, node distance=0cm, rotate=0, anchor=center,yshift=4mm, xshift=8mm] {\small$\phi$};
+        \node[below=of ceptop, node distance=0cm, yshift=10mm, xshift=11mm] {\small$\eta$};
+        \node[left=of ceptop, node distance=0cm, rotate=0, anchor=center,yshift=4mm, xshift=8mm] {\small$\phi$};
+
+    \end{tikzpicture}
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Event topology}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (sdtop) at (-3.5,0) {\includegraphics[height=1.1cm,keepaspectratio]{pics/SD_eta}};
+        \node[inner sep=0pt] (ddtop) at (0,0) {\includegraphics[height=1.1cm,keepaspectratio]{pics/DD_eta}};
+        \node[inner sep=0pt] (ceptop) at (3.5,0) {\includegraphics[height=1.1cm,keepaspectratio]{pics/CEP_eta}};
+
+        \node[align = center, above = of sdtop, yshift=-9mm] {\small Single diffractive};
+        \node[align = center, above = of ddtop, yshift=-9mm] {\small Double diffractive};
+        \node[align = center, above = of ceptop, yshift=-9mm] {\small CEP};
+
+        \node[below=of sdtop, node distance=0cm, yshift=10mm, xshift=11mm] {\small$\eta$};
+        \node[left=of sdtop, node distance=0cm, rotate=0, anchor=center,yshift=4mm, xshift=8mm] {\small$\phi$};
+        \node[below=of ddtop, node distance=0cm, yshift=10mm, xshift=11mm] {\small$\eta$};
+        \node[left=of ddtop, node distance=0cm, rotate=0, anchor=center,yshift=4mm, xshift=8mm] {\small$\phi$};
+        \node[below=of ceptop, node distance=0cm, yshift=10mm, xshift=11mm] {\small$\eta$};
+        \node[left=of ceptop, node distance=0cm, rotate=0, anchor=center,yshift=4mm, xshift=8mm] {\small$\phi$};
+
+        \draw [decorate,decoration={brace,mirror,amplitude=15pt},xshift=0pt,yshift=0pt]
+            (-4,-1) -- (4,-1) node [black,midway,yshift=-1.0cm] 
+            {Large $eta$~gap compared to non-diffractive event};
+
+        \node[inner sep=0pt] (nd) at (0,-4) {\includegraphics[height=1.1cm,keepaspectratio]{pics/ND_eta}};
+        \node[align = center, above = of nd, yshift=-9mm] {\small Non-diffractive};
+        \node[below=of nd, node distance=0cm, yshift=10mm, xshift=11mm] {\small$\eta$};
+        \node[left=of nd, node distance=0cm, rotate=0, anchor=center,yshift=4mm, xshift=8mm] {\small$\phi$};
+    \end{tikzpicture}
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Event selection}
+    Large rapidity gaps in \emph{non-diffractive} events are exponentially supressed
+    \centering\includegraphics[height=6cm,keepaspectratio]{pics/newDeltaEta_biggerSymbols.pdf}
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{The ALICE detector system}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (det) at (-3.3,0) {\includegraphics[height=3.3cm,keepaspectratio]{pics/2017-May-11-ALICE_RUN2_labels_HD}};
+        \node[inner sep=0pt] (cov) at (3.3,0) {\includegraphics[height=3.3cm,keepaspectratio]{pics/ALICE_eta_coverage}};
+        \draw[->, thick] (det) -- (cov);
+
+        \node[align = center, above = of det, yshift=-9mm] {\small ALICE detector};
+        \node[align = center, above = of cov, yshift=-9mm] {\small $\eta$ coverage};
+
+        \node<2>[] (centralbarrel) at (0,-3) {\small Central barrel $\to$ determine $p^{\mu}$};
+        \node<2> (rectbarrel) at (3.35,0.18) [rectangle, dashed, minimum height=28mm,minimum width=8mm,draw, thick] {};
+        \draw<2>[->, ultra thick] (centralbarrel) -- (-4.0,-0.0);
+        \draw<2>[->, ultra thick] (centralbarrel) -- (rectbarrel);
+
+        \node<3->[] (vetodets) at (0,-3) {\small Small detectors for global event characterisation};
+        \node<3-> (rectbarrel1) at (4.6,0.18) [rectangle, dashed, minimum height=28mm,minimum width=16mm,draw, thick] {};
+        \node<3-> (rectbarrel2) at (2.1,0.18) [rectangle, dashed, minimum height=28mm,minimum width=16mm,draw, thick] {};
+        \draw<3->[->, ultra thick] (vetodets) -- (rectbarrel1);
+        \draw<3->[->, ultra thick] (vetodets) -- (rectbarrel2);
+
+        % \node (rectroot) at (0,0) [rectangle, dashed, color=red, minimum height=2cm,minimum width=3cm,draw, thick] {};
+        % \node (rootbottom) [below=1mm of rectroot, color=red]  {Root node};
+ 
+        % \node[inner sep=0pt] (nd) at (0,-4) {\[includegraphicsheight=1.1cm,keepaspectratio]{pics/ND_eta}};
+        % \node[align = center, below = of nd, yshift=9mm] {\small Non-diffractive};
+        % \node[below=of nd, node distance=0cm, yshift=10mm, xshift=11mm] {\small$\eta$};
+        % \node[left=of nd, node distance=0cm, rotate=0, anchor=center,yshift=4mm, xshift=8mm] {\small$\phi$};
+    \end{tikzpicture}
+        
+    % \centering\includegraphics[height=6cm,keepaspectratio]{pics/}
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Central exclusive production at ALICE}
+    To study the CEP events a $\eta$ gap condition is used
+    \begin{enumerate}
+        \item<2-> Signal in the central barrel
+        \item<3-> No activity in veto detectors
+    \end{enumerate}
+    
+    \vspace*{2mm}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (cov) at (3.3,0) {\includegraphics[height=3.3cm,keepaspectratio]{pics/ALICE_eta_coverage}};
+        \node[inner sep=0pt] (det) at (-3.3,0) {\includegraphics[height=2.5cm,keepaspectratio]{pics/CEP_eta}};
+        \draw[->, thick] (det) -- (cov);
+
+        \node[align = center, above = of det, yshift=-9mm] {\small CEP event};
+        \node[align = center, above = of cov, yshift=-9mm] {\small $\eta$ coverage};
+
+        \node<2-> (rectbarrel) at (3.35,0.18) [color=red,rectangle, dashed, minimum height=28mm,minimum width=8mm,draw, thick] {};
+
+        \node<3-> (rectbarrel1) at (4.6,0.18) [rectangle, dashed, minimum height=28mm,minimum width=16mm,draw, thick] {};
+        \node<3-> (rectbarrel2) at (2.1,0.18) [rectangle, dashed, minimum height=28mm,minimum width=16mm,draw, thick] {};
+
+        % \node (rectroot) at (0,0) [rectangle, dashed, color=red, minimum height=2cm,minimum width=3cm,draw, thick] {};
+        % \node (rootbottom) [below=1mm of rectroot, color=red]  {Root node};
+ 
+        % \node[inner sep=0pt] (nd) at (0,-4) {\[includegraphicsheight=1.1cm,keepaspectratio]{pics/ND_eta}};
+        % \node[align = center, below = of nd, yshift=9mm] {\small Non-diffractive};
+        % \node[below=of nd, node distance=0cm, yshift=10mm, xshift=11mm] {\small$\eta$};
+        % \node[left=of nd, node distance=0cm, rotate=0, anchor=center,yshift=4mm, xshift=8mm] {\small$\phi$};
+    \end{tikzpicture}
+        
+    % \centering\includegraphics[height=6cm,keepaspectratio]{pics/}
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Invariant mass spectrum}
+    Studying \emph{Pythia-8} simulations yield
+    \begin{itemize}
+        \item<1-> Enforcing $\eta$ gap cut reduces non-diffractive almost entirely  
+        \item<2-> Remaining background are partially recontructed CEP events - \textbf{feed down}
+    \end{itemize}
+    % \vspace*{1mm}
+    \centering\begin{tikzpicture}
+        \node<1-2>[inner sep=0pt] (cov) at (0,0) {\includegraphics[height=5.1cm,keepaspectratio]{pics/detected_simulated_newLabels}};
+        \node<3>[inner sep=0pt] (fd) at (0,0) {\includegraphics[height=4.1cm,keepaspectratio]{pics/detected_simulated_newLabels}};
+
+        % \draw[->, thick] (det) -- (cov);
+
+        % \node[align = center, above = of det, yshift=-9mm] {\small CEP event};
+        % \node[align = center, above = of cov, yshift=-9mm] {\small $\eta$ coverage};
+
+        % \node<2-> (rectbarrel) at (3.35,0.18) [color=red,rectangle, dashed, minimum height=28mm,minimum width=8mm,draw, thick] {};
+
+        % \node<3-> (rectbarrel1) at (4.6,0.18) [rectangle, dashed, minimum height=28mm,minimum width=16mm,draw, thick] {};
+        % \node<3-> (rectbarrel2) at (2.1,0.18) [rectangle, dashed, minimum height=28mm,minimum width=16mm,draw, thick] {};
+
+        % \node (rectroot) at (0,0) [rectangle, dashed, color=red, minimum height=2cm,minimum width=3cm,draw, thick] {};
+        % \node (rootbottom) [below=1mm of rectroot, color=red]  {Root node};
+
+        % \node[inner sep=0pt] (nd) at (0,-4) {\[includegraphicsheight=1.1cm,keepaspectratio]{pics/ND_eta}};
+        % \node[align = center, below = of nd, yshift=9mm] {\small Non-diffractive};
+        % \node[below=of nd, node distance=0cm, yshift=10mm, xshift=11mm] {\small$\eta$};
+        % \node[left=of nd, node distance=0cm, rotate=0, anchor=center,yshift=4mm, xshift=8mm] {\small$\phi$};
+    \end{tikzpicture}
+ 
+\end{frame}
+
+%------------------------------------------------ 
+
 \section{ML: an overview} %
 
 \begin{frame}
@@ -105,20 +343,6 @@ Stefan Meyer Institut\\
         \end{itemize}
     \end{block}
 \end{frame}
-
-%------------------------------------------------ 
-
-% \begin{frame}
-%     \frametitle{ML: an overview}
-%     In general ML represents a contrast to a \emph{rule based systems}
-%     \begin{block}{Machine learning}
-%         \begin{itemize}
-%             \item<1-> Alorithms that learn from \emph{data} \& make predictions on \emph{data}
-%             \item<2-> Automatic methods (no human needed)
-%             \item<3-> Human work required for defining problem \& assessing the data
-%         \end{itemize}
-%     \end{block}
-% \end{frame}
 
 %------------------------------------------------ 
 
@@ -461,7 +685,7 @@ Stefan Meyer Institut\\
 \end{frame} 
 
 %------------------------------------------------ 
-\section{Single layer perceptron}
+\subsection{Single layer perceptron}
 \begin{frame}
     \frametitle{Single layer perceptron (SLP)}
 
@@ -738,6 +962,7 @@ Stefan Meyer Institut\\
 
 % -----------------------------------------------
 
+\section{Neural networks}
 \begin{frame}
     \frametitle{Visualisaion}
     \centering\begin{tikzpicture}[scale=0.7, every node/.style={scale=0.6}]
@@ -918,6 +1143,7 @@ Stefan Meyer Institut\\
 
 \end{frame}
 
+% % -----------------------------------------------
 \begin{frame}
     \frametitle{Update weights via backpropergation}
     \begin{block}{Backpropergation}
@@ -925,10 +1151,119 @@ Stefan Meyer Institut\\
         \begin{itemize}
             \item<1-> Initialize weigts
             \item<2-> Evaluate $y_{predict} = f(\boldsymbol{x})$ and calculate $\Delta = (y_{true} - y_{predict})$
-            \item<2-> Update weights: Weight adaption often denoted via loss $L \propto \Delta$\\\hspace*{5mm} $\to$ minimize loss $\to$ find best fit
+            \item<3-> Update weights: Weight adaption often denoted via loss $L \propto \Delta$\\\hspace*{5mm} $\to$ minimize loss $\to$ find best fit
         \end{itemize}
     \end{block}
 \end{frame}
+
+% % -----------------------------------------------
+
+\begin{frame}
+    \frametitle{Quantify MVA output}
+    \begin{block}{Evaluate classifier performance}
+        \begin{itemize}
+            \item Compare predicted class labels with the true ones $\to$ confusion matrix
+       \end{itemize}
+    \end{block}
+    \vspace*{4mm}
+    \centering\includegraphics<1>[height=4.8cm,keepaspectratio]{pics/Confusion_matrix}%            
+\end{frame}
+
+% % -----------------------------------------------
+
+\begin{frame}
+    \frametitle{Quantify MVA output}
+    \begin{block}{Evaluate classifier performance}
+        \begin{itemize}
+            \item ROC curve: continuously scan y \& plot background acceptance (FPR) vs. signal efficiency (TPR)
+                
+        \end{itemize}
+    \end{block}
+    \vspace*{2mm}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (roc) at (0,0)
+            {\includegraphics[height=3.8cm,keepaspectratio]{pics/roc_curve}};
+        % \draw[->, color=black, ultra thick] (2,-0.8) to [out=270,in=90] (roc.north);
+        \node[align=center] (formula) at (5, 0) {\small$\text{FPR = FP/(FP+TN)}$};
+        \node[align=center, below=of formula,yshift=9mm] (formula2) {\small$\text{TPR = TP/ (TP + FN)}$};
+        \node[align=center, below=of roc,yshift=9mm,xshift=20mm,text width=0.8\paperwidth] (auc) {\footnotesize ROC-AUC: probability that classifier ranks randomly chosen positive sample higher than randomly chosen negative one};
+    \end{tikzpicture}
+\end{frame}
+
+% % -----------------------------------------------
+
+\begin{frame}
+    \frametitle{Bias-variance tradeof}
+    \begin{itemize}
+        \item Small variance: Classifiers with low degrees of freedom are less prone to statistical fluctuations\\$\to$~different training samples result in similar classification boundaries 
+        \item However: if data contain features that a model with few degrees of freedom cannot describe, a bias is introduced
+    \end{itemize}
+    \vspace*{3mm}
+    \centering\includegraphics<1>[height=3.0cm,keepaspectratio]{pics/Overfitting}%
+    \centering\includegraphics<2>[height=3.8cm,keepaspectratio]{pics/overfitting_2}%
+\end{frame}
+
+
+% -----------------------------------------------
+
+% \begin{frame}
+%     \frametitle{Getting started}
+%     add piece of code \& show how easy it is
+% \end{frame}
+
+
+% -----------------------------------------------
+
+\section{Results}
+\begin{frame}
+    \frametitle{Results}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (f1) at (0,0)
+            {\includegraphics[height=20mm,keepaspectratio]{pics/pt}};
+        \node[inner sep=0pt, below=of f1,yshift=9mm] (f2)
+            {\includegraphics[height=20mm,keepaspectratio]{pics/z_impact}};
+        \node[inner sep=0pt, below=of f2,yshift=9mm] (dots)
+            {\LARGE$\vdots$};
+        \node[inner sep=0pt, below=of dots,yshift=9mm] (fn)
+            {\includegraphics[height=20mm,keepaspectratio]{pics/pid_bayes_proba_pion}};
+        \draw [decorate,decoration={brace,amplitude=15pt},xshift=5mm,yshift=0pt]
+            (f1.north east) -- (fn.south east) node [black,midway,xshift=15mm] 
+            {$\mathbb{R}^{n}\to\mathbb{R}$};
+        \node<1>[inner sep=0pt, right=of dots,yshift=9mm,xshift=30mm] (output)
+            {\includegraphics[height=45mm,keepaspectratio]{pics/MVAoutput_distr_train_log}};
+
+        % ROC curves
+        % train
+        \node<2>[inner sep=0pt, right=of dots,yshift=9mm,xshift=30mm] (roctrain)
+            {\includegraphics[height=45mm,keepaspectratio]{pics/roc_curve_train}};
+        \node<2>[inner sep=0pt, above=of roctrain,yshift=-9mm] (roctrainTXT)
+            {\footnotesize ROC train};
+        % test
+        \node<3>[inner sep=0pt, right=of dots,yshift=9mm,xshift=30mm] (roctest)
+            {\includegraphics[height=45mm,keepaspectratio]{pics/roc_curve_test}};
+        \node<3>[inner sep=0pt, above=of roctest,yshift=-9mm] (roctestTXT)
+            {\footnotesize ROC test};
+
+        %significance
+        \node<4>[inner sep=0pt, right=of dots,yshift=9mm,xshift=30mm] (sign)
+            {\includegraphics[height=45mm,keepaspectratio]{pics/significance_vs_MVAcut}};
+        \node<4>[inner sep=0pt, above=of sign,yshift=-9mm] (sigTXT)
+            {\footnotesize Significance $S=N_{sig}/\sqrt{N_{sig}+N_{BG}}$};
+
+        % inv mass
+        \node<5>[inner sep=0pt, right=of dots,yshift=25mm,xshift=30mm] (invar1)
+            {\includegraphics[height=30mm,keepaspectratio]{pics/noV0_invar_mass_plot}};
+        \node<5>[inner sep=0pt, above=of invar1,yshift=-9mm] (invar1TXT)
+            {\footnotesize no MVA cut};
+        \node<5>[inner sep=0pt, right=of dots,yshift=-7mm,xshift=30mm] (invar2)
+            {\includegraphics[height=30mm,keepaspectratio]{pics/invar_mass_plot}};
+        \node<5>[inner sep=0pt, below=of invar2,yshift=9mm] (invar2TXT)
+            {\footnotesize with MVA cut};
+      \end{tikzpicture}
+\end{frame}
+
+
+
 
 
 
