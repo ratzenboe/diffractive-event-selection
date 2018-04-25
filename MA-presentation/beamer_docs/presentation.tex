@@ -92,20 +92,44 @@ Stefan Meyer Institut\\
 
 %------------------------------------------------ 
 
+\begin{frame}
+    \frametitle{Introduction}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (diffr) at (0,0)
+            {\includegraphics[height=6cm,keepaspectratio]{pics/cross_sections_LHC}};
+        \node[below=of diffr,yshift=9mm] {Cross section contribution at LHC energies};
+     \end{tikzpicture}
+\end{frame}
+
+%------------------------------------------------ 
+
 \section{Central exclusive production at ALICE} %
 \begin{frame}
-    \frametitle{Diffractive events}
-    Diffractive events are reactions where no quantum numbers are exchanged\\
+    \frametitle{Diffraction definition}
+    Diffractive events are reactions where \textbf{no quantum numbers are exchanged}~$\to$ leads to special topology\\
     \vspace*{5mm}
     \centering\begin{tikzpicture}
         \node[inner sep=0pt] (diffr) at (0,0)
             {\includegraphics[height=4cm,keepaspectratio]{pics/diffraction_wo}};
         \node (nonD) at (-4.2,0) [text width=3cm] {\small Incident hadrons aquire color\\ $\to$~break apart};
-        \node (D) at (4.5,0) [text width=3cm] {\small Colorless exchange with \emph{vacuum}\\quantum numbers};
-        \node (nonDbelow) at (-2.5,-3) [text width=6cm] {\small$\eta$~gap exponentially supressed};
-        \node (Dbelow) at (4,-3) [text width=6cm] {\small$\eta$~ gap not supressed};
-        \draw[->] (-3,-2.6) to [out=90,in=270] (-1.5,-2.1) ;
-        \draw[->] (3,-2.6) to [out=90,in=270] (1.5,-2.1) ;
+        \node (D) at (4.5,0) [text width=3cm] {\small Colorless exchange};
+        \node (nonDbelow) at (-2.5,-3.2) [text width=6cm] {\small$\eta$~gap exponentially supressed};
+        \node (Dbelow) at (4.4,-3.2) [text width=6cm] {\small$\eta$~ gap not supressed};
+        \node [below=of diffr,yshift=9mm] (eta) [text width=3cm] {\small $\eta=-ln(tan(\frac{\theta}{2}))$};
+        % \draw[->] (-3,-2.6) to [out=90,in=270] (-1.5,-2.1) ;
+        % \draw[->] (3,-2.6) to [out=90,in=270] (1.5,-2.1) ;
+        \draw[->] (-3,-2.8) to [out=90,in=225] (diffr.south west) ;
+        \draw[->] (3.3,-2.8) to [out=90,in=315] (diffr.south east) ;
+      \end{tikzpicture}
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Rapidity gap}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (diffr) at (0,0)
+            {\includegraphics[width=0.8\paperwidth,keepaspectratio]{pics/rapidity_gap}};
      \end{tikzpicture}
 \end{frame}
 
@@ -133,29 +157,15 @@ Stefan Meyer Institut\\
 \end{frame}
 
 %------------------------------------------------ 
-
-\begin{frame}
-    \frametitle{Regge theory - short overview}
-    \begin{itemize}
-        \item<1-> Reactions characterized by a color neutral \emph{t}~-channel exchange carrying vacuum quantum numbers
-        \item<2-> t-channel process governed by exchange of resonances sitting on \emph{Regge trajectory} $\alpha(t) = \alpha + \alpha\textprime t$
-        \item<3-> Resonance of mass $m$ sitting on the trajectory at $t = m^{2}$ has angular momentum of value $\alpha(m^{2})$
-        \item<4-> Trajectory makes contribution to total inelastic cross section $\sigma_{tot}(s) \propto s^{\alpha -1}$
-    \end{itemize}
-   
-\end{frame}
-
-%------------------------------------------------ 
-
-\begin{frame}
-    \frametitle{Regge theory - short overview}
-    \begin{itemize}
-        \item<1-> Pomeron $\mathbb{P}$ represents special Regge trajectory \& is a color singlet state of gluons \& has vacuum quantum numbers
-        \item<2-> Contribution to $\sigma_{tot}$ grows with increasing energy
-        \item<3-> Double Pomeron exchange = production mechanism to study glueballs in the mass region below $2~$MeV
-        \item<4-> Pomeron exchange leads to restriction of quantum numbers of $X$\\\hspace*{4mm}$\to J^{PC}=($even$)^{++}$
-    \end{itemize}
-\end{frame}
+% \begin{frame}
+%     \frametitle{Regge theory - short overview}
+%     \begin{itemize}
+%         \item<1-> Pomeron $\mathbb{P}$ represents special Regge trajectory \& is a color singlet state of gluons \& has vacuum quantum numbers
+%         \item<2-> Contribution to $\sigma_{tot}$ grows with increasing energy
+%         \item<3-> Double Pomeron exchange = production mechanism to study glueballs in the mass region below $2~$MeV
+%         \item<4-> Pomeron exchange leads to restriction of quantum numbers of $X$\\\hspace*{4mm}$\to J^{PC}=($even$)^{++}$
+%     \end{itemize}
+% \end{frame}
 
 %------------------------------------------------ 
 
@@ -168,6 +178,7 @@ Stefan Meyer Institut\\
         \node[align = center, above = of sd, yshift=-15mm] {\small Single diffractive};
         \node[align = center, above = of dd, yshift=-15mm] {\small Double diffractive};
         \node[align = center, above = of cep, yshift=-15mm] {\small CEP};
+        \node[align = center, below = of cep, xshift=15mm,yshift=30mm] {\small \emph{X}};
  
         \node[inner sep=0pt] (sdtop) at (-3.5,-2.5) {\includegraphics[height=1.1cm,keepaspectratio]{pics/SD_eta}};
         \node[inner sep=0pt] (ddtop) at (0,-2.5) {\includegraphics[height=1.1cm,keepaspectratio]{pics/DD_eta}};
@@ -271,6 +282,8 @@ Stefan Meyer Institut\\
         \node[inner sep=0pt] (cov) at (3.3,0) {\includegraphics[height=3.3cm,keepaspectratio]{pics/ALICE_eta_coverage}};
         \node[inner sep=0pt] (det) at (-3.3,0) {\includegraphics[height=2.5cm,keepaspectratio]{pics/CEP_eta}};
         \draw[->, thick] (det) -- (cov);
+        % \node[below=of det, node distance=0cm, yshift=10mm, xshift=11mm] {\small$\eta$};
+        % \node[left=of det, node distance=0cm, rotate=0, anchor=center,yshift=4mm, xshift=8mm] {\small$\phi$};
 
         \node[align = center, above = of det, yshift=-9mm] {\small CEP event};
         \node[align = center, above = of cov, yshift=-9mm] {\small $\eta$ coverage};
@@ -295,6 +308,38 @@ Stefan Meyer Institut\\
 %------------------------------------------------ 
 
 \begin{frame}
+    \frametitle{Regge theory - short overview}
+    \begin{itemize}
+        \item<1-> Reactions characterized by a color neutral \emph{t}~-channel exchange carrying vacuum quantum numbers\\$\to$ Quantum number filter on $J^{PC} = (\text{even})^{++}$~states
+        \item<2-> CEP $\to$ hadron spectroscopy for $<2.5$~GeV
+        \begin{itemize}
+            \item<2-> Study mass spectrum
+            \item<3-> Lightest \emph{glueball} predicted in that region $J^{PC} = (0)^{++}$~state
+        \end{itemize}
+    \end{itemize}
+    \centering\begin{tikzpicture}
+        \node<2->[inner sep=0pt] (cep) at (0,0) {\includegraphics[height=3cm,keepaspectratio]{pics/CEP1.pdf}};
+        % \node[align = center, above = of cep, yshift=-15mm] {\small CEP};
+        \node[below=of cep, xshift=18mm,yshift=28mm] (X) {\small \emph{X}};
+        \node[align = center, right = of X, xshift=0mm,yshift=5mm] (part1) {\small $\pi,K$};
+        \node[align = center, right = of X, xshift=0mm,yshift=-5mm] (part2) {\small $\pi,K$};
+        \draw[->,thick] (X) -- (part1);
+        \draw[->,thick] (X) -- (part2);
+    \end{tikzpicture}
+ 
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Regge theory - short overview}
+    \centering\includegraphics[height=8cm, keepaspectratio]{pics/mesons_mass_range}
+
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
     \frametitle{Invariant mass spectrum}
     Studying \emph{Pythia-8} simulations yield
     \begin{itemize}
@@ -304,7 +349,7 @@ Stefan Meyer Institut\\
     % \vspace*{1mm}
     \centering\begin{tikzpicture}
         \node<1-2>[inner sep=0pt] (cov) at (0,0) {\includegraphics[height=5.1cm,keepaspectratio]{pics/detected_simulated_newLabels}};
-        \node<3>[inner sep=0pt] (fd) at (0,0) {\includegraphics[height=4.1cm,keepaspectratio]{pics/detected_simulated_newLabels}};
+        \node[above=of cov, yshift=-15mm] (txt) {$\to$~increasing~$\Delta\eta$};
 
         % \draw[->, thick] (det) -- (cov);
 
@@ -326,6 +371,50 @@ Stefan Meyer Institut\\
     \end{tikzpicture}
  
 \end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Feed down}
+    \textbf{Feed down} \emph{vs} \text{fully reconstructed} events\\
+    \vspace*{3mm}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (cep) at (0,0) {\includegraphics[height=3cm,keepaspectratio]{pics/CEP1.pdf}};
+        % \node[align = center, above = of cep, yshift=-15mm] {\small CEP};
+        \node[below=of cep, xshift=18mm,yshift=28mm] (X) {\small \emph{X}};
+        \node[align = center, right = of X, xshift=0mm,yshift=5mm] (part1) {\small $\pi^{-}$};
+        \node[align = center, right = of X, xshift=0mm,yshift=-5mm] (part2) {\small $\pi^{+}$};
+        \draw[->,thick] (X) -- (part1);
+        \draw[->,thick] (X) -- (part2);
+
+        \node[inner sep=0pt] (cep2) at (0,-3) {\includegraphics[height=3cm,keepaspectratio]{pics/CEP1.pdf}};
+        \node[draw,rectangle,minimum height=28mm,minimum width=65mm,color=red,ultra thick,dashed] (rect) at (1,-3) {};
+        \node[align = center, right = of rect, xshift=-10mm,yshift=0mm,text width=4cm] (txtFD) {\small $\pi^{0}$ not detectable ~$\to$~missing mass};
+        \node[align = center, above = of txtFD, xshift=0mm,yshift=10mm,text width=4cm] (txtFR) {\small Total mass of $X$ recontructable};
+
+        \node[below=of cep2, xshift=18mm,yshift=28mm] (X2) {\small \emph{X}};
+        \node[align = center, right = of X2, xshift=0mm,yshift=8mm] (partFD1) {\small $\pi^{-}$};
+        \node[align = center, right = of X2, xshift=0mm,yshift=0mm] (partFD2) {\small $\pi^{+}$};
+        \node[align = center, right = of X2, xshift=0mm,yshift=-8mm] (part3) {\small $\pi^{0}$};
+        \draw[->,thick] (X2) -- (partFD1);
+        \draw[->,thick] (X2) -- (partFD2);
+        \draw[->,thick,dashed] (X2) -- (part3);
+    \end{tikzpicture}
+\end{frame}
+
+%------------------------------------------------ 
+{\setbeamercolor{background canvas}{bg=red!20}
+\begin{frame}
+    \frametitle{Motivation}
+    \begin{itemize}
+        \item Reduce dominant background contribution: \textbf{feed down}\\\hspace*{5mm}$\to$~Try multivariate approach instead of classical cut methods\\\vspace*{5mm}
+        \item Next up
+        \begin{itemize}
+            \item Comparison: Multi-variate \emph{vs.} single-variate analysis
+        \end{itemize}
+     \end{itemize}
+\end{frame}
+}
 
 %------------------------------------------------ 
 
@@ -387,7 +476,7 @@ Stefan Meyer Institut\\
 
 %------------------------------------------------ 
 
-\section{Rectangular cuts} %
+\subsection{Rectangular cuts} %
 \begin{frame}
     \frametitle{Rectangular cuts}
     \begin{columns}[T] % align columns        
@@ -415,7 +504,6 @@ Stefan Meyer Institut\\
 
 %------------------------------------------------ 
 
-\subsection{Decision Trees}
 \begin{frame}
     \frametitle{Rectangular cuts with \emph{decision trees}}
     \vspace*{-7mm}
@@ -429,64 +517,63 @@ Stefan Meyer Institut\\
 
 %------------------------------------------------ 
 
-\begin{frame}
-    \frametitle{Rectangular cuts with \emph{decision trees}}
-    \begin{tikzpicture}
-        [
-            grow                    = right,
-            sibling distance        = 6em,
-            level distance          = 10em,
-            edge from parent/.style = {draw, -latex},
-            every node/.style       = {font=\footnotesize},
-            sloped
-        ]
-	\node [root] {Student?}
-        child { node [dummy] {Exam?}
-                child { node [env] {Beer}
-                        edge from parent node [above] {No} }
-                child { node [env] {No Beer}
-                        edge from parent node [above] {Yes} }                
-                edge from parent node [above] {Yes} }
-        child { node [dummy] {Weekday?}
-                child { node [env] {No Beer}
-                        edge from parent node [above] {Yes} }
-                child { node [env] {Beer}
-                        edge from parent node [above] {No} }                
-                edge from parent node [above] {No} };
-    \pause
-    \node (rectroot) at (0,0) [rectangle, dashed, color=red, minimum height=2cm,minimum width=3cm,draw, thick] {};
-    \node (rootbottom) [below=1mm of rectroot, color=red]  {Root node};
-    \pause
-    \node (rectinner) at (3.8,0) [rectangle, dashed, color=red, minimum height=6cm,minimum width=2cm,draw, thick] {};
-    \node (innerbottom) [below=1mm of rectinner, color=red]  {Inner nodes};
-    \node (innertop) [above=1mm of rectinner, color=red]  {Decisions};
-    \pause
-    \node (rectleaf) at (7.7,0) [rectangle, dashed, color=red, minimum height=6cm,minimum width=2cm,draw, thick] {};
-    \node (leafbottom) [below=1mm of rectleaf, color=red]  {Leaf nodes};
-    \node (leaftop) [above=1mm of rectleaf, color=red]  {Class prediction};
+% \begin{frame}
+%     \frametitle{Rectangular cuts with \emph{decision trees}}
+%     \begin{tikzpicture}
+%         [
+%             grow                    = right,
+%             sibling distance        = 6em,
+%             level distance          = 10em,
+%             edge from parent/.style = {draw, -latex},
+%             every node/.style       = {font=\footnotesize},
+%             sloped
+%         ]
+% 	\node [root] {Student?}
+%         child { node [dummy] {Exam?}
+%                 child { node [env] {Beer}
+%                         edge from parent node [above] {No} }
+%                 child { node [env] {No Beer}
+%                         edge from parent node [above] {Yes} }                
+%                 edge from parent node [above] {Yes} }
+%         child { node [dummy] {Weekday?}
+%                 child { node [env] {No Beer}
+%                         edge from parent node [above] {Yes} }
+%                 child { node [env] {Beer}
+%                         edge from parent node [above] {No} }                
+%                 edge from parent node [above] {No} };
+%     \pause
+%     \node (rectroot) at (0,0) [rectangle, dashed, color=red, minimum height=2cm,minimum width=3cm,draw, thick] {};
+%     \node (rootbottom) [below=1mm of rectroot, color=red]  {Root node};
+%     \pause
+%     \node (rectinner) at (3.8,0) [rectangle, dashed, color=red, minimum height=6cm,minimum width=2cm,draw, thick] {};
+%     \node (innerbottom) [below=1mm of rectinner, color=red]  {Inner nodes};
+%     \node (innertop) [above=1mm of rectinner, color=red]  {Decisions};
+%     \pause
+%     \node (rectleaf) at (7.7,0) [rectangle, dashed, color=red, minimum height=6cm,minimum width=2cm,draw, thick] {};
+%     \node (leafbottom) [below=1mm of rectleaf, color=red]  {Leaf nodes};
+%     \node (leaftop) [above=1mm of rectleaf, color=red]  {Class prediction};
 
-    \end{tikzpicture}
-\end{frame}
-
-%------------------------------------------------ 
-
-\begin{frame}
-    \frametitle{Decision tree learning}
-    \vspace*{-7mm}
-    \begin{block}{Training}
-        \emph{Recursively} split feature space into sub-spaces at each step\\
-        $\to$ Measures to evaluate split
-        \begin{itemize}
-            \item Error rate
-            \item Information gain
-            \item Gini index
-        \end{itemize}
-    \end{block}
-\end{frame}
+%     \end{tikzpicture}
+% \end{frame}
 
 %------------------------------------------------ 
 
-\subsection{Example}
+% \begin{frame}
+%     \frametitle{Decision tree learning}
+%     \vspace*{-7mm}
+%     \begin{block}{Training}
+%         \emph{Recursively} split feature space into sub-spaces at each step\\
+%         $\to$ Measures to evaluate split
+%         \begin{itemize}
+%             \item Error rate
+%             \item Information gain
+%             \item Gini index
+%         \end{itemize}
+%     \end{block}
+% \end{frame}
+
+%------------------------------------------------ 
+
 \begin{frame}
     \frametitle{Decision tree learning}
     \centering\begin{tikzpicture}
@@ -579,9 +666,9 @@ Stefan Meyer Institut\\
         \item Use more sophisticated split measures 
             \begin{itemize}
                 \item \emph{Information gain} $\leftrightarrow$ (im-)purity of splitted sub-sets
-                \item Gini index
             \end{itemize}
         \item Pruning 
+        \item Ensemble trees (Random forest \& boosted DT)
     \end{itemize}
     \vspace*{3mm}
     \centering\begin{tikzpicture}
@@ -598,42 +685,41 @@ Stefan Meyer Institut\\
 
 %------------------------------------------------ 
 
-\subsection{Improvements}
-\begin{frame}
-    \frametitle{Decision tree improvements II}
-    \begin{columns}[T] % align columns        
-        \begin{column}{.48\textwidth}
-            \begin{block}{Random forest}
-                \begin{itemize}
-                    \item<1-> Ensemble of DTs
-                    \item<2-> For each tree use:
-                    \begin{itemize}
-                        \item<3-> Random sub-sample (=\emph{bootstrapping})
-                        \item<4-> Random number of the original features\\
-                                  $\to$ large number of rather shallow trees
-                    \end{itemize}
-                    \item<5-> Classify data by majority voting of individual trees
-                \end{itemize}
-            \end{block}
-        \end{column}%
-        \hfill%
-        \begin{column}{.48\textwidth}
-            \begin{block}{Boosted DT}
-                \begin{itemize}
-                    \item<6-> Sequential ensemble of evolving DTs
-                    \item<7-> Assign weights to training samples $\to$ initially equal weights
-                    \item<8-> Adjust weights \& give more importance to misclassified samples
-                    \item<9-> Subsequent predictors thus should focus on those 
-                \end{itemize}
-            \end{block}            
-        \end{column}%
-    \end{columns}
+% \begin{frame}
+%     \frametitle{Decision tree improvements II}
+%     \begin{columns}[T] % align columns        
+%         \begin{column}{.48\textwidth}
+%             \begin{block}{Random forest}
+%                 \begin{itemize}
+%                     \item<1-> Ensemble of DTs
+%                     \item<2-> For each tree use:
+%                     \begin{itemize}
+%                         \item<3-> Random sub-sample (=\emph{bootstrapping})
+%                         \item<4-> Random number of the original features\\
+%                                   $\to$ large number of rather shallow trees
+%                     \end{itemize}
+%                     \item<5-> Classify data by majority voting of individual trees
+%                 \end{itemize}
+%             \end{block}
+%         \end{column}%
+%         \hfill%
+%         \begin{column}{.48\textwidth}
+%             \begin{block}{Boosted DT}
+%                 \begin{itemize}
+%                     \item<6-> Sequential ensemble of evolving DTs
+%                     \item<7-> Assign weights to training samples $\to$ initially equal weights
+%                     \item<8-> Adjust weights \& give more importance to misclassified samples
+%                     \item<9-> Subsequent predictors thus should focus on those 
+%                 \end{itemize}
+%             \end{block}            
+%         \end{column}%
+%     \end{columns}
 
-\end{frame}
+% \end{frame}
 
 %------------------------------------------------ 
 
-\section{Linear cuts}
+\subsection{Linear cuts}
 
 \begin{frame}
     \frametitle{Linear cuts}
@@ -685,7 +771,6 @@ Stefan Meyer Institut\\
 \end{frame} 
 
 %------------------------------------------------ 
-\subsection{Single layer perceptron}
 \begin{frame}
     \frametitle{Single layer perceptron (SLP)}
 
@@ -735,12 +820,12 @@ Stefan Meyer Institut\\
             % \color{red}\rule{\linewidth}{4pt}
             \begin{block}{Algorithm} 
                 \begin{enumerate}
-                    \item<1-> Initialize weights $\boldsymbol{w}_{init}$
-                    \item<2-> Repeat until $y=y_{target}$:
+                    \item Initialize weights $\boldsymbol{w}$
+                    \item Repeat until $y_{predict}=y_{target}$:
                     \begin{enumerate}
-                        \item<3,7,10-> Present training sample $\boldsymbol{x}$
-                        \item<4,8,10-> Predict sample label $y=\Theta(\boldsymbol{x}\boldsymbol{w}_{init})$ and compute error $\Delta=y_{target}-y$
-                        \item<5,9-> If $\Delta \neq 0~\to$ update weights\\$\boldsymbol{w}\textprime=\boldsymbol{w} + \alpha \Delta \boldsymbol{x}$
+                        \item Present training sample $\boldsymbol{x}$
+                        \item Predict sample label $y=\Theta(\boldsymbol{x}\boldsymbol{w}_{init})$ and compute error $\Delta=y_{target}-y$
+                        \item If $\Delta \neq 0~\to$ update weights\\$\boldsymbol{w}\textprime=\boldsymbol{w} + \alpha \Delta \boldsymbol{x}$
                     \end{enumerate}
                 \end{enumerate}
             \end{block}
@@ -749,18 +834,18 @@ Stefan Meyer Institut\\
         \begin{column}{.48\textwidth}
             % \color{blue}\rule{\linewidth}{4pt}
             % \hspace*{-10mm}
-            \raggedright\includegraphics<1,2>[height=4.3cm,keepaspectratio]{pics/PCT_init_weights.png}%
-            \raggedright\includegraphics<3>[height=4.3cm,keepaspectratio]{pics/PCT_0.png}%
-            \raggedright\includegraphics<4,5>[height=4.3cm,keepaspectratio]{pics/PCT_1.png}%
-            \raggedright\includegraphics<6,7,8>[height=4.3cm,keepaspectratio]{pics/PCT_2.png}%
-            \raggedright\includegraphics<9>[height=4.3cm,keepaspectratio]{pics/PCT_3.png}%
-            \raggedright\includegraphics<10>[height=4.3cm,keepaspectratio]{pics/PCT_final_0.png}%
-            \only<1> {
-                \begin{textblock}{3.5}(10,13)
-                    $y = w_{1}x_{1} + w_{2}x_{2}$
-                \end{textblock}
-            }
-            \only<5-> {
+            \raggedright\includegraphics<1>[height=4.3cm,keepaspectratio]{pics/PCT_init_weights.png}%
+            \raggedright\includegraphics<2>[height=4.3cm,keepaspectratio]{pics/PCT_0.png}%
+            \raggedright\includegraphics<3>[height=4.3cm,keepaspectratio]{pics/PCT_1.png}%
+            \raggedright\includegraphics<4>[height=4.3cm,keepaspectratio]{pics/PCT_2.png}%
+            \raggedright\includegraphics<5>[height=4.3cm,keepaspectratio]{pics/PCT_3.png}%
+            \raggedright\includegraphics<6>[height=4.3cm,keepaspectratio]{pics/PCT_final_0.png}%
+            \raggedright\includegraphics<7>[height=4.3cm,keepaspectratio]{pics/PCT_regions.png}%
+
+            \begin{textblock}{3.5}(10,13)
+                $y = w_{1}x_{1} + w_{2}x_{2}$
+            \end{textblock}
+            \only<3-> {
                 \begin{textblock}{5}(2,13)
                     $\alpha \dots$~learning rate
                 \end{textblock}
@@ -863,7 +948,6 @@ Stefan Meyer Institut\\
 \end{frame}
 % -----------------------------------------------
 
-\subsection{Activation functions}
 \begin{frame}
     \frametitle{SLP activation functions}
     \vspace*{-5mm}
@@ -909,12 +993,19 @@ Stefan Meyer Institut\\
 % -----------------------------------------------
 
 \begin{frame}
-    \frametitle{SLP improvement INon-linear activation functions output}
+    \frametitle{Non-linear activation functions: output}
+    Distance to decision boundary comes into play
     \centering\begin{tikzpicture}
-        \node[inner sep=0pt] (actpic) at (0,0)
-            {\includegraphics[height=1.5cm,keepaspectratio]{pics/plot_activation.png}};
-        \node[below=1cm of actpic,inner sep=0pt] (dist) {\includegraphics[height=4.1cm,keepaspectratio]{pics/MVAoutput_distr_train_log.pdf}};
-        \draw[->, color=black, ultra thick] (2,-0.8) to [out=270,in=90] (dist.north);
+        \node<1>[inner sep=0pt] (theta) at (0,0)
+            {\includegraphics[height=4.5cm,keepaspectratio]{pics/PCT_regions}};
+        \node<1>[below of=theta,yshift=-19mm] {\small MVA output $y=0~or~1$};
+
+        \node<2>[inner sep=0pt] (actpic) at (0,0)
+            {\includegraphics[height=1.5cm,keepaspectratio]{pics/plot_activation.png}};        
+
+        \node<2>[below=1cm of actpic,inner sep=0pt] (dist) {\includegraphics[height=4.1cm,keepaspectratio]{pics/MVAoutput_distr_train_log.pdf}};
+        \node<2>[right of=dist,xshift=30mm,text width=2cm] {\small MVA output $y\in(0,1)$};
+        \draw<2>[->, color=black, ultra thick] (2,-0.8) to [out=270,in=90] (dist.north);
     \end{tikzpicture}
      
 
@@ -922,7 +1013,6 @@ Stefan Meyer Institut\\
 
 % -----------------------------------------------
 
-\subsection{Kernel trick}
 \begin{frame}
     \frametitle{Improving linear methods}
     \begin{block}{Kernel trick}
@@ -941,30 +1031,29 @@ Stefan Meyer Institut\\
 
 % -----------------------------------------------
 
-\section{Non-linear cuts}
-\begin{frame}
-    \frametitle{Non-linear models}
-    \begin{block}{Assumtion}
-        Take \emph{kernel trick} idea: map inputs $\boldsymbol{x} = (x_{1},\dots x_{n})$ to higher dimensional space $\mathbb{R}^{m}$ with $m~>~n$
-        where linear seperation is possible:
-        \vspace*{3mm}
-        \begin{align*} 
-              % y: \mathbb{R}^{n} \to \mathbb{R}^{m} \to \mathbb{R}~|~\boldsymbol{x} \mapsto y  &= 
-              %   \sigma (w^{(2)}_{0} + \boldsymbol{w^{(2)}} \cdot \sigma (w^{(1)}_{0} + \boldsymbol{w^{(1)}} \cdot \boldsymbol{x}) )\\ 
-              % y: \mathbb{R}^{n} \to \mathbb{R}^{m}  &=  \sigma (w^{(2)}_{0} + \boldsymbol{w^{(2)}} \cdot \sigma (w^{(1)}_{0} + \boldsymbol{w^{(1)}} \cdot \boldsymbol{x}) )\\ 
-            y: \mathbb{R}^{n} \to \mathbb{R}^{m} \to \mathbb{R} &= \sigma \left( w_{0}^{2} + \sum_{i=1}^{m} \left[ w_{i}^{(2)} + \sigma \left( w_{0,i}^{(1)} + \sum_{k=1}^{n} w_{k,i}^{(1)}~x_{k} \right) \right] \right)\\
-            &=  \sigma \left[ w^{(2)}_{0} + \boldsymbol{w}^{(2)} \cdot \sigma(\boldsymbol{w}^{(1)}_{0}+ \boldsymbol{W}^{(1)} \cdot \boldsymbol{x})\right]
-        \end{align*}
-        \vspace*{3mm}
-        $\to$ $m$ \emph{single layer perceptrons}
-    \end{block}
-\end{frame} 
+\subsection{Non-linear cuts}
+% \begin{frame}
+%     \frametitle{Non-linear models}
+%     \begin{block}{Assumtion}
+%         Take \emph{kernel trick} idea: map inputs $\boldsymbol{x} = (x_{1},\dots x_{n})$ to higher dimensional space $\mathbb{R}^{m}$ with $m~>~n$
+%         where linear seperation is possible:
+%         \vspace*{3mm}
+%         \begin{align*} 
+%               % y: \mathbb{R}^{n} \to \mathbb{R}^{m} \to \mathbb{R}~|~\boldsymbol{x} \mapsto y  &= 
+%               %   \sigma (w^{(2)}_{0} + \boldsymbol{w^{(2)}} \cdot \sigma (w^{(1)}_{0} + \boldsymbol{w^{(1)}} \cdot \boldsymbol{x}) )\\ 
+%               % y: \mathbb{R}^{n} \to \mathbb{R}^{m}  &=  \sigma (w^{(2)}_{0} + \boldsymbol{w^{(2)}} \cdot \sigma (w^{(1)}_{0} + \boldsymbol{w^{(1)}} \cdot \boldsymbol{x}) )\\ 
+%             y: \mathbb{R}^{n} \to \mathbb{R}^{m} \to \mathbb{R} &= \sigma \left( w_{0}^{2} + \sum_{i=1}^{m} \left[ w_{i}^{(2)} + \sigma \left( w_{0,i}^{(1)} + \sum_{k=1}^{n} w_{k,i}^{(1)}~x_{k} \right) \right] \right)\\
+%             &=  \sigma \left[ w^{(2)}_{0} + \boldsymbol{w}^{(2)} \cdot \sigma(\boldsymbol{w}^{(1)}_{0}+ \boldsymbol{W}^{(1)} \cdot \boldsymbol{x})\right]
+%         \end{align*}
+%         \vspace*{3mm}
+%         $\to$ $m$ \emph{single layer perceptrons}
+%     \end{block}
+% \end{frame} 
 
 % -----------------------------------------------
 
-\section{Neural networks}
 \begin{frame}
-    \frametitle{Visualisaion}
+    \frametitle{Non-linear models}
     \centering\begin{tikzpicture}[scale=0.7, every node/.style={scale=0.6}]
 
         \node[draw,circle,minimum size=25pt,inner sep=0pt] (x) at (0,0) {$\Sigma$ $\sigma$};
@@ -1044,41 +1133,41 @@ Stefan Meyer Institut\\
 
 % -----------------------------------------------
 
-\begin{frame}
-    \frametitle{Visualising the hidden layer}
-    \begin{block}{Effects of adding a hidden layer}
-        Input vector $\boldsymbol{x}$ undergoes \emph{linear transformation} by multiplication with weight matrix $\boldsymbol{W}$. The bias term $\boldsymbol{w}_{0}$ causes a \emph{translation}.\\
-    \end{block}
-    \vspace*{5mm}
-    \centering\begin{tikzpicture}
-        \node<1>[align=center] (formula) at (1, 2){$y = \sigma [  w^{(2)}_{0} + \boldsymbol{w}^{(2)} \cdot \underbrace{\sigma(\boldsymbol{w}^{(1)}_{0} + \boldsymbol{W}^{(1)}
-            \cdot \boldsymbol{x})}_{\mathbb{\boldsymbol{\tilde{x}}}}]$};
+% \begin{frame}
+%     \frametitle{Visualising the hidden layer}
+%     \begin{block}{Effects of adding a hidden layer}
+%         Input vector $\boldsymbol{x}$ undergoes \emph{linear transformation} by multiplication with weight matrix $\boldsymbol{W}$. The bias term $\boldsymbol{w}_{0}$ causes a \emph{translation}.\\
+%     \end{block}
+%     \vspace*{5mm}
+%     \centering\begin{tikzpicture}
+%         \node<1>[align=center] (formula) at (1, 2){$y = \sigma [  w^{(2)}_{0} + \boldsymbol{w}^{(2)} \cdot \underbrace{\sigma(\boldsymbol{w}^{(1)}_{0} + \boldsymbol{W}^{(1)}
+%             \cdot \boldsymbol{x})}_{\mathbb{\boldsymbol{\tilde{x}}}}]$};
 
-        \node<2->[align=center] (formula) at (1, 2){$\boldsymbol{\tilde{x}} = \sigma(\boldsymbol{w}^{(1)}_{0}+ \boldsymbol{W}^{(1)} \cdot \boldsymbol{x})~\text{ with \emph{e.g.}}~\boldsymbol{W}= \begin{pmatrix} w_{1}^{1} & w_{1}^{2} \\ w_{2}^{1} & w_{2}^{2} \end{pmatrix} $ };
+%         \node<2->[align=center] (formula) at (1, 2){$\boldsymbol{\tilde{x}} = \sigma(\boldsymbol{w}^{(1)}_{0}+ \boldsymbol{W}^{(1)} \cdot \boldsymbol{x})~\text{ with \emph{e.g.}}~\boldsymbol{W}= \begin{pmatrix} w_{1}^{1} & w_{1}^{2} \\ w_{2}^{1} & w_{2}^{2} \end{pmatrix} $ };
 
-        \pause
-        \node[inputNode, thick] (i1) at (0, 1) {};
-        \node[inputNode, thick] (i2) at (0, -1) {};
+%         \pause
+%         \node[inputNode, thick] (i1) at (0, 1) {};
+%         \node[inputNode, thick] (i2) at (0, -1) {};
         
-        \node[inputNode, thick] (h1) at (2, 1) {};
-        \node[inputNode, thick] (h2) at (2, -1) {};
+%         \node[inputNode, thick] (h1) at (2, 1) {};
+%         \node[inputNode, thick] (h2) at (2, -1) {};
 
-        \draw[stateTransition] (-1, 1) -- node[left, xshift=-4mm] {$x_{1}$} (i1);
-        \draw[stateTransition] (-1, -1) -- node[left,xshift=-4mm] {$x_{2}$} (i2);
+%         \draw[stateTransition] (-1, 1) -- node[left, xshift=-4mm] {$x_{1}$} (i1);
+%         \draw[stateTransition] (-1, -1) -- node[left,xshift=-4mm] {$x_{2}$} (i2);
        
-        \draw[stateTransition] (i1) -- node[midway,fill=white] {\tiny$w_{1}^{1}$} (h1);
-        \draw[stateTransition] (i1) -- node[midway,fill=white, xshift=-4mm, yshift=4mm] {\tiny$w_{1}^{2}$} (h2);
+%         \draw[stateTransition] (i1) -- node[midway,fill=white] {\tiny$w_{1}^{1}$} (h1);
+%         \draw[stateTransition] (i1) -- node[midway,fill=white, xshift=-4mm, yshift=4mm] {\tiny$w_{1}^{2}$} (h2);
 
-        \draw[stateTransition] (i2) -- node[midway,fill=white, xshift=-4mm, yshift=-4mm] {\tiny$w_{2}^{1}$} (h1);
-        \draw[stateTransition] (i2) -- node[midway,fill=white] {\tiny$w_{2}^{2}$} (h2);
+%         \draw[stateTransition] (i2) -- node[midway,fill=white, xshift=-4mm, yshift=-4mm] {\tiny$w_{2}^{1}$} (h1);
+%         \draw[stateTransition] (i2) -- node[midway,fill=white] {\tiny$w_{2}^{2}$} (h2);
 
-        \draw[stateTransition] (h1) -- node[right, xshift=4mm] {$x_{1}\textprime$} (3, 1);
-        \draw[stateTransition] (h2) -- node[right, xshift=4mm] {$x_{2}\textprime$} (3, -1);
+%         \draw[stateTransition] (h1) -- node[right, xshift=4mm] {$x_{1}\textprime$} (3, 1);
+%         \draw[stateTransition] (h2) -- node[right, xshift=4mm] {$x_{2}\textprime$} (3, -1);
 
-        % \path[dashed, double, ultra thick, gray, opacity=0.5] (x.north) edge[bend left=0] (h5.north);
-        % \path[dashed, double, ultra thick, gray, opacity=0.5] (x.south) edge[bend right=0] (h5.south);
-    \end{tikzpicture}
-\end{frame}
+%         % \path[dashed, double, ultra thick, gray, opacity=0.5] (x.north) edge[bend left=0] (h5.north);
+%         % \path[dashed, double, ultra thick, gray, opacity=0.5] (x.south) edge[bend right=0] (h5.south);
+%     \end{tikzpicture}
+% \end{frame}
 
 % -----------------------------------------------
 
@@ -1145,29 +1234,36 @@ Stefan Meyer Institut\\
 
 % % -----------------------------------------------
 \begin{frame}
-    \frametitle{Update weights via backpropergation}
+    \frametitle{Update weights via back-propergation}
     \begin{block}{Backpropergation}
         Adapt weights by going backwards in the network
         \begin{itemize}
             \item<1-> Initialize weigts
             \item<2-> Evaluate $y_{predict} = f(\boldsymbol{x})$ and calculate $\Delta = (y_{true} - y_{predict})$
-            \item<3-> Update weights: Weight adaption often denoted via loss $L \propto \Delta$\\\hspace*{5mm} $\to$ minimize loss $\to$ find best fit
+            \item<3-> Update weights: Weight adaption often denoted via loss $L = L(y_{true},\boldsymbol{w}^{(1)},\boldsymbol{W}^{(2)})$
         \end{itemize}
-    \end{block}
+    \end{block} 
+    \vspace*{3mm}
+    \centering\begin{tikzpicture}
+        \node<4->[inner sep=0pt] (loss) at (0,0)
+            {\includegraphics[height=3.1cm,keepaspectratio]{pics/loss_func}};
+        \node<4->[right=of loss, xshift=-2mm,yshift=0mm] (txt) {Minimize loss~$\to$~find best fit};
+        \draw<4->[->,red,thick] (txt.west) to [out=180, in=45] (0,-0.9);
+    \end{tikzpicture}
 \end{frame}
 
-% % -----------------------------------------------
+% -----------------------------------------------
 
-\begin{frame}
-    \frametitle{Quantify MVA output}
-    \begin{block}{Evaluate classifier performance}
-        \begin{itemize}
-            \item Compare predicted class labels with the true ones $\to$ confusion matrix
-       \end{itemize}
-    \end{block}
-    \vspace*{4mm}
-    \centering\includegraphics<1>[height=4.8cm,keepaspectratio]{pics/Confusion_matrix}%            
-\end{frame}
+% \begin{frame}
+%     \frametitle{Quantify MVA output}
+%     \begin{block}{Evaluate classifier performance}
+%         \begin{itemize}
+%             \item Compare predicted class labels with the true ones $\to$ confusion matrix
+%        \end{itemize}
+%     \end{block}
+%     \vspace*{4mm}
+%     \centering\includegraphics<1>[height=4.8cm,keepaspectratio]{pics/Confusion_matrix}%            
+% \end{frame}
 
 % % -----------------------------------------------
 
@@ -1200,7 +1296,7 @@ Stefan Meyer Institut\\
     \end{itemize}
     \vspace*{3mm}
     \centering\includegraphics<1>[height=3.0cm,keepaspectratio]{pics/Overfitting}%
-    \centering\includegraphics<2>[height=3.8cm,keepaspectratio]{pics/overfitting_2}%
+    % \centering\includegraphics<2>[height=3.8cm,keepaspectratio]{pics/overfitting_2}%
 \end{frame}
 
 
@@ -1214,7 +1310,77 @@ Stefan Meyer Institut\\
 
 % -----------------------------------------------
 
-\section{Results}
+{\setbeamercolor{background canvas}{bg=red!20}
+\begin{frame}
+    \frametitle{MVA applied to CEP data}
+    In order to reduce the main background component - \textbf{feed down} - ML is applied on simulated data.\\
+    \vspace*{5mm}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (cov) at (0,0) {\includegraphics[height=5.1cm,keepaspectratio]{pics/detected_simulated_newLabels}};
+        \node[above=of cov, yshift=-15mm] (txt) {$\to$~increasing~$\Delta\eta$};
+
+        % \draw[->, thick] (det) -- (cov);
+
+        % \node[align = center, above = of det, yshift=-9mm] {\small CEP event};
+        % \node[align = center, above = of cov, yshift=-9mm] {\small $\eta$ coverage};
+
+        % \node<2-> (rectbarrel) at (3.35,0.18) [color=red,rectangle, dashed, minimum height=28mm,minimum width=8mm,draw, thick] {};
+
+        % \node<3-> (rectbarrel1) at (4.6,0.18) [rectangle, dashed, minimum height=28mm,minimum width=16mm,draw, thick] {};
+        % \node<3-> (rectbarrel2) at (2.1,0.18) [rectangle, dashed, minimum height=28mm,minimum width=16mm,draw, thick] {};
+
+        % \node (rectroot) at (0,0) [rectangle, dashed, color=red, minimum height=2cm,minimum width=3cm,draw, thick] {};
+        % \node (rootbottom) [below=1mm of rectroot, color=red]  {Root node};
+
+        % \node[inner sep=0pt] (nd) at (0,-4) {\[includegraphicsheight=1.1cm,keepaspectratio]{pics/ND_eta}};
+        % \node[align = center, below = of nd, yshift=9mm] {\small Non-diffractive};
+        % \node[below=of nd, node distance=0cm, yshift=10mm, xshift=11mm] {\small$\eta$};
+        % \node[left=of nd, node distance=0cm, rotate=0, anchor=center,yshift=4mm, xshift=8mm] {\small$\phi$};
+    \end{tikzpicture}
+\end{frame}
+}
+
+
+\section{Results \& Conclusion}
+
+\begin{frame}
+    \frametitle{Neural network structure}
+    \centering\begin{tikzpicture}
+        \node (rectFMD) at (0,0) [text=black,draw=blue, fill=blue!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny FMD};
+        \node[right=of rectFMD,xshift=-2mm] (rectNNFMD) [text=black,draw=yellow,fill=yellow!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny NN};
+
+        \node[below=of rectFMD,yshift=8mm] (rectV0) [text=black,draw=blue,fill=blue!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny V0};
+        \node[right=of rectV0,xshift=-2mm] (rectNNV0) [text=black,draw=yellow,fill=yellow!20,rectangle,minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny NN};
+        \node[right=of rectNNV0,xshift=2mm] (VetoAux) [draw=yellow,fill=yellow!20,circle,draw, thick,minimum size=6mm] {\tiny Aux};
+        \draw[->] (rectV0) -- (rectNNV0) -- (VetoAux);
+        \draw[->] (rectFMD) -- (rectNNFMD) -- ([xshift=2mm]rectNNFMD) -- (VetoAux);
+
+        \node[below=of rectV0,yshift=8mm] (rectAD) [text=black,draw=blue,fill=blue!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny AD};
+        \node[right=of rectAD,xshift=-2mm] (rectNNad) [text=black,draw=yellow,fill=yellow!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny NN};
+        \draw[->] (rectAD) -- (rectNNad) -- ([xshift=2mm]rectNNad) -- (VetoAux);
+
+        \node[below=of rectAD,yshift=2mm] (rectEMC) [text=black,draw=red,fill=red!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny EMC};
+        \node[right=of rectEMC,xshift=-2mm] (rectRNNemc) [text=black,draw=yellow,fill=yellow!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny RNN};
+        \node[right=of rectRNNemc,xshift=2mm,yshift=-2mm] (VetoAuxCalo) [draw=yellow,fill=yellow!20,circle,draw, thick,minimum size=6mm] {\tiny Aux};
+        \draw[->] (rectEMC) -- (rectRNNemc) -- (VetoAuxCalo);
+
+        \node[below=of rectEMC,yshift=8mm] (rectPHOS) [text=black,draw=red,fill=red!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny PHOS};
+        \node[right=of rectPHOS,xshift=-2mm] (rectRNNphos) [text=black,draw=yellow,fill=yellow!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny RNN};
+        \draw[->] (rectPHOS) -- (rectRNNphos) -- (VetoAuxCalo);
+
+        \node[below=of rectPHOS,yshift=2mm] (rectTrack) [text=black,draw=green,fill=green!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny Tracks};
+        \node[right=of rectTrack,xshift=-2mm] (rectRNNtrack) [text=black,draw=yellow,fill=yellow!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny RNN};
+        \node[right=of rectRNNtrack,xshift=2mm,yshift=2mm] (VetoAuxTrack) [draw=yellow,fill=yellow!20,circle,draw, thick,minimum size=6mm] {\tiny Aux};
+        \draw[->] (rectTrack) -- (rectRNNtrack) -- (VetoAuxTrack);
+
+        \node[below=of rectTrack,yshift=2mm] (rectEvent) [text=black,draw=black,fill=black!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny Event};
+        \draw[->] (rectEvent) -- ([xshift=4mm]rectEvent);
+
+
+    \end{tikzpicture}
+     
+\end{frame}
+
 \begin{frame}
     \frametitle{Results}
     \centering\begin{tikzpicture}
@@ -1234,38 +1400,200 @@ Stefan Meyer Institut\\
 
         % ROC curves
         % train
-        \node<2>[inner sep=0pt, right=of dots,yshift=9mm,xshift=30mm] (roctrain)
-            {\includegraphics[height=45mm,keepaspectratio]{pics/roc_curve_train}};
-        \node<2>[inner sep=0pt, above=of roctrain,yshift=-9mm] (roctrainTXT)
-            {\footnotesize ROC train};
-        % test
-        \node<3>[inner sep=0pt, right=of dots,yshift=9mm,xshift=30mm] (roctest)
-            {\includegraphics[height=45mm,keepaspectratio]{pics/roc_curve_test}};
-        \node<3>[inner sep=0pt, above=of roctest,yshift=-9mm] (roctestTXT)
-            {\footnotesize ROC test};
+        % \node<2>[inner sep=0pt, right=of dots,yshift=9mm,xshift=30mm] (roctrain)
+        %     {\includegraphics[height=45mm,keepaspectratio]{pics/roc_curve_train}};
+        % \node<2>[inner sep=0pt, above=of roctrain,yshift=-9mm] (roctrainTXT)
+        %     {\footnotesize ROC train};
+        % % test
+        % \node<3>[inner sep=0pt, right=of dots,yshift=9mm,xshift=30mm] (roctest)
+        %     {\includegraphics[height=45mm,keepaspectratio]{pics/roc_curve_test}};
+        % \node<3>[inner sep=0pt, above=of roctest,yshift=-9mm] (roctestTXT)
+        %     {\footnotesize ROC test};
 
-        %significance
-        \node<4>[inner sep=0pt, right=of dots,yshift=9mm,xshift=30mm] (sign)
-            {\includegraphics[height=45mm,keepaspectratio]{pics/significance_vs_MVAcut}};
-        \node<4>[inner sep=0pt, above=of sign,yshift=-9mm] (sigTXT)
-            {\footnotesize Significance $S=N_{sig}/\sqrt{N_{sig}+N_{BG}}$};
+        % %significance
+        % \node<4>[inner sep=0pt, right=of dots,yshift=9mm,xshift=30mm] (sign)
+        %     {\includegraphics[height=45mm,keepaspectratio]{pics/significance_vs_MVAcut}};
+        % \node<4>[inner sep=0pt, above=of sign,yshift=-9mm] (sigTXT)
+        %     {\footnotesize Significance $S=N_{sig}/\sqrt{N_{sig}+N_{BG}}$};
 
-        % inv mass
-        \node<5>[inner sep=0pt, right=of dots,yshift=25mm,xshift=30mm] (invar1)
-            {\includegraphics[height=30mm,keepaspectratio]{pics/noV0_invar_mass_plot}};
-        \node<5>[inner sep=0pt, above=of invar1,yshift=-9mm] (invar1TXT)
-            {\footnotesize no MVA cut};
-        \node<5>[inner sep=0pt, right=of dots,yshift=-7mm,xshift=30mm] (invar2)
-            {\includegraphics[height=30mm,keepaspectratio]{pics/invar_mass_plot}};
-        \node<5>[inner sep=0pt, below=of invar2,yshift=9mm] (invar2TXT)
-            {\footnotesize with MVA cut};
+        % % inv mass
+        % \node<5>[inner sep=0pt, right=of dots,yshift=25mm,xshift=30mm] (invar1)
+        %     {\includegraphics[height=30mm,keepaspectratio]{pics/noV0_invar_mass_plot}};
+        % \node<5>[inner sep=0pt, above=of invar1,yshift=-9mm] (invar1TXT)
+        %     {\footnotesize no MVA cut};
+        % \node<5>[inner sep=0pt, right=of dots,yshift=-7mm,xshift=30mm] (invar2)
+        %     {\includegraphics[height=30mm,keepaspectratio]{pics/invar_mass_plot}};
+        % \node<5>[inner sep=0pt, below=of invar2,yshift=9mm] (invar2TXT)
+        %     {\footnotesize with MVA cut};
       \end{tikzpicture}
 \end{frame}
 
+% -----------------------------------------------
+
+\begin{frame}
+    \frametitle{Results}
+    ROC curve\\
+    \vspace*{5mm}
+    \centering\begin{tikzpicture}
+        \node<1-2>[inner sep=0pt] (output) at (0,0)
+            {\includegraphics[height=40mm,keepaspectratio]{pics/MVAoutput_distr_train_log}};
+        \node<1-2>[inner sep=0pt, above=of output,yshift=-9mm] (trainTXT)
+            {\footnotesize Training data};
+
+        % ROC curves
+        % train
+        \node<2>[inner sep=0pt, right=of output,yshift=3mm,xshift=-5mm] (roctrain)
+            {\includegraphics[height=42mm,keepaspectratio]{pics/roc_curve_train}};
+        \node<2>[inner sep=0pt, above=of roctrain,yshift=-9mm] (roctrainTXT)
+            {\footnotesize ROC train};
+        % test
+        \node<3>[inner sep=0pt] (output) at (0,0)
+            {\includegraphics[height=40mm,keepaspectratio]{pics/MVAoutput_distr_test_log}};        
+        \node<3>[inner sep=0pt, above=of output,yshift=-9mm] (testTXT)
+            {\footnotesize Test data};
+
+        \node<3>[inner sep=0pt, right=of output,yshift=3mm,xshift=-5mm] (roctest)
+            {\includegraphics[height=42mm,keepaspectratio]{pics/roc_curve_test}};
+        \node<3>[inner sep=0pt, above=of roctest,yshift=-9mm] (roctestTXT)
+            {\footnotesize ROC test};
+
+      \end{tikzpicture}
+\end{frame}
+
+% -----------------------------------------------
+
+\begin{frame}
+    \frametitle{Results}
+    To find the optimal cut on MVA output we evaluate significance along $y$\\
+    \vspace*{5mm}
+    \centering\begin{tikzpicture}
+        \node<1->[inner sep=0pt] (output) at (0,0)
+            {\includegraphics[height=40mm,keepaspectratio]{pics/MVAoutput_distr_train_log}};
+
+        %significance
+        \node<2->[inner sep=0pt, right=of output,yshift=0mm,xshift=-7mm] (sign)
+            {\includegraphics[height=40mm,keepaspectratio]{pics/significance_vs_MVAcut}};
+        \node<2->[inner sep=0pt, below=of sign,yshift=8mm,xshift=-25mm] (sigTXT)
+            {\footnotesize Significance $S=\frac{N_{sig}}{\sqrt{N_{sig}+N_{BG}}}$ };
+
+        \draw<3->[color=red, ultra thick, dashed] (-0.16, -1.35) -- (-0.16,1.2);
+
+      \end{tikzpicture}
+\end{frame}
+
+% -----------------------------------------------
+
+\begin{frame}
+    \frametitle{Results}
+    \centering\begin{tikzpicture}
+        \node<1->[inner sep=0pt] (output) at (0,0)
+            {\includegraphics[height=40mm,keepaspectratio]{pics/MVAoutput_distr_train_log}};
+        \draw<1->[color=red, ultra thick, dashed] (-0.16, -1.35) -- (-0.16,1.2);
+
+        % inv mass
+        \node<1->[inner sep=0pt, right=of output,yshift=15mm,xshift=-2mm] (invar1)
+            {\includegraphics[height=30mm,keepaspectratio]{pics/noV0_invar_mass_plot}};
+        \node<1->[inner sep=0pt, above=of invar1,yshift=-9mm] (invar1TXT)
+            {\small no MVA cut};
+        \node<1->[inner sep=0pt, right=of output,yshift=-15mm,xshift=-2mm] (invar2)
+            {\includegraphics[height=30mm,keepaspectratio]{pics/invar_mass_plot}};
+        \node<1->[inner sep=0pt, below=of invar2,yshift=12mm] (invar2TXT)
+            {\small with MVA cut};
+
+      \end{tikzpicture}
+\end{frame}
+
+% -----------------------------------------------
+
+\begin{frame}
+    \frametitle{Results}
+    Spectrum comparison yields MVA cut~$\leftrightarrow$~mass cut\\
+    \vspace*{5mm}
+    \centering\begin{tikzpicture}
+        \node<1-2>[inner sep=0pt] (pythia) at (0,0)
+            {\includegraphics[height=45mm,keepaspectratio]{pics/Pythia8_MVA_cut_comp}};
+        \node<1-2>[inner sep=0pt, above=of pythia,yshift=-12mm] (txtpyt)
+            {\emph{Pythia-8} (training \& test)};
+        \draw<2>[color=red, ultra thick, dashed] (-0.16, -1.35) -- (-0.16,1.2);
+
+        % \node<2-3>[right=of pythia, inner sep=0pt, xshift=-10mm] (dime)
+        %     {\includegraphics[height=45mm,keepaspectratio]{pics/DIME_MVA_cut_comp}};
+        % \node<2-3>[inner sep=0pt, above=of dime,yshift=-12mm] (txtdime)
+        %     {\emph{DIME} (different CEP sim.)};
+
+        % \node<3->[inner sep=0pt] (pt) at (0,0)
+        %     {\includegraphics[height=45mm,keepaspectratio]{pics/pt}};
+        % \node<3->[inner sep=0pt, below=of pt,yshift=8mm,xshift=8mm] (txt2)
+        %     {$pt$ least overlapping feature~$\to$~NN favours $pt$-cut};
+      \end{tikzpicture}
+\end{frame}
+
+% -----------------------------------------------
+
+\begin{frame}
+    \frametitle{Challenges}
+    \begin{itemize}
+        \item Need higher statistics to train models
+        \item Missing components in MC data 
+        \item Feature distributions real~$\leftrightarrow$~MC data not always overlapping
+        \item CEP simulations active field of research
+        \item EMCal corrections
+    \end{itemize}
+\end{frame}
+
+% -----------------------------------------------
 
 
+\begin{frame}
+    \frametitle{EMCal corrections}
+    \begin{itemize}
+        \item<1-> Currently: emcal data are not making a diffence\\\hspace*{5mm}$\to$~however, they should!
+        \item<2-> EMCal correction framework should (hopefully) fix that\\
+    \end{itemize}
+    \vspace*{5mm}
+    \centering\begin{tikzpicture}
+        \node<1->[inner sep=0pt] (output) at (0,0)
+            {\includegraphics[height=40mm,keepaspectratio]{pics/piechart}};
+        \node<1->[inner sep=0pt, above=of output ,yshift=-9mm] (txt1)
+            {Feed down contributions};
+
+%         % EMCal correction pics
+%         \node<2>[inner sep=0pt] (emcampl) at (0,0)
+%             {\includegraphics[height=40mm,keepaspectratio]{pics/emc_ampl_cep_comp}};
+%         \node<2>[inner sep=0pt, above=of emcampl,yshift=-9mm] (txt2)
+%             {EMC amplitude};
+
+%         \node<2>[inner sep=0pt, right=of emcampl, xshift=-5mm] (emcamplCorr)
+%             {\includegraphics[height=40mm,keepaspectratio]{pics/emcal_amplidude}};
+%         \node<2>[inner sep=0pt, above=of emcamplCorr,yshift=-9mm] (txt3)
+%             {Corrected amplitude};
+
+%         \node<3>[inner sep=0pt] (emctime) at (0,0)
+%             {\includegraphics[height=40mm,keepaspectratio]{pics/emcal_time_cep_comp}};
+%         \node<3>[inner sep=0pt, above=of emctime,yshift=-9mm] (txt2)
+%             {EMC time};
+
+%         \node<3>[inner sep=0pt, right=of emctime, xshift=-5mm] (emctimeCorr)
+%             {\includegraphics[height=40mm,keepaspectratio]{pics/emcal_time}};
+%         \node<3>[inner sep=0pt, above=of emctimeCorr,yshift=-9mm] (txt3)
+%             {Corrected time};
 
 
+      \end{tikzpicture}
+\end{frame}
+
+% --------------------------------------------
+
+{\setbeamercolor{background canvas}{bg=red!20}
+\begin{frame}
+    \frametitle{Conclusion}
+    \begin{itemize}
+        \item \emph{Pythia-8} simulations show $\eta$~gap condition drastically reduces non-diffractive background 
+        \item Dominant remaniing background is composed of partially reconstructed (\textbf{feed down}) events
+        \item MVA provides reasonable results on simulated data~$\to$~needs furthes steps on real data
+    \end{itemize}
+\end{frame}
+}
 
 %       - show a little more how back propergation works -> how weights are adjusted 
 %       - state importance that training sample has to represented the unknown samples later on!
