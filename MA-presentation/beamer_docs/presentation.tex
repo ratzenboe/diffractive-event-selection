@@ -1389,6 +1389,16 @@ Stefan Meyer Institut\\
 
         \node[right=of concat,xshift=-2mm] (DNN) [text=black,draw=orange,fill=orange!20,rectangle, minimum height=8mm,minimum width=14mm,draw, thick,rounded corners] {\footnotesize DNN};
 
+        \draw[->] (concat) -- (DNN);
+
+        \node[right=of DNN,xshift=-4mm] (y) [text=black] {\footnotesize $y$};
+
+        \draw[->] (DNN) -- (y);
+
+        \draw [decorate,decoration={brace,mirror,amplitude=15pt},xshift=0mm,yshift=0pt]
+            (rectFMD.north west) -- (rectEvent.south west) node (brace) [black,midway,xshift=-8mm] 
+            {$\boldsymbol{x}$};
+
 
     \end{tikzpicture}
      
