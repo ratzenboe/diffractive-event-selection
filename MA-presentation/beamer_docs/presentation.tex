@@ -116,10 +116,10 @@ Stefan Meyer Institut\\
     \centering\begin{tikzpicture}
         \node[inner sep=0pt] (diffr) at (0,0)
             {\includegraphics[height=4cm,keepaspectratio]{pics/diffraction_wo}};
-        \node (nonD) at (-4.2,0) [text width=3cm] {\small Incident hadrons aquire color\\ $\to$~break apart};
+        \node (nonD) at (-4.2,0) [text width=3cm] {\small Incident hadrons acquire color\\ $\to$~break apart};
         \node (D) at (4.5,0) [text width=3cm] {\small Colorless exchange};
-        \node (nonDbelow) at (-2.5,-3.2) [text width=6cm] {\small$\eta$~gap exponentially supressed};
-        \node (Dbelow) at (4.4,-3.2) [text width=6cm] {\small$\eta$~ gap not supressed};
+        \node (nonDbelow) at (-2.5,-3.2) [text width=6cm] {\small$\eta$~gap exponentially suppressed};
+        \node (Dbelow) at (4.4,-3.2) [text width=6cm] {\small$\eta$~ gap not suppressed};
         \node [below=of diffr,yshift=9mm] (eta) [text width=3cm] {\small $\eta=-ln(tan(\frac{\theta}{2}))$};
         % \draw[->] (-3,-2.6) to [out=90,in=270] (-1.5,-2.1) ;
         % \draw[->] (3,-2.6) to [out=90,in=270] (1.5,-2.1) ;
@@ -233,7 +233,7 @@ Stefan Meyer Institut\\
 
 \begin{frame}
     \frametitle{Event selection}
-    Large rapidity gaps in \emph{non-diffractive} events are exponentially supressed
+    Large rapidity gaps in \emph{non-diffractive} events are exponentially suppressed
     \centering\includegraphics[height=6cm,keepaspectratio]{pics/newDeltaEta_biggerSymbols.pdf}
 \end{frame}
 
@@ -254,7 +254,7 @@ Stefan Meyer Institut\\
         \draw<2>[->, ultra thick] (centralbarrel) -- (-4.0,-0.0);
         \draw<2>[->, ultra thick] (centralbarrel) -- (rectbarrel);
 
-        \node<3->[] (vetodets) at (0,-3) {\small Small detectors for global event characterisation};
+        \node<3->[] (vetodets) at (0,-3) {\small Small detectors for global event characterization};
         \node<3-> (rectbarrel1) at (4.6,0.18) [rectangle, dashed, minimum height=28mm,minimum width=16mm,draw, thick] {};
         \node<3-> (rectbarrel2) at (2.1,0.18) [rectangle, dashed, minimum height=28mm,minimum width=16mm,draw, thick] {};
         \draw<3->[->, ultra thick] (vetodets) -- (rectbarrel1);
@@ -349,7 +349,7 @@ Stefan Meyer Institut\\
     Studying \emph{Pythia-8} simulations yield
     \begin{itemize}
         \item<1-> Enforcing $\eta$ gap cut reduces non-diffractive almost entirely  
-        \item<2-> Remaining background are partially recontructed CEP events - \textbf{feed down}
+        \item<2-> Remaining background are partially reconstructed CEP events - \textbf{feed down}
     \end{itemize}
     % \vspace*{1mm}
     \centering\begin{tikzpicture}
@@ -445,7 +445,7 @@ Stefan Meyer Institut\\
     In general ML represents a contrast to a \emph{rule based systems}
     \begin{block}{Machine learning}
         \begin{itemize}
-            \item<1-> Alorithms that learn from \emph{data} \& make predictions on \emph{data}
+            \item<1-> Algorithms that learn from \emph{data} \& make predictions on \emph{data}
             \item<2-> Automatic methods $\to$ no human needed
             \item<3-> Human work required for defining problem \& assessing the data
         \end{itemize}
@@ -490,7 +490,7 @@ Stefan Meyer Institut\\
             \vspace*{-10mm}
             Standard cut in one variable
             \begin{itemize}
-                \item<1-> Cuts only in lower-dimensional subspaces
+                \item<1-> Cuts only in lower-dimensional sub-spaces
                 \item<2-> Ignores possible dependencies between the input variables
                 \item<3-> Signal might behave like BG in several observables\\ $\to$ misclassification
             \end{itemize}
@@ -516,7 +516,7 @@ Stefan Meyer Institut\\
         % \item Simple \& rather old model (\emph{60s, 70s})
         \item Tree-like graph $\to$ flowchart
         \item Easy to understand
-        \item Either be manually modelled by experts or learned from training data
+        \item Either be manually modeled by experts or learned from training data
     \end{itemize}
 \end{frame}
 
@@ -640,7 +640,7 @@ Stefan Meyer Institut\\
 \begin{frame}
     \frametitle{Decision tree learning}
     1) We compute a measure for \emph{each possible split} in each feature\\\hspace*{5mm}$\to$ here \textbf{absolute error rate} (AER)\\
-    2) Recursively repead step (1) for each subspace until AER $\to 0$
+    2) Recursively repeat step (1) for each subspace until AER $\to 0$
     \\
     \vspace*{3mm}
     \centering\includegraphics<1>[height=4.3cm,keepaspectratio]{pics/DT_1_split.png}%
@@ -670,7 +670,7 @@ Stefan Meyer Institut\\
     \begin{itemize}
         \item Use more sophisticated split measures 
             \begin{itemize}
-                \item \emph{Information gain} $\leftrightarrow$ (im-)purity of splitted sub-sets
+                \item \emph{Information gain} $\leftrightarrow$ (im-)purity of split sub-sets
             \end{itemize}
         \item Pruning 
         \item Ensemble trees (Random forest \& boosted DT)
@@ -1021,7 +1021,7 @@ Stefan Meyer Institut\\
 \begin{frame}
     \frametitle{Improving linear methods}
     \begin{block}{Kernel trick}
-        Map data to a higher dimensional space where linear hyperplane can again be found
+        Map data to a higher dimensional space where linear hyper-plane can again be found
     \end{block}
     \begin{columns}[T] % align columns
         \begin{column}{.48\textwidth}
@@ -1177,7 +1177,7 @@ Stefan Meyer Institut\\
 % -----------------------------------------------
 
 \begin{frame}
-    \frametitle{Visualising the hidden layer}
+    \frametitle{Visualizing the hidden layer}
     \begin{columns}[T] % align columns        
         \begin{column}{.48\textwidth}
             \vspace*{-5mm}
@@ -1239,11 +1239,11 @@ Stefan Meyer Institut\\
 
 % % -----------------------------------------------
 \begin{frame}
-    \frametitle{Update weights via back-propergation}
-    \begin{block}{Backpropergation}
+    \frametitle{Update weights via back-propagation}
+    \begin{block}{Back-propagation}
         Adapt weights by going backwards in the network
         \begin{itemize}
-            \item<1-> Initialize weigts
+            \item<1-> Initialize weights
             \item<2-> Evaluate $y_{predict} = f(\boldsymbol{x})$ and calculate $\Delta = (y_{true} - y_{predict})$
             \item<3-> Update weights: Weight adaption often denoted via loss $L = L(y_{true},\boldsymbol{w}^{(1)},\boldsymbol{W}^{(2)})$
         \end{itemize}
@@ -1294,7 +1294,7 @@ Stefan Meyer Institut\\
 % % -----------------------------------------------
 
 \begin{frame}
-    \frametitle{Bias-variance tradeof}
+    \frametitle{Bias-variance trade-off}
     \begin{itemize}
         \item Small variance: Classifiers with low degrees of freedom are less prone to statistical fluctuations\\$\to$~different training samples result in similar classification boundaries 
         \item However: if data contain features that a model with few degrees of freedom cannot describe, a bias is introduced
@@ -1570,7 +1570,7 @@ Stefan Meyer Institut\\
 \begin{frame}
     \frametitle{EMCal corrections}
     \begin{itemize}
-        \item<1-> Currently: emcal data are not making a diffence\\\hspace*{5mm}$\to$~however, they should!
+        \item<1-> Currently: emcal data are not making a difference\\\hspace*{5mm}$\to$~however, they should!
         \item<2-> EMCal correction framework should (hopefully) fix that\\
     \end{itemize}
     \vspace*{5mm}
@@ -1612,8 +1612,8 @@ Stefan Meyer Institut\\
     \frametitle{Conclusion}
     \begin{itemize}
         \item \emph{Pythia-8} simulations show $\eta$~gap condition drastically reduces non-diffractive background 
-        \item Dominant remaniing background is composed of partially reconstructed (\textbf{feed down}) events
-        \item MVA provides reasonable results on simulated data~$\to$~needs furthes steps on real data
+        \item Dominant remaining background is composed of partially reconstructed (\textbf{feed down}) events
+        \item MVA provides reasonable results on simulated data~$\to$~needs further steps on real data
     \end{itemize}
 \end{frame}
 }
