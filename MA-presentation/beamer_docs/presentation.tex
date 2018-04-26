@@ -41,6 +41,11 @@
       \alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}} % \pgfkeysalso doesn't change the path
   },
 }
+\tikzset{
+    cross/.style={path picture={ 
+      \draw[orange]
+      (path picture bounding box.south east) -- (path picture bounding box.north west) (path picture bounding box.south west) -- (path picture bounding box.north east);}}
+}
 
 % \usetheme{Copenhagen}
 \usetheme{EastLansing}
@@ -1347,34 +1352,42 @@ Stefan Meyer Institut\\
     \frametitle{Neural network structure}
     \centering\begin{tikzpicture}
         \node (rectFMD) at (0,0) [text=black,draw=blue, fill=blue!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny FMD};
-        \node[right=of rectFMD,xshift=-2mm] (rectNNFMD) [text=black,draw=yellow,fill=yellow!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny NN};
+        \node [draw,circle,cross,minimum width=1 cm,draw=orange,fill=orange!20] (concat) at (6,-3.1) {}; 
+
+        \node[right=of rectFMD,xshift=-2mm] (rectNNFMD) [text=black,draw=orange,fill=orange!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny NN};
 
         \node[below=of rectFMD,yshift=8mm] (rectV0) [text=black,draw=blue,fill=blue!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny V0};
-        \node[right=of rectV0,xshift=-2mm] (rectNNV0) [text=black,draw=yellow,fill=yellow!20,rectangle,minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny NN};
-        \node[right=of rectNNV0,xshift=2mm] (VetoAux) [draw=yellow,fill=yellow!20,circle,draw, thick,minimum size=6mm] {\tiny Aux};
+        \node[right=of rectV0,xshift=-2mm] (rectNNV0) [text=black,draw=orange,fill=orange!20,rectangle,minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny NN};
+        \node[right=of rectNNV0,xshift=2mm] (VetoAux) [draw=orange,fill=orange!20,circle,draw, thick,minimum size=6mm] {\tiny Aux};
         \draw[->] (rectV0) -- (rectNNV0) -- (VetoAux);
         \draw[->] (rectFMD) -- (rectNNFMD) -- ([xshift=2mm]rectNNFMD) -- (VetoAux);
 
         \node[below=of rectV0,yshift=8mm] (rectAD) [text=black,draw=blue,fill=blue!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny AD};
-        \node[right=of rectAD,xshift=-2mm] (rectNNad) [text=black,draw=yellow,fill=yellow!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny NN};
+        \node[right=of rectAD,xshift=-2mm] (rectNNad) [text=black,draw=orange,fill=orange!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny NN};
         \draw[->] (rectAD) -- (rectNNad) -- ([xshift=2mm]rectNNad) -- (VetoAux);
 
         \node[below=of rectAD,yshift=2mm] (rectEMC) [text=black,draw=red,fill=red!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny EMC};
-        \node[right=of rectEMC,xshift=-2mm] (rectRNNemc) [text=black,draw=yellow,fill=yellow!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny RNN};
-        \node[right=of rectRNNemc,xshift=2mm,yshift=-2mm] (VetoAuxCalo) [draw=yellow,fill=yellow!20,circle,draw, thick,minimum size=6mm] {\tiny Aux};
+        \node[right=of rectEMC,xshift=-2mm] (rectRNNemc) [text=black,draw=orange,fill=orange!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny RNN};
+        \node[right=of rectRNNemc,xshift=2mm,yshift=-3mm] (VetoAuxCalo) [draw=orange,fill=orange!20,circle,draw, thick,minimum size=6mm] {\tiny Aux};
         \draw[->] (rectEMC) -- (rectRNNemc) -- (VetoAuxCalo);
 
         \node[below=of rectEMC,yshift=8mm] (rectPHOS) [text=black,draw=red,fill=red!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny PHOS};
-        \node[right=of rectPHOS,xshift=-2mm] (rectRNNphos) [text=black,draw=yellow,fill=yellow!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny RNN};
+        \node[right=of rectPHOS,xshift=-2mm] (rectRNNphos) [text=black,draw=orange,fill=orange!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny RNN};
         \draw[->] (rectPHOS) -- (rectRNNphos) -- (VetoAuxCalo);
 
         \node[below=of rectPHOS,yshift=2mm] (rectTrack) [text=black,draw=green,fill=green!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny Tracks};
-        \node[right=of rectTrack,xshift=-2mm] (rectRNNtrack) [text=black,draw=yellow,fill=yellow!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny RNN};
-        \node[right=of rectRNNtrack,xshift=2mm,yshift=2mm] (VetoAuxTrack) [draw=yellow,fill=yellow!20,circle,draw, thick,minimum size=6mm] {\tiny Aux};
+        \node[right=of rectTrack,xshift=-2mm] (rectRNNtrack) [text=black,draw=orange,fill=orange!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick,rounded corners] {\tiny RNN};
+        \node[right=of rectRNNtrack,xshift=2mm,yshift=0mm] (VetoAuxTrack) [draw=orange,fill=orange!20,circle,draw, thick,minimum size=6mm] {\tiny Aux};
         \draw[->] (rectTrack) -- (rectRNNtrack) -- (VetoAuxTrack);
 
         \node[below=of rectTrack,yshift=2mm] (rectEvent) [text=black,draw=black,fill=black!20,rectangle, minimum height=5mm,minimum width=10mm,draw, thick] {\tiny Event};
-        \draw[->] (rectEvent) -- ([xshift=4mm]rectEvent);
+
+        \draw[->] (rectEvent) -- (6,-6.2) -- (concat);
+        \draw[->] (VetoAuxTrack) -- (concat);
+        \draw[->] (VetoAuxCalo) -- (concat);
+        \draw[->] (VetoAux) -- (6,-0.75)  -- (concat);
+
+        \node[right=of concat,xshift=-2mm] (DNN) [text=black,draw=orange,fill=orange!20,rectangle, minimum height=8mm,minimum width=14mm,draw, thick,rounded corners] {\footnotesize DNN};
 
 
     \end{tikzpicture}
@@ -1393,7 +1406,7 @@ Stefan Meyer Institut\\
         \node[inner sep=0pt, below=of dots,yshift=9mm] (fn)
             {\includegraphics[height=20mm,keepaspectratio]{pics/pid_bayes_proba_pion}};
         \draw [decorate,decoration={brace,amplitude=15pt},xshift=5mm,yshift=0pt]
-            (f1.north east) -- (fn.south east) node [black,midway,xshift=15mm] 
+            (f1.north east) -- (fn.south east) node (brace) [black,midway,xshift=15mm] 
             {$\mathbb{R}^{n}\to\mathbb{R}$};
         \node<1>[inner sep=0pt, right=of dots,yshift=9mm,xshift=30mm] (output)
             {\includegraphics[height=45mm,keepaspectratio]{pics/MVAoutput_distr_train_log}};
