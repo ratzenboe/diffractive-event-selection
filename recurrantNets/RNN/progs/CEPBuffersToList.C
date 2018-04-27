@@ -37,7 +37,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
     TList *input_files = input_dir.GetListOfFiles();
 
     TChain *cep_tree = new TChain(tree_name);
-    if(input_files) {
+    if(input_files && (!input_dirname.EndsWith(".root")) ) {
         std::cout << "\nReading \"*" << file_ext << "\" files from \"" << input_dirname << "\"..." << std::endl;
         TSystemFile *file;
         TString fname;
@@ -48,7 +48,8 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
                 cep_tree->Add(input_dirname + fname);
             }
         }
-    }
+    } else if(input_dirname.EndsWith(".root")) cep_tree->Add(input_dirname);
+    else { printf("<E> Input file must end with .txt"); gSystem->Exit(0); } 
 
     CEPRawEventBuffer* cep_raw_evt = 0x0;
     CEPEventBuffer* cep_evt = 0x0;
@@ -85,6 +86,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
     TH1F* evt_n_v0s = new TH1F("n_v0s", "", 100, 0, 1000);
     TH1F* evt_charge_sum = new TH1F("charge_sum", "", 40, -10, 10);
     TH1F* evt_lhc16_filter = new TH1F("LHC16Filter", "", 10, -1, 2);
+    TH1F* evt_is_full_recon = new TH1F("is_full_recon", "", 8, -1, 2);
 
     // hlt = high level track
     TH1F* trk_tof_bunch_crossing = new TH1F("tof_bunch_crossing", "", 100, 0, 100);
@@ -147,7 +149,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
 
     // emc
     TH1F* emcal_amplidude = new TH1F("emcal_amplidude", "", 100, 0, 100);
-    TH1F* emcal_time = new TH1F("emcal_time", "", 100, 0, 2e-6);
+    TH1F* emcal_time = new TH1F("emcal_time", "", 100, -5e-7, 5e-7);
     
     // phos
     TH1F* phos_amplidude = new TH1F("phos_amplidude", "", 100, 0, 5);
@@ -158,6 +160,10 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
     TH1F* cc_shapeDispersion = new TH1F("calo_cluster_shape_dispersion", "", 100, 0, 10);
     TH1F* cc_chi2 = new TH1F("calo_cluster_chi2", "", 10, -2, 2);
     TH1F* cc_cpvdist = new TH1F("calo_cluster_cpvdist", "", 1000, 0, 1500);
+
+    TH1F* cc_m02 = new TH1F("calo_cluster_m02", "", 100, 0, 10);
+    TH1F* cc_m20 = new TH1F("calo_cluster_m20", "", 100, 0, 10);
+    TH1F* cc_time = new TH1F("calo_cluster_time", "", 100, -9e-8, 9e-8);
 
     Int_t cu, mode;
     Bool_t isDG, isNDG;
@@ -184,6 +190,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
     CEPRawCaloBuffer* emcal = 0x0;
     CEPRawCaloBuffer* phos  = 0x0;
     Int_t n_tracks = 2;
+    std::vector<Int_t> part_vec;
     if (filter==99) n_tracks=3;
     for (UInt_t ii(evt_offset); ii<evt_offset+n_evts_to_read; ii++)
     {
@@ -201,6 +208,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
         // display purposes only ////////////////////
 
         cep_tree->GetEntry(ii);
+        /* if (is_full_recon(cep_evt)==0) continue; */
         if (!cep_evt) {
             std::cout << "Event number " << ii << " cannot be found!" << std::endl;
             gSystem->Exit(1);
@@ -227,6 +235,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
         if ((filter>=0) && (filter!=99) && (isDG==kFALSE || nseltracks!=n_tracks)) continue;
         if ((filter==99) && (isDG==kFALSE || nseltracks<n_tracks)) continue;
 
+        part_vec.clear();
         evt_lhc16_filter->Fill(lhc16_filter);
         if (filter==99 && cep_evt->GetnTracks()>2) {
             Bool_t kPiPlus(false), kPiMinus(false);
@@ -259,12 +268,12 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
         TVector3 v;
         UInt_t hlt_kk(0);
         Int_t track_nb(0);
-        for (UInt_t kk(0); kk<n_tracks; kk++)
+        for (UInt_t kk(0); kk<cep_evt->GetnTracks(); kk++)
         {
             if (filter==99) track_nb=part_vec[kk];
             else track_nb = kk;
             trk = cep_evt->GetTrack(track_nb);
-            if (!trk) break;
+            if (!trk) { printf("\n\n<W> no track recieved!\n\n"); break; }
             // put here all track info
             trk_tof_bunch_crossing->Fill(trk->GetTOFBunchCrossing());
             trk_dca_vtx_z->Fill(trk->GetZv());
@@ -362,6 +371,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
         evt_tot_phos_time->Fill(cep_raw_evt->GetTotalPHOSTime());
 
         evt_n_v0s->Fill(cep_evt->GetnV0());
+        evt_is_full_recon->Fill(is_full_recon(cep_evt));
 
         // AD
         ad = cep_raw_evt->GetRawADBuffer();
@@ -414,6 +424,9 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
             cc_shapeDispersion->Fill(rawCaloCluster->GetCaloClusterShapeDispersion());
             cc_chi2->Fill(rawCaloCluster->GetCaloClusterChi2());
             cc_cpvdist->Fill(rawCaloCluster->GetCaloClusterCPVDist());
+            cc_m02->Fill(rawCaloCluster->GetCaloClusterM02()); 
+            cc_m20->Fill(rawCaloCluster->GetCaloClusterM20());
+            cc_time->Fill(rawCaloCluster->GetCaloClusterTime());
         }
     }
     // cursor of status display has to move to the next line
@@ -441,6 +454,7 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
     hist_list->Add(evt_n_v0s);
     hist_list->Add(evt_charge_sum);
     hist_list->Add(evt_lhc16_filter);
+    hist_list->Add(evt_is_full_recon);
 
     // hlt = high level track
     hist_list->Add(trk_tof_bunch_crossing);
@@ -508,7 +522,10 @@ void CEPBuffersToList(TString input_dirname, TString output_prefix,
     hist_list->Add(cc_shapeDispersion);
     hist_list->Add(cc_chi2);
     hist_list->Add(cc_cpvdist);
- 
+    hist_list->Add(cc_m02);
+    hist_list->Add(cc_m20);
+    hist_list->Add(cc_time);
+  
     list_file->cd();
     hist_list->Write();
     list_file->Close();
