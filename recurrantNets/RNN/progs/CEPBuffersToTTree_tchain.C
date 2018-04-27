@@ -40,7 +40,7 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     TList *input_files = input_dir.GetListOfFiles();
 
     TChain *cep_tree = new TChain(tree_name);
-    if(input_files) {
+    if(input_files && (!input_dirname.EndsWith(".root")) ) {
         std::cout << "\nReading \"*" << file_ext << "\" files from \"" << input_dirname << "\"..." << std::endl;
         TSystemFile *file;
         TString fname;
@@ -51,7 +51,9 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
                 cep_tree->Add(input_dirname + fname);
             }
         }
-    }
+    } else if(input_dirname.EndsWith(".root")) cep_tree->Add(input_dirname);
+    else { printf("<E> Input file must end with .txt"); gSystem->Exit(0); } 
+
 
     CEPRawEventBuffer* cep_raw_evt = 0x0;
     CEPEventBuffer* cep_evt = 0x0;
@@ -229,19 +231,27 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
 
     TFile* caloClusterFile = new TFile((output_prefix+"calo_cluster_info"+file_addon_str).Data(), "RECREATE");
     TTree* caloClusterTree = new TTree("calo_cluster", "raw calo cluster info");
-    Double_t CC_E, CC_shapeDispersion, CC_chi2, CC_CPVDist;
+    Double_t CC_E, CC_shapeDispersion, CC_chi2, CC_CPVDist, CC_pos_x, CC_pos_y, CC_pos_z, CC_m02,
+             CC_m20, CC_time;
     caloClusterTree->Branch("event_id", &event_nb);
     caloClusterTree->Branch("energy", &CC_E);
     caloClusterTree->Branch("shape_dispersion", &CC_shapeDispersion);
     caloClusterTree->Branch("chi2", &CC_chi2);
     caloClusterTree->Branch("cpv_distance", &CC_CPVDist);
+    caloClusterTree->Branch("pos_x", &CC_pos_x);
+    caloClusterTree->Branch("pos_y", &CC_pos_y);
+    caloClusterTree->Branch("pos_z", &CC_pos_z);
+    caloClusterTree->Branch("m02", &CC_m02);
+    caloClusterTree->Branch("m20", &CC_m20);
+    caloClusterTree->Branch("time", &CC_time);
 
     TFile* emcalFile = new TFile((output_prefix+"emcal_info"+file_addon_str).Data(), "RECREATE");
     TTree* emcalTree = new TTree("emcal", "raw emcal info");
-    Double_t emcal_amplidude, emcal_time; 
+    Double_t emcal_amplidude, emcal_time, emcal_n_fired_cells;
     emcalTree->Branch("event_id", &event_nb);
     emcalTree->Branch("amplitude", &emcal_amplidude);
     emcalTree->Branch("time", &emcal_time);
+    emcalTree->Branch("n_fired_cells", &emcal_n_fired_cells);
 
     TFile* phosFile = new TFile((output_prefix+"phos_info"+file_addon_str).Data(), "RECREATE");
     TTree* phosTree = new TTree("phos", "raw phos info");
@@ -249,6 +259,7 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     phosTree->Branch("event_id", &event_nb);
     phosTree->Branch("amplitude", &phos_amplidude);
     phosTree->Branch("time", &phos_time);
+    phosTree->Branch("n_fired_cells", &phos_n_fired_cells);
 
     // now that we have prepared all Trees and files we go along and read out the 
     // raw-buffers and write the content to the output files
@@ -513,6 +524,7 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
         {
             emcal_amplidude = emcal->GetCaloCellAmplitude(kk);
             emcal_time =  emcal->GetCaloCellTime(kk);
+            emcal_n_fired_cells = emcal->GetNCells();
 
             emcalTree->Fill();
         }
@@ -522,6 +534,7 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
         {
             phos_amplidude = phos->GetCaloCellAmplitude(kk);
             phos_time =  phos->GetCaloCellTime(kk);
+            phos_n_fired_cells = phos->GetNCells();
 
             phosTree->Fill();
         }
@@ -536,6 +549,11 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
             CC_shapeDispersion = rawCaloCluster->GetCaloClusterShapeDispersion();
             CC_chi2 = rawCaloCluster->GetCaloClusterChi2();
             CC_CPVDist = rawCaloCluster->GetCaloClusterCPVDist();
+            CC_m20 = rawCaloCluster->GetCaloClusterM20();
+            CC_m02 = rawCaloCluster->GetCaloClusterM02();
+            CC_time = rawCaloCluster->GetCaloClusterTime();
+
+            rawCaloCluster->GetCaloClusterGlobalPosition(CC_pos_x,CC_pos_y,CC_pos_z);
 
             caloClusterTree->Fill();
         }
