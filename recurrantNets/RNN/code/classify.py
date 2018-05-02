@@ -60,6 +60,7 @@ def main():
         evt_id_string     = data_params['evt_id']
         missing_vals_dic  = data_params['missing_values']
         remove_features   = data_params['remove_features']
+        print('evt_id_string: {}'.format(evt_id_string))
         # ------------ run-parameters --------------
         do_standard_scale = run_params['do_standard_scale']
         # ------------ model-parametrs -------------
@@ -72,23 +73,30 @@ def main():
         # saved pickle files (the event.pkl, etc)
         # raise TypeError('We want to produce the evt_dic again')
         evt_dictionary = get_data_dictionary(inpath)
-        print('\n:: Event dictionary loaded from file: {}'.format(
-            output_path + 'evt_dic.pkl'))
+        print('\n:: Event dictionary loaded from file: {}'.format(inpath))
         evt_dictionary = get_sub_dictionary(evt_dictionary, branches_dic)
     except(OSError, IOError, TypeError, ValueError):
-        raise IOError('The event dictionary cannot be loaded from {}!'.format(
-            output_path+'evt_dic.pkl'))
+        raise IOError('The event dictionary cannot be loaded from {}!'.format(inpath))
+
+    if evt_id_string in evt_dictionary['event'].dtype.names:
+        print('{} in event category!'.format(evt_id_string))
+        print('{}'.format(evt_dictionary['event'].dtype.names))
+    else:
+        print('{} NOT in event category!'.format(evt_id_string))
+        print('{}'.format(evt_dictionary['event'].dtype.names))
+    evt_dictionary['event'], evt_id_np = remove_field_name(evt_dictionary['event'], evt_id_string)
+    print('\nType evt-id-np: {}'.format(type(evt_id_np)))
+    print(evt_id_np)
 
     evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
     evt_dictionary, list_of_engineered_features = engineer_features(evt_dictionary, replace=False)
     
     # function that extracts the evt-id from each 'event'-array and puts it into a list
-    if 'koala' not in run_mode_user:
-        not_99_indices = np.arange(evt_dictionary['target'].shape[0])[evt_dictionary['target']!=99]
-        for key in evt_dictionary.keys():
-            evt_dictionary[key] = evt_dictionary[key][not_99_indices]
+    # we do not need the 99 events any more
+    not_99_indices = np.arange(evt_dictionary['target'].shape[0])[evt_dictionary['target']!=99]
+    for key in evt_dictionary.keys():
+        evt_dictionary[key] = evt_dictionary[key][not_99_indices]
 
-    evt_dictionary['event'], evt_id_np = remove_field_name(evt_dictionary['event'], evt_id_string)
     evt_id_list = list(map(int, evt_id_np.ravel().tolist()))
     # remove a feature if it is in the cut_dic and contains no further info 
     branches_dic['event'].remove(evt_id_string)
@@ -108,6 +116,15 @@ def main():
         raise KeyError('Attention, the event id key is still in the data! '\
                 'By not removing it the machine will treat it as a feature') 
 
+    # lets remove some features to check if we get a worse performance 
+    if 'koala' in run_mode_user: 
+        evt_dictionary.pop('fmd', None)
+        evt_dictionary.pop('ad', None)
+        evt_dictionary.pop('v0', None)
+        evt_dictionary.pop('calo_cluster', None)
+        evt_dictionary.pop('phos', None)
+        evt_dictionary.pop('emcal', None)
+
     # if plot:
     #     print('\n::  Plotting the features...')
     #     plot_all_features(evt_dictionary, out_path, real_bg=False)
@@ -118,7 +135,7 @@ def main():
     ######################################################################################
     print('\n::  Standarad scaling...')
     # returns a numpy array (due to fit_transform function)
-    preprocess(evt_dictionary, model_path, load_fitted_attributes=True)
+    preprocess(evt_dictionary, model_dir, load_fitted_attributes=True)
 
     # before we lose track of the column names we save the eta-phi-diff columns
     # which we will (is needed for the koala mode)
@@ -128,13 +145,13 @@ def main():
     print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
     shape_data(evt_dictionary)
 
-    if 'NN' in run_mode_user:
-        flatten_feature(evt_dictionary, 'track')
-        evt_dictionary['feature_matrix'] = np.c_[evt_dictionary.pop('track'), 
-                                                 evt_dictionary.pop('event')]
+    # if 'NN' in run_mode_user:
+    #     flatten_feature(evt_dictionary, 'track')
+    #     evt_dictionary['feature_matrix'] = np.c_[evt_dictionary.pop('track'), 
+    #                                              evt_dictionary.pop('event')]
     print_array_in_dictionary_stats(evt_dictionary, 'Training data info:')
     # Get the best model
-    model = load_model(model_path + 'best_model.h5')
+    model = load_model(model_path)
     ######################################################################################
     # STEP 3:
     # ----------------------------- Evaluating the model ---------------------------------
@@ -162,10 +179,10 @@ def main():
                 feed_down += 1
 
     num_trueSignal, num_trueBackgr = plot_MVAoutput(y_target, y_score, 
-                                                    model_path, label='classify')
-    if num_trueSignal:
-        MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, model_path, 'classify')
-        plot_ROCcurve(y_target, y_score, model_path, label='classify')
+                                                    model_dir, label='classify')
+    if num_trueSignal is not None:
+        MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, model_dir, 'classify')
+        plot_ROCcurve(y_target, y_score, model_dir, label='classify')
     del num_trueSignal, num_trueBackgr
 
 
@@ -174,8 +191,8 @@ def main():
     print('   Signal events after cut: {}/{}'.format(full_recon, full_recon+feed_down))
     print('   Signal efficiency: {}'.format(full_recon/(full_recon+feed_down)))
 
-    print('::  Saving the predicted signal evts in {}...'.format(model_path+outfile))
-    thefile = open(model_path+outfile, 'w')
+    print('::  Saving the predicted signal evts in {}...'.format(model_dir+outfile))
+    thefile = open(model_dir+outfile, 'w')
     for item in sig_list:
         thefile.write("%s\n" % item)
 
@@ -251,12 +268,17 @@ if __name__ == "__main__":
     if not outfile.endswith('.txt'):
         outfile += '.txt'
 
-    if not model_path.endswith('/'):
+    if not model_path.endswith('/') and not model_path.endswith('.hdf5'):
         model_path += '/'
 
-    if model_path is None or not os.path.isdir(model_path):
+    if model_path.endswith('/'):
+        model_path += 'best_model.h5'
+
+    model_dir = os.path.split(model_path)[0]+'/'
+
+    if model_path is None or not os.path.isfile(model_path):
         raise IOError('No valid "model_path" provided!\nPlease do so via ' \
-                'command line argument: -modelpath /path/to/modelfolder/')
+                'command line argument: -modelpath /path/to/modelfolder/model_file.hdf5')
 
     if not mva_cut or mva_cut < 0. or mva_cut > 1.:
         raise IOError('MVA cut-value has no valid value: {}'.format(mva_cut))
