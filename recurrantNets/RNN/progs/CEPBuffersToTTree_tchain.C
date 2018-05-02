@@ -68,7 +68,8 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     TTree* eventTree = new TTree("event", "event level info");
 
     Int_t evt_n_tracks, evt_n_tracklets, evt_n_singles, evt_n_residuals, 
-          evt_n_tracks_total, evt_n_tracks_its_only,
+          evt_n_tracks_total, evt_n_tracks_its_only, 
+          evt_n_calo_tracks, evt_n_emcal_cells, evt_n_phos_cells,
           mc_process_type, evt_is_full_recon, 
 	  evt_lhc16_filter_checkSPD_hard, evt_lhc16_filter_checkSPD_maxnSingle_0,
 	  evt_lhc16_filter_checkSPD_maxnSingle_1, evt_lhc16_filter_checkSPD_maxnSingle_2,
@@ -90,6 +91,9 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     eventTree->Branch("n_tracks_total", &evt_n_tracks_total);
     eventTree->Branch("n_residuals", &evt_n_residuals);
     eventTree->Branch("n_tracks_its_only", &evt_n_tracks_its_only);
+    eventTree->Branch("n_calo_clusters", &evt_n_calo_tracks);
+    eventTree->Branch("n_emcal_cells", &evt_n_emcal_cells);
+    eventTree->Branch("n_phos_cells", &evt_n_phos_cells);
     // detector sums
     eventTree->Branch("tot_ad_mult", &evt_tot_ad_mult);
     eventTree->Branch("tot_ad_time", &evt_tot_ad_time);
@@ -231,8 +235,8 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
 
     TFile* caloClusterFile = new TFile((output_prefix+"calo_cluster_info"+file_addon_str).Data(), "RECREATE");
     TTree* caloClusterTree = new TTree("calo_cluster", "raw calo cluster info");
-    Double_t CC_E, CC_shapeDispersion, CC_chi2, CC_CPVDist, CC_pos_x, CC_pos_y, CC_pos_z, CC_m02,
-             CC_m20, CC_time;
+    Double_t CC_E, CC_shapeDispersion, CC_chi2, CC_CPVDist, CC_pos_x, CC_pos_y, CC_pos_z, CC_pos_eta, CC_pos_phi, CC_pos_pt,
+             CC_m02, CC_m20, CC_time;
     caloClusterTree->Branch("event_id", &event_nb);
     caloClusterTree->Branch("energy", &CC_E);
     caloClusterTree->Branch("shape_dispersion", &CC_shapeDispersion);
@@ -241,6 +245,9 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     caloClusterTree->Branch("pos_x", &CC_pos_x);
     caloClusterTree->Branch("pos_y", &CC_pos_y);
     caloClusterTree->Branch("pos_z", &CC_pos_z);
+    caloClusterTree->Branch("pos_eta", &CC_pos_eta);
+    caloClusterTree->Branch("pos_phi", &CC_pos_phi);
+    caloClusterTree->Branch("pos_pt", &CC_pos_pt);
     caloClusterTree->Branch("m02", &CC_m02);
     caloClusterTree->Branch("m20", &CC_m20);
     caloClusterTree->Branch("time", &CC_time);
@@ -453,40 +460,6 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
             rawtrk_eta = rawTrack->GetEta(); 
             trackTree->Fill();
         }
-        evt_is_pipi_evt_mc = (kPiPlus && kPiMinus) ? 1 : 0;
-        evt_is_pion_evt_bayes = kIsPionEvtBayes ? 1 : 0;
-        // Event  
-        // event info contains charge sum, hence we have to first loop
-        // over the tracks to gain this information
-        evt_n_tracks = cep_evt->GetnTracks();
-        evt_n_tracklets = cep_evt->GetnTracklets(); 
-        evt_n_singles = cep_evt->GetnSingles(); 
-        evt_n_residuals = cep_evt->GetnResiduals();
-        evt_n_tracks_total = cep_evt->GetnTracksTotal(); 
-        evt_n_tracks_its_only = cep_evt->GetnITSpureTracks();
-
-        evt_tot_ad_mult = cep_raw_evt->GetTotalADMult();
-        evt_tot_ad_time = cep_raw_evt->GetTotalADTime();
-        evt_tot_ad_charge = cep_raw_evt->GetTotalADCharge();
-
-        evt_tot_fmd_mult = cep_raw_evt->GetTotalFMDMult();
-
-        evt_tot_v0_mult = cep_raw_evt->GetTotalV0Mult();
-        evt_tot_v0_time = cep_raw_evt->GetTotalV0Time();
-        evt_tot_v0_charge = cep_raw_evt->GetTotalV0Charge();
-        evt_tot_v0_sig_width = cep_raw_evt->GetTotalV0SigWidth();
-       
-        evt_tot_emc_ampl = cep_raw_evt->GetTotalEMCAmplitude();
-        evt_tot_emc_time = cep_raw_evt->GetTotalEMCTime();
-        evt_tot_phos_ampl = cep_raw_evt->GetTotalPHOSAmplitude();
-        evt_tot_phos_time = cep_raw_evt->GetTotalPHOSTime();
-
-        evt_is_full_recon = is_full_recon(cep_evt);
-        mc_process_type = cep_evt->GetMCProcessType();
-        
-        evt_n_v0s = cep_evt->GetnV0();
-
-        eventTree->Fill();
 
         
         // AD
@@ -555,8 +528,54 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
 
             rawCaloCluster->GetCaloClusterGlobalPosition(CC_pos_x,CC_pos_y,CC_pos_z);
 
+            TVector3 v(CC_pos_x,CC_pos_y, CC_pos_z);
+            CC_pos_eta = c.Eta();
+            CC_pos_phi = c.Phi();
+            CC_pos_pt  = c.Pt();
+
             caloClusterTree->Fill();
         }
+
+        // combined track info
+        evt_is_pipi_evt_mc = (kPiPlus && kPiMinus) ? 1 : 0;
+        evt_is_pion_evt_bayes = kIsPionEvtBayes ? 1 : 0;
+        // Event  
+        // event info contains charge sum, hence we have to first loop
+        // over the tracks to gain this information
+        evt_n_tracks = cep_evt->GetnTracks();
+        evt_n_tracklets = cep_evt->GetnTracklets(); 
+        evt_n_singles = cep_evt->GetnSingles(); 
+        evt_n_residuals = cep_evt->GetnResiduals();
+        evt_n_tracks_total = cep_evt->GetnTracksTotal(); 
+        evt_n_tracks_its_only = cep_evt->GetnITSpureTracks();
+
+        // combined calorimeter info
+        evt_n_calo_tracks = cep_raw_evt->GetnCaloClusterTotal()
+        evt_n_emcal_cells = emcal->GetNCells()
+        evt_n_phos_cells  = phos->GetNCells()
+
+        evt_tot_ad_mult = cep_raw_evt->GetTotalADMult();
+        evt_tot_ad_time = cep_raw_evt->GetTotalADTime();
+        evt_tot_ad_charge = cep_raw_evt->GetTotalADCharge();
+
+        evt_tot_fmd_mult = cep_raw_evt->GetTotalFMDMult();
+
+        evt_tot_v0_mult = cep_raw_evt->GetTotalV0Mult();
+        evt_tot_v0_time = cep_raw_evt->GetTotalV0Time();
+        evt_tot_v0_charge = cep_raw_evt->GetTotalV0Charge();
+        evt_tot_v0_sig_width = cep_raw_evt->GetTotalV0SigWidth();
+       
+        evt_tot_emc_ampl = cep_raw_evt->GetTotalEMCAmplitude();
+        evt_tot_emc_time = cep_raw_evt->GetTotalEMCTime();
+        evt_tot_phos_ampl = cep_raw_evt->GetTotalPHOSAmplitude();
+        evt_tot_phos_time = cep_raw_evt->GetTotalPHOSTime();
+
+        evt_is_full_recon = is_full_recon(cep_evt);
+        mc_process_type = cep_evt->GetMCProcessType();
+        
+        evt_n_v0s = cep_evt->GetnV0();
+
+        eventTree->Fill();
 
     }
     // cursor of status display has to move to the next line
