@@ -243,6 +243,7 @@ def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
     n_total, bins_total, patches_total = \
         plt.hist(y_score,
                  bins=nbins,
+                 range=(0., 1.),
                  alpha=.25,
                  color='black',
                  label='signal+backgr.')
@@ -250,24 +251,32 @@ def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
     n_trueNeg, bins_trueNeg, patches_trueNeg = \
         plt.hist(y_score_trueNeg,
                  bins=nbins,
+                 range=(0., 1.),
                  alpha=0.5,
                  color='#dd0000',
                  label='background')
     
-    n_truePos, bins_truePos, patches_truePos = \
-        plt.hist(y_score_truePos,
-                 bins=nbins,
-                 alpha=0.5,
-                 color='green',
-                 label='signal')
+    if y_score_truePos.shape[0] > 0:
+        n_truePos, bins_truePos, patches_truePos = \
+            plt.hist(y_score_truePos,
+                     bins=nbins,
+                     range=(0., 1.),
+                     alpha=0.5,
+                     color='green',
+                     label='signal')
+    else:
+        n_truePos = None
+        
     
     if y_score_trueBG.shape[0] > 0:
         n_trueBG, bins_trueBG, patches_trueBG = \
             plt.hist(y_score_trueBG,
                      bins=nbins,
+                     range=(0., 1.),
                      alpha=0.5,
                      color='yellow',
                      label='generated backg.')
+        n_trueNeg = n_trueNeg+n_trueBG
  
     #plt.title('MVA output distribution (positive class)')
     plt.xlim(-0.05, 1.05)
