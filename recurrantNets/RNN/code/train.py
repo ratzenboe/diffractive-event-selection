@@ -79,6 +79,7 @@ def main():
         n_layers          = model_params['n_layers']
         layer_nodes       = model_params['layer_nodes']
         batch_norm        = model_params['batch_norm']
+        k_reg             = model_params['k_reg']
         # printing model parameters:
         print('\n{}'.format(30*'-'))
         print('::  Model Parameters:')
@@ -91,6 +92,7 @@ def main():
         print('::    n_layers: {}'.format(n_layers))
         print('::    layer_nodes: {}'.format(layer_nodes))
         print('::    batch_norm: {}'.format(batch_norm))
+        print('::    kernel regularizer: {}'.format(k_reg))
         print('::    aux-output: {}'.format(aux))
         print('::    flatten: {}'.format(flat))
         print('{}'.format(30*'-'))
@@ -261,6 +263,7 @@ def main():
                           n_layers    = n_layers,
                           layer_nodes = layer_nodes, 
                           batch_norm  = batch_norm,
+                          k_reg       = k_reg,
                           activation  = activation,
                           flat        = flat,
                           aux         = aux)
