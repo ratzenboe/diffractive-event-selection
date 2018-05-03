@@ -14,7 +14,9 @@
 #include <TChain.h>
 #include <TTree.h>
 
-void GetRawEventBuffer(TString input_dirname, CEPRawEventBuffer*& cep_raw_evt, CEPEventBuffer*& cep_evt)
+UInt_t index = 0;
+
+TChain* GetRawEventBuffer(TString input_dirname, CEPRawEventBuffer*& cep_raw_evt, CEPEventBuffer*& cep_evt, Int_t entry=0)
 {
     // file extensions
     const char *file_ext = ".root";
@@ -47,5 +49,12 @@ void GetRawEventBuffer(TString input_dirname, CEPRawEventBuffer*& cep_raw_evt, C
 
     cep_tree->SetBranchAddress(cep_evts_branchname,     &cep_evt);
     cep_tree->SetBranchAddress(cep_raw_evts_branchname, &cep_raw_evt);
+
+    if (entry>=cep_tree->GetEntries() || entry<0) entry = 0;
+    cep_tree->GetEntry(entry);
+
+    return cep_tree;
 }
+
+
 
