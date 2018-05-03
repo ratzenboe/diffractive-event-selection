@@ -91,6 +91,7 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     eventTree->Branch("n_tracks_total", &evt_n_tracks_total);
     eventTree->Branch("n_residuals", &evt_n_residuals);
     eventTree->Branch("n_tracks_its_only", &evt_n_tracks_its_only);
+    // calo infos
     eventTree->Branch("n_calo_clusters", &evt_n_calo_tracks);
     eventTree->Branch("n_emcal_cells", &evt_n_emcal_cells);
     eventTree->Branch("n_phos_cells", &evt_n_phos_cells);
