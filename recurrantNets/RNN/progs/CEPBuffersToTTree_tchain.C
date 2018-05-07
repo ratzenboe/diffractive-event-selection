@@ -16,12 +16,9 @@
 #include <TChain.h>
 #include <TTree.h>
 
-void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TString path_to_cepfilter_macro, 
+void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix,
         Int_t evt_offset, Int_t n_evts_to_read, TString file_addon_str="")
 {
-    // get the cut-selection info
-    gROOT->ProcessLine((".L " + path_to_cepfilter_macro).Data());
-
     // file extensions
     const char *file_ext = ".root";
     
@@ -255,11 +252,10 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
 
     TFile* emcalFile = new TFile((output_prefix+"emcal_info"+file_addon_str).Data(), "RECREATE");
     TTree* emcalTree = new TTree("emcal", "raw emcal info");
-    Double_t emcal_amplidude, emcal_time, emcal_n_fired_cells;
+    Double_t emcal_amplidude, emcal_time;
     emcalTree->Branch("event_id", &event_nb);
     emcalTree->Branch("amplitude", &emcal_amplidude);
     emcalTree->Branch("time", &emcal_time);
-    emcalTree->Branch("n_fired_cells", &emcal_n_fired_cells);
 
     TFile* phosFile = new TFile((output_prefix+"phos_info"+file_addon_str).Data(), "RECREATE");
     TTree* phosTree = new TTree("phos", "raw phos info");
@@ -267,7 +263,6 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix, TStr
     phosTree->Branch("event_id", &event_nb);
     phosTree->Branch("amplitude", &phos_amplidude);
     phosTree->Branch("time", &phos_time);
-    phosTree->Branch("n_fired_cells", &phos_n_fired_cells);
 
     // now that we have prepared all Trees and files we go along and read out the 
     // raw-buffers and write the content to the output files
