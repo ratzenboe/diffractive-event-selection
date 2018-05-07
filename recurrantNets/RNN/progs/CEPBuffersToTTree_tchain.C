@@ -146,7 +146,7 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix,
              pidHMPIDsig, pidTRDsig, pid_tof_sig_tuned, 
              rawtrk_its_chi2, rawtrk_tpc_chi2;
     Double_t track_xy, track_z, track_dz, track_dx, track_phiEMC, track_etaEMC, 
-             track_pEMC, track_ptEMC, rawtrk_eta, hlt_golden_chi2;
+             track_pEMC, track_ptEMC, hlt_golden_chi2;
     trackTree->Branch("event_id", &event_nb);
     trackTree->Branch("tof_bunch_crossing", &hlt_tof_bunch_crossing);
 
@@ -453,7 +453,6 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix,
             track_ptEMC = rawTrack->GetTrkPtOnEMC();
             track_pEMC = rawTrack->GetTrkPOnEMC();
 
-            rawtrk_eta = rawTrack->GetEta(); 
             trackTree->Fill();
         }
 
@@ -493,7 +492,6 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix,
         {
             emcal_amplidude = emcal->GetCaloCellAmplitude(kk);
             emcal_time =  emcal->GetCaloCellTime(kk);
-            emcal_n_fired_cells = emcal->GetNCells();
 
             emcalTree->Fill();
         }
@@ -503,7 +501,6 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix,
         {
             phos_amplidude = phos->GetCaloCellAmplitude(kk);
             phos_time =  phos->GetCaloCellTime(kk);
-            phos_n_fired_cells = phos->GetNCells();
 
             phosTree->Fill();
         }
@@ -525,9 +522,9 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix,
             rawCaloCluster->GetCaloClusterGlobalPosition(CC_pos_x,CC_pos_y,CC_pos_z);
 
             TVector3 v(CC_pos_x,CC_pos_y, CC_pos_z);
-            CC_pos_eta = c.Eta();
-            CC_pos_phi = c.Phi();
-            CC_pos_pt  = c.Pt();
+            CC_pos_eta = v.Eta();
+            CC_pos_phi = v.Phi();
+            CC_pos_pt  = v.Pt();
 
             caloClusterTree->Fill();
         }
@@ -546,9 +543,9 @@ void CEPBuffersToTTree_tchain(TString input_dirname, TString output_prefix,
         evt_n_tracks_its_only = cep_evt->GetnITSpureTracks();
 
         // combined calorimeter info
-        evt_n_calo_tracks = cep_raw_evt->GetnCaloClusterTotal()
-        evt_n_emcal_cells = emcal->GetNCells()
-        evt_n_phos_cells  = phos->GetNCells()
+        evt_n_calo_tracks = cep_raw_evt->GetnCaloClusterTotal();
+        evt_n_emcal_cells = emcal->GetNCells();
+        evt_n_phos_cells  = phos->GetNCells();
 
         evt_tot_ad_mult = cep_raw_evt->GetTotalADMult();
         evt_tot_ad_time = cep_raw_evt->GetTotalADTime();
