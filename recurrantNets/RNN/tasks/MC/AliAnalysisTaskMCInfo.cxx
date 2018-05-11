@@ -148,14 +148,28 @@ void AliAnalysisTaskMCInfo::UserCreateOutputObjects()
     fOutList->SetOwner(kTRUE);          // memory stuff: the list is owner of all objects 
                                         // it contains and will delete them if requested 
     fGammaE  = new TH1F("fGammaE",  "fGammaE",  100, 0, 10);       
-    fNeutralPDG = new TH1F("fNeutralPDG", "fNeutralPDG", 100, 0, 2500);
+    fNeutralPDG = new TH1F("fNeutralPDG", "fNeutralPDG", 3500, 0, 3500);
     fEmcalHitMothers = new TH1F("fEmcalHitMothers", "fEmcalHitMothers", 100, 0, 2500);
-    
+    fDistBadChannel_SIG;
+    fDistBadChannel_BG;
+    fEMCnClus_SIG;
+    fEMCnClus_BG;  
+    fPHOSnClus_SIG; 
+    fPHOSnClus_BG;   
+    fEMCenergy_SIG;   
+    fEMCenergy_BG;     
+    fPHOSenergy_SIG;    
+    fPHOSenergy_BG;      
+    fEMC_nClusVSenergy_SIG;
+    fEMC_nClusVSenergy_BG; 
+    fPHOS_nClusVSenergy_SIG;
+    fPHOS_nClusVSenergy_BG;  
+  
     fOutList->Add(fGammaE);          
     fOutList->Add(fNeutralPDG);          
     fOutList->Add(fEmcalHitMothers);          
 
-    PostData(1, fOutList);           // postdata will notify the analysis manager of changes 
+    PostData(1, fOutList);              // postdata will notify the analysis manager of changes 
                                         // and updates to the fOutList object. 
                                         // the manager will in the end take care of writing 
                                         // the output to file so it needs to know what's 
@@ -231,16 +245,15 @@ void AliAnalysisTaskMCInfo::UserExec(Option_t *)
     if (fMCEvent) stack = fMCEvent->Stack();
     else { 
         printf("<E> No MC-event available!\n"); 
-        std::cout << "mc event: " << fMCEvent << "\n";
-        std::cout << "stack: " << stack << "\n";
-        gSystem->Exit(1); 
+        return ;
+        /* gSystem->Exit(1); */ 
     }
     // get information if event is fully-reconstructed or not
     Int_t nTracksMC = stack->GetNtrack();
     Int_t nTracksPrimMC = stack->GetNprimary();
     Int_t nTracksTranspMC = stack->GetNtransported();
-    printf("Number of\ntracks: %i\nprimaries: %i\ntransported: %i\n----------------------\n", 
-            nTracksMC, nTracksPrimMC, nTracksTranspMC);
+    /* printf("---------------------------\nNumber of\ntracks: %i\nprimaries: %i\ntransported: %i\n", */ 
+    /*         nTracksMC, nTracksPrimMC, nTracksTranspMC); */
     // get lorentzvector of the X particle
     TLorentzVector X_lor = GetXLorentzVector(fMCEvent);
     
@@ -253,28 +266,37 @@ void AliAnalysisTaskMCInfo::UserExec(Option_t *)
         AliESDtrack *tmptrk = (AliESDtrack*) fTracks->At(trkIndex);
         // get MC truth
         Int_t MCind = tmptrk->GetLabel();
-        if (fMCEvent && MCind >= 0) {
+        if (MCind <= 0) {
+            printf("<W> MC index below 0\nCorrection to absolute value!\n"); 
+            if (abs(MCind) <= nTracksPrimMC) MCind = abs(MCind);
+            else return ;
+        }
+        if (fMCEvent) {
             TParticle* part = stack->Particle(MCind);
             // set MC mass and momentum
             TLorentzVector lv;
             part->Momentum(lv);
             measured_lor += lv;        
-        } else { printf("<E> No MC-particle info available!"); gSystem->Exit(1); }
+        } else { printf("\n<E> No MC-particle info available!\n\n"); gSystem->Exit(1); }
     }
     Double_t m_diff = measured_lor.M() - X_lor.M();
     if (m_diff < 0) m_diff = -m_diff;
-    if (m_diff < 1e-5) printf("------- Fully reconstruced event!--------\n");
+    Bool_t isFullRecon(kFALSE);
+    if (m_diff < 1e-5) isFullRecon = kTRUE;
+    /* PrintStack(fMCEvent, kFALSE); */
 
-    for (Int_t ii=0; ii<nTracksMC; ii++){
-        Int_t pdg = stack->Particle(ii)->GetPdgCode();
+    for (Int_t ii=4; ii<nTracksPrimMC; ii++) {
+        if (stack->Particle(ii)->GetStatusCode()==0) continue;
+        TParticle* part = stack->Particle(ii);
+        Int_t pdg = part->GetPdgCode();
         Double_t charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge();
         if(charge==0.) {
-            fGammaE->Fill(stack->Particle(ii)->Energy()); 
+            if (pdg==22) fGammaE->Fill(part->Energy()); 
             fNeutralPDG->Fill(pdg); 
         }
     }
 
-    PostData(1, fOutList);       // stream the results the analysis of this event to
+    PostData(1, fOutList);          // stream the results the analysis of this event to
                                     // the output manager which will take care of writing
                                     // it to a file
 }
@@ -351,4 +373,72 @@ TLorentzVector AliAnalysisTaskMCInfo::GetXLorentzVector(AliMCEvent* MCevent)
     }
     /* } else { printf("<E> MC-generator not pythia CEP!"); gSystem->Exit(1); } */
     return lvprod;
+}
+
+//_____________________________________________________________________________
+void AliAnalysisTaskMCInfo::PrintStack(AliMCEvent* MCevent, Bool_t prim)
+{
+    AliStack* stack = MCevent->Stack();
+    Int_t nPrimaries = stack->GetNprimary();
+    Int_t nTracks = stack->GetNtrack();
+
+    /* TLorentzVector lvtmp; */
+    printf("\n-----------------------------------------------\n");
+    Int_t nParticles = prim ? nPrimaries : nTracks;
+    for (Int_t ii=4; ii<nParticles; ii++) {
+        TParticle* part = stack->Particle(ii);
+        printf("%i: %-13s: E=%-6.2f", ii, part->GetName(), part->Energy());
+        if (part->GetStatusCode()==1) printf("   final\n");
+        else printf("\n");
+        if (ii==nPrimaries-1) printf("-------------- Primaries end ------------------\n");
+        /* if (stack->Particle(ii)->GetMother(0)==0) { */
+    }
+    printf("-----------------------------------------------\n");
+    return ;
+}
+
+void AliAnalysisTaskMCInfo::EMCalAnalysis(void)
+{
+    Int_t nEMCClus(0), nPHOSClus(0);
+    Double_t ene(0.), dBadChannel(0.), EMCEne(0.), PHOSEne(0.);
+
+    Int_t nClusters = fESD->GetNumberOfCaloClusters();
+    for (Int_t ii(0); ii<nClusters; ii++) 
+    {
+        AliESDCaloCluster *clust = fESD->GetCaloCluster(ii);
+        ene = clust->E();
+        dBadChannel = clust->GetDistanceToBadChannel();
+        if (isSignal) fDistBadChannel_SIG->Fill(dBadChannel);
+        else fDistBadChannel_BG->Fill(dBadChannel);
+
+        // number of clusters on EMC/PHOS
+        // deposited energy, ignore matched clusters
+        if (clust->IsEMCAL()) {
+            nEMCClus++;
+            if (clust->GetNTracksMatched()<=0) EMCEne += ene;
+        }
+        if (clust->IsPHOS()) {
+            nPHOSClus++;
+            if (clust->GetNTracksMatched()<=0) PHOSEne += ene;
+        }
+    }
+
+    // update histograms
+    if (isSignal) fEMCnClus_SIG->Fill(nEMCClus);
+    else fEMCnClus_BG->Fill(nEMCClus); 
+
+    if (isSignal) fPHOSnClus_SIG->Fill(nPHOSClus);
+    else fPHOSnClus_BG->Fill(nPHOSClus);
+
+    if (isSignal)     fEMCenergy_SIG->Fill(EMCEne);
+    else fEMCenergy_BG->Fill(EMCEne); 
+
+    if (isSignal) fPHOSenergy_SIG->Fill(PHOSEne);
+    else fPHOSenergy_BG->Fill(PHOSEne);
+
+    if (isSignal) fEMC_nClusVSenergy_SIG->Fill(nEMCClus,EMCEne);
+    else fEMC_nClusVSenergy_BG->Fill(nEMCClus,EMCEne); 
+
+    if (isSignal) fPHOS_nClusVSenergy_SIG->Fill(nPHOSClus,PHOSEne);
+    else fPHOS_nClusVSenergy_BG->Fill(nPHOSClus,PHOSEne);  
 }
