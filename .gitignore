@@ -121,6 +121,9 @@ recurrantNets/RNN/progs/grid_scripts
 # ignore files.txt files
 files.txt
 
+# ignore .d compiled files
+*.d
+
 # jupyter notebooks 
 *.ipynb
 # .pyc files 
