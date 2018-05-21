@@ -3,7 +3,7 @@
 #include <iostream>
 #include <map>
 
-void read_esd_files(TString esd_file)
+void ReadESDFiles(TString esd_file)
 {
     TChain* chain = new TChain("esdTree");
     chain->Add(esd_file.Data());
