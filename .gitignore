@@ -124,6 +124,10 @@ files.txt
 # ignore .d compiled files
 *.d
 
+# ignore zip and root files
+*.root
+*.zip
+
 # jupyter notebooks 
 *.ipynb
 # .pyc files 
