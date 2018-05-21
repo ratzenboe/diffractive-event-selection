@@ -28,11 +28,11 @@ void runMCAna (
   const char *gridmode          = "full",     // Set the run mode (can be "full", "test", "offline", "submit" or "terminate"). Full & Test work for proof
   const bool isMC               = kTRUE,      // kTRUE = looking at MC truth or reconstructed, 0 = looking at real data
   const bool enableBGrejection  = kTRUE,      // apply BG rejection in physics selection
-  const Long64_t nentries       = 5e4,          // for local and proof mode, ignored in grid mode. Set to 1234567890 for all events.
+  const Long64_t nentries       = 1e4,          // for local and proof mode, ignored in grid mode. Set to 1234567890 for all events.
   const Long64_t firstentry     = 0,          // for local and proof mode, ignored in grid mode
   const char *proofdataset      = "/alice/sim/LHC10c_000120821_p1", // path to dataset on proof cluster, for proof analysis
   const char *proofcluster      = "alice-caf.cern.ch",              // which proof cluster to use in proof mode
-  const char *griddatapattern,                // Data Pattern
+  const char *griddatapattern   = "*/AliESDs.root",                // Data Pattern
   const char *option            = "" )
 {
 	// set taskname
@@ -118,6 +118,7 @@ void runMCAna (
   // run without physics selection
   Bool_t withPhysSel      = kFALSE;
   Bool_t withDGTriggerSel = kFALSE;
+  Bool_t withEMCalCorrection = kTRUE;
   
 	gROOT->LoadMacro("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C");
 	AliPhysicsSelectionTask *physicsSelectionTask = AddTaskPhysicsSelection(isMC,enableBGrejection);
@@ -134,11 +135,22 @@ void runMCAna (
   }
   
   // --------------------------------------------------------------------------
-	// Add PID task manager if we use PID
-	gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C");
-	AliAnalysisTaskPIDResponse *pidResponseTask = AddTaskPIDResponse(isMC);
-	if(!pidResponseTask) { Printf("no pidResponseTask"); return; }
-	
+    // Add PID task manager if we use PID
+    gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C");
+    AliAnalysisTaskPIDResponse *pidResponseTask = AddTaskPIDResponse(isMC);
+    if(!pidResponseTask) { Printf("no pidResponseTask"); return; }
+
+    // --------------------------------------------------------------------------
+    // EMCal correction task
+    // The default argument is an empty string, so we don't have to set it here.
+    /* if (withEMCalCorrection) { */
+    /*     gROOT->LoadMacro("$ALICE_PHYSICS/PWG/EMCAL/macros/AddTaskEmcalCorrectionTask.C"); */
+    /*     AliEmcalCorrectionTask * correctionTask = AddTaskEmcalCorrectionTask(); */
+    /*     if(!correctionTask) { Printf("no EmcalCorrectionTask"); return; } */
+    /*     correctionTask->SetUserConfigurationFilename("AliEmcalCorrectionConfiguration_CEP.yaml"); */
+    /*     correctionTask->Initialize(); */
+    /* } */
+ 
   // --------------------------------------------------------------------------
   // add the analysis task
   // taskconfig: task configuration
