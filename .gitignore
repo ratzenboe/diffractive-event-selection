@@ -118,6 +118,9 @@ recurrantNets/RNN/code/modules/load_model_save.py
 recurrantNets/RNN/progs/old_progs
 recurrantNets/RNN/progs/grid_scripts
 
+# ignore files.txt files
+files.txt
+
 # jupyter notebooks 
 *.ipynb
 # .pyc files 
