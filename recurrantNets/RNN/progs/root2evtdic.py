@@ -596,8 +596,8 @@ if __name__ == "__main__":
 
     # commend line parser (right now not a own function as only 2 elements are used)
     parser = argparse.ArgumentParser()
-    parser.add_argument('-filespath', '-pklfilesdir',
-                        help='string (mandatory): the path where the pickle files are stored',
+    parser.add_argument('-filespath', '-rootfilesdir',
+                        help='string (mandatory): the path where the root files are stored',
                         action='store',
                         dest='filespath',
                         default=None,
