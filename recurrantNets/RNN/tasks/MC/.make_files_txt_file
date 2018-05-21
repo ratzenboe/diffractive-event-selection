@@ -1,7 +1,7 @@
 #!/bin/bash
 
-array=(/home/ratzenboe/remote_data1/pbuehler/alice/Pythia8CEP/*/AliESDs.root)
+array=(/media/hdd/Pythia8GridFiles/258017_*/AliESDs.root)
 
 for dir in "${array[@]}"; do
-    echo "$dir" >> /home/ratzenboe/Documents/CEP_ALICE/runners/files.txt
+    echo "$dir" >> files.txt
 done
