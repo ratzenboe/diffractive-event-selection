@@ -119,7 +119,7 @@ recurrantNets/RNN/progs/old_progs
 recurrantNets/RNN/progs/grid_scripts
 
 # ignore files.txt files
-files.txt
+*files*.txt
 
 # ignore .d compiled files
 *.d
