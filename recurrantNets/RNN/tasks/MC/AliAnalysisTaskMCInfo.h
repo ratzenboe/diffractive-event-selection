@@ -14,7 +14,8 @@ class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE
                                 AliAnalysisTaskMCInfo(const char *name,
                                                       Long_t state,
                                                       UInt_t TTmask,
-                                                      UInt_t TTpattern);
+                                                      UInt_t TTpattern,
+                                                      TString hitFileName);
         virtual                 ~AliAnalysisTaskMCInfo();
 
         // these functions also exist in AliAnalysisTaskSE (SE=single event)
@@ -30,6 +31,15 @@ class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE
         TArrayI*                fTrackStatus;       //! array of track-status
         TObjArray*              fTracks;            //! array of AliESDtracks
         AliCEPUtils*            fCEPUtil;           //! AliCEPUtil object
+
+        TString                 fHitFileName;       //  EMCal hit file 
+        TFile*                  fHitFile;           //! EMCal hit file 
+        TTree*                  fHitTree;           //! EMCal hit tree 
+        TBranch*                fHitBranch;         //! EMCal hit branch 
+        TDirectory*             fHitDir;            //! EMCal hit directory 
+        TClonesArray*           fHitsArray;         //! EMCal hit clones array
+        TString                 fCurrentDir;        //  current ESD-working directory 
+
         Long_t                  fAnalysisStatus;    //  stores the analysis-status 
         UInt_t                  fTTmask;            //  track conditions
         UInt_t                  fTTpattern;         //  track conditions
@@ -46,15 +56,15 @@ class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE
         TH1F*                   fEMCnClus_SIG;       //! calo: #clusters in emcal signal
         TH1F*                   fEMCnClus_BG;        //! calo: #clusters in emcal bg
 
-        TH1F*                   fEMCnMatchedClus_SIG; //! calo: # matched clusters in emcal sig
-        TH1F*                   fEMCnMatchedClus_BG; //! calo: # matched clusters in emcal bg
+        TH1F*                   fEMCnMatchedClus_SIG;  //! calo: # matched clusters in emcal sig
+        TH1F*                   fEMCnMatchedClus_BG;   //! calo: # matched clusters in emcal bg
         TH2F*                   fEMC_nClusVSnMatched_SIG; //! calo: nclus VS n-matched-clus sig
-        TH2F*                   fEMC_nClusVSnMatched_BG; //! calo: nclus VS n-matched-clus bg
+        TH2F*                   fEMC_nClusVSnMatched_BG;  //! calo: nclus VS n-matched-clus bg
 
-        TH1F*                   fEMCDphi_SIG;            //! distance to closest track in phi sig
-        TH1F*                   fEMCDphi_BG;            //! distance to closest track in phi bg
-        TH1F*                   fEMCDz_SIG;              //! distance to closest track in z sig
-        TH1F*                   fEMCDz_BG;              //! distance to closest track in z bg
+        TH1F*                   fEMCDphi_SIG;          //! distance to closest track in phi sig
+        TH1F*                   fEMCDphi_BG;           //! distance to closest track in phi bg
+        TH1F*                   fEMCDz_SIG;            //! distance to closest track in z sig
+        TH1F*                   fEMCDz_BG;             //! distance to closest track in z bg
 
         TH1F*                   fPHOSnClus_SIG;      //! calo: #clusters in phos signal
         TH1F*                   fPHOSnClus_BG;       //! calo: #clusters in phos bg
@@ -62,12 +72,13 @@ class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE
         TH1F*                   fEMCenergy_BG;       //! calo: energy bg
         TH1F*                   fPHOSenergy_SIG;     //! calo: energy sig
         TH1F*                   fPHOSenergy_BG;      //! calo: energy bg
+
         TH2F*                   fEMC_nClusVSenergy_SIG;  //! calo: 2D #clus vs energy signal
         TH2F*                   fEMC_nClusVSenergy_BG;   //! calo: 2D #clus vs energy bg
         TH2F*                   fPHOS_nClusVSenergy_SIG; //! calo: 2D #clus vs energy signal
         TH2F*                   fPHOS_nClusVSenergy_BG;  //! calo: 2D #clus vs energy bg
-        TH1F*                   fEmcalHitMothers_SIG;   //! mothers of the hitting particles (sig)
-        TH1F*                   fEmcalHitMothers_BG;   //! mothers of the hitting particles (bg)
+        TH1F*                   fEmcalHitMothers_SIG;    //! mothers of the hitting particles (sig)
+        TH1F*                   fEmcalHitMothers_BG;     //! mothers of the hitting particles (bg)
 
         TH1F*                   fEMCal_dphiEta_SIG;  //! phi-eta distance of cluster hit to track
         TH1F*                   fEMCal_dphiEta_BG;   //! phi-eta distance of cluster hit to track
@@ -76,13 +87,28 @@ class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE
         AliAnalysisTaskMCInfo(const AliAnalysisTaskMCInfo&); 
         AliAnalysisTaskMCInfo& operator=(const AliAnalysisTaskMCInfo&); 
 
-        Bool_t IsSTGFired(TBits* fFOmap,Int_t dphiMin=0,Int_t dphiMax=10);
-        TLorentzVector GetXLorentzVector(AliMCEvent* MCevent);
-        void PrintStack(AliMCEvent* MCevent, Bool_t prim=kTRUE);
-        void EMCalAnalysis(Bool_t isSignal, Int_t nTracksTT, TArrayI* TTindices);
-        Bool_t MatchTracks(AliESDCaloCluster* clust, Int_t nTracksTT, TArrayI* TTindices, 
-                           Double_t& dPhiEtaMin);
-        Bool_t IsClusterFromPDG(AliESDCaloCluster* clust, Int_t pdg);
+        // prefiltering 
+        Bool_t                  lhc16filter(AliESDEvent* esd_evt, Int_t nTracksAccept, 
+                                            Int_t& nTracksTT, TArrayI*& TTindices);
+        // part of the lhc16filter
+        Bool_t                  IsSTGFired(TBits* fFOmap,Int_t dphiMin=0,Int_t dphiMax=10);
+        // check if event is fully reconstructed
+        TLorentzVector          GetXLorentzVector(AliMCEvent* MCevent);
+        // print particle stack
+        void                    PrintStack(AliMCEvent* MCevent, Bool_t prim=kTRUE);
+        // filling the histograms
+        void                    EMCalAnalysis(Bool_t isSignal, Int_t nTracksTT, 
+                                              TArrayI* TTindices);
+        // match tracks to the emcal
+        Bool_t                  MatchTracks(AliESDCaloCluster* clust, Int_t nTracksTT, 
+                                            TArrayI* TTindices, Double_t& dPhiEtaMin);
+        // check if calo-cluster originates from certain particle (including secondaries)
+        Bool_t                  IsClusterFromPDG(AliESDCaloCluster* clust, Int_t pdg);
+        // get directory from full path to AliESDs.root file
+        TString                 GetDirFromFullPath(const char* fullpath);
+        // update global variables as well as the hit-tree/branch
+        Bool_t                  UpdateGlobalVars();
+
         ClassDef(AliAnalysisTaskMCInfo, 1);
 };
 
