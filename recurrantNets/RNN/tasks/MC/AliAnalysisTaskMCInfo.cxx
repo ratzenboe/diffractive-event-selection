@@ -40,6 +40,9 @@
 #include "AliCEPUtils.h"
 #include "AliAnalysisTaskMCInfo.h"
 
+#include <string>         // std::string
+#include <cstddef>         // std::size_t
+
 class AliAnalysisTaskMCInfo;    // your analysis class
 
 using namespace std;            // std namespace: so you can do things like 'cout'
@@ -53,6 +56,12 @@ AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo()
   , fTrackStatus(0)
   , fTracks(0)
   , fCEPUtil(0)
+  , fHitFileName("EMCAL.Hits.root")
+  , fHitFile(0)
+  , fHitTree(0)
+  , fHitBranch(0)
+  , fHitDir(0)
+  , fCurrentDir("")
   , fAnalysisStatus(AliCEPBase::kBitConfigurationSet)
   , fTTmask(AliCEPBase::kTTBaseLine)
   , fTTpattern(AliCEPBase::kTTBaseLine) 
@@ -93,13 +102,21 @@ AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo()
 //_____________________________________________________________________________
 AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo(const char* name,
   Long_t state,
-  UInt_t TTmask, UInt_t TTpattern) 
+  UInt_t TTmask, 
+  UInt_t TTpattern,
+  TString hitFileName) 
   : AliAnalysisTaskSE(name)
   , fESD(0)
   , fTrigger(0)
   , fTrackStatus(0)
   , fTracks(0)
   , fCEPUtil(0)
+  , fHitFileName(hitFileName)
+  , fHitFile(0)
+  , fHitTree(0)
+  , fHitBranch(0)
+  , fHitDir(0)
+  , fCurrentDir("")
   , fAnalysisStatus(state)
   , fTTmask(TTmask)
   , fTTpattern(TTpattern)
@@ -175,6 +192,8 @@ void AliAnalysisTaskMCInfo::UserCreateOutputObjects()
     //
     // this function is called ONCE at the start of the analysis (RUNTIME)
     // here the histograms and other objects are created
+    fHitsArray = new TClonesArray("AliEMCALHit",1000);
+
     fTrackStatus = new TArrayI();
     fTracks = new TObjArray();
 
@@ -285,54 +304,17 @@ void AliAnalysisTaskMCInfo::UserExec(Option_t *)
     // the manager will retrieve the next event from the chain
     fESD = dynamic_cast<AliESDEvent*>(InputEvent()); 
     if(!fESD) return;
-    // here we filter for events that satisfy the condition (filter-bit 107 in CEP evts)
-    // 0: remove pileup
-    // 1: CCUP13
-    // 3: !V0
-    // 5: !AD
-    // 6: *FO>=1 (to replay OSMB) && *FO<=trks
-    // - 2 tracks
-    Int_t nTracksAccept(2);
-    Int_t nTracks = fCEPUtil->AnalyzeTracks(fESD,fTracks,fTrackStatus);
-
-    TArrayI *TTindices  = new TArrayI();
-    Int_t nTracksTT = fCEPUtil->countstatus(fTrackStatus, fTTmask, fTTpattern, TTindices);
-    if (nTracksTT!=nTracksAccept) return;
+    // the directory may have changed we therefore update the neccessary global vars
+    if (!UpdateGlobalVars()) return;
+    printf("\n current file name: %s", fCurrentDir.Data());
     
-    // remove pileup
-    if (fESD->IsPileupFromSPD(3,0.8,3.,2.,5.)) return;
-    // CCUP13
-    Bool_t isV0A = fTrigger->IsOfflineTriggerFired(fESD, AliTriggerAnalysis::kV0A);
-    Bool_t isV0C = fTrigger->IsOfflineTriggerFired(fESD, AliTriggerAnalysis::kV0C);
-    UInt_t isSTGTriggerFired;
-    const AliMultiplicity *mult = (AliMultiplicity*)fESD->GetMultiplicity();
-    TBits foMap = mult->GetFastOrFiredChips();
-    isSTGTriggerFired  = IsSTGFired(&foMap,0) ? (1<<0) : 0;
-    for (Int_t ii=1; ii<=10; ii++) {
-        isSTGTriggerFired |= IsSTGFired(&foMap,ii) ? (1<<ii) : 0;
-    }
-    if (isV0A || isV0C || !isSTGTriggerFired) return;
-    // !V0
-    // is encorporated in CCUP13
-    // !AD
-    Bool_t isADA = fTrigger->IsOfflineTriggerFired(fESD, AliTriggerAnalysis::kADA);
-    Bool_t isADC = fTrigger->IsOfflineTriggerFired(fESD, AliTriggerAnalysis::kADC);
-    if (isADA || isADC) return;
-    // *FO>=1 (to replay OSMB) && *FO<=trks
-    Short_t nFiredChips[4] = {0};
-    nFiredChips[0] = mult->GetNumberOfFiredChips(0);
-    nFiredChips[1] = mult->GetNumberOfFiredChips(1);
-    for (Int_t ii=0;    ii<400; ii++) nFiredChips[2] += foMap[ii]>0 ? 1 : 0;
-    for (Int_t ii=400; ii<1200; ii++) nFiredChips[3] += foMap[ii]>0 ? 1 : 0;
-    Bool_t firedChipsOK = kTRUE;
-    for (Int_t ii=0; ii<4; ii++) {
-      firedChipsOK =
-        firedChipsOK &&
-        (nFiredChips[ii]>=1) &&
-        (nFiredChips[ii]<=nTracksAccept);
-    }
-    if (!firedChipsOK) return;
-  
+
+    // set global variables
+    Int_t nTracks = fCEPUtil->AnalyzeTracks(fESD, fTracks, fTrackStatus);
+    Int_t nTracksAccept(2), nTracksTT;
+    TArrayI *TTindices  = new TArrayI();
+    Bool_t isGoodEvt = lhc16filter(fESD, nTracksAccept, nTracksTT, TTindices);
+    if (!isGoodEvt) return ;
     // here we have now events which passed the track selection
     
     // get MC event (fMCEvent is member variable from AliAnalysisTaskSE)
@@ -487,8 +469,9 @@ void AliAnalysisTaskMCInfo::PrintStack(AliMCEvent* MCevent, Bool_t prim)
     Int_t nParticles = prim ? nPrimaries : nTracks;
     for (Int_t ii(4); ii<nParticles; ii++) {
         TParticle* part = stack->Particle(ii);
-        printf("%i: %-13s: E=%-6.2f, Mother: %i", 
-                ii, part->GetName(), part->Energy(), part->GetMother(0));
+        printf("%i: %-13s: E=%-6.2f, Mother: %i, Daugther 0: %i, 1: %i", 
+                ii, part->GetName(), part->Energy(), 
+                part->GetMother(0), part->GetDaughter(0), part->GetDaughter(1));
 
         if (part->GetStatusCode()==1) printf("   final\n");
         else printf("\n");
@@ -536,6 +519,7 @@ void AliAnalysisTaskMCInfo::PrintStack(AliMCEvent* MCevent, Bool_t prim)
     return ;
 }
 
+//_____________________________________________________________________________
 void AliAnalysisTaskMCInfo::EMCalAnalysis(Bool_t isSignal, Int_t nTracksTT, TArrayI *TTindices)
 {
     Int_t nEMCClus(0), nPHOSClus(0), nEMCClus_matched(0);
@@ -612,6 +596,8 @@ void AliAnalysisTaskMCInfo::EMCalAnalysis(Bool_t isSignal, Int_t nTracksTT, TArr
     else fPHOS_nClusVSenergy_BG->Fill(nPHOSClus,PHOSEne);  
 }
 
+//_____________________________________________________________________________
+
 Bool_t AliAnalysisTaskMCInfo::MatchTracks(AliESDCaloCluster* clust, Int_t nTracksTT, TArrayI* TTindices, Double_t& dPhiEtaMin)
 {
     dPhiEtaMin = 999.;
@@ -662,6 +648,7 @@ Bool_t AliAnalysisTaskMCInfo::MatchTracks(AliESDCaloCluster* clust, Int_t nTrack
     return (dPhiEtaMin==999.) ? kFALSE : kTRUE;
 }
 
+//_____________________________________________________________________________
 Bool_t AliAnalysisTaskMCInfo::IsClusterFromPDG(AliESDCaloCluster* clust, Int_t pdg)
 {
     AliStack* stack = fMCEvent->Stack();
@@ -677,3 +664,89 @@ Bool_t AliAnalysisTaskMCInfo::IsClusterFromPDG(AliESDCaloCluster* clust, Int_t p
     printf("Primary particle causing cluster: %i (pdg: %i)\n", mc_idx, particle_pdg); 
     return (particle_pdg==pdg);
 }
+
+//_____________________________________________________________________________
+TString AliAnalysisTaskMCInfo::GetDirFromFullPath(const char* fullpath)
+{
+    std::string curr_dir(fullpath);
+    // find last occurance of "/" (determining the full path to the directory)
+    std::size_t path_end_idx = curr_dir.find_last_of("/\\");
+    // take only the substring to the last occurance (+1 to also get the slash /)
+    TString outstr((curr_dir.substr(0,path_end_idx+1)).c_str());
+
+    return outstr;
+}
+
+//_____________________________________________________________________________
+Bool_t AliAnalysisTaskMCInfo::UpdateGlobalVars()
+{
+    if (fCurrentDir=="" || fCurrentDir != GetDirFromFullPath(CurrentFileName())) {
+        fCurrentDir = GetDirFromFullPath(CurrentFileName());
+        fHitFile = TFile::Open(fCurrentDir+fHitFileName);
+    }
+    TString iev_str;
+    iev_str.Form("Event%i", Entry());
+    fHitDir = fHitFile->GetDirectory(iev_str);
+    if (!fHitDir) return kFALSE;
+    // get the hit-tree corresponding to the event 
+    fHitDir->GetObject("TreeH", fHitTree);
+    if (!fHitTree) return kFALSE;
+    fHitBranch = fHitTree->GetBranch("EMCAL");
+    fHitBranch->SetAddress(&fHitsArray);
+    if (!fHitBranch) return kFALSE;
+
+    return kTRUE;
+}
+
+//_____________________________________________________________________________
+Bool_t AliAnalysisTaskMCInfo::lhc16filter(AliESDEvent* esd_evt, Int_t nTracksAccept, 
+        Int_t& nTracksTT, TArrayI*& TTindices)
+{
+    // here we filter for events that satisfy the condition (filter-bit 107 in CEP evts)
+    // 0: remove pileup
+    // 1: CCUP13
+    // 3: !V0
+    // 5: !AD
+    // 6: *FO>=1 (to replay OSMB) && *FO<=trks
+    // - nTracksAccept
+    nTracksTT = fCEPUtil->countstatus(fTrackStatus, fTTmask, fTTpattern, TTindices);
+    if (nTracksTT!=nTracksAccept) return kFALSE;
+    
+    // remove pileup
+    if (esd_evt->IsPileupFromSPD(3,0.8,3.,2.,5.)) return kFALSE;
+    // CCUP13
+    Bool_t isV0A = fTrigger->IsOfflineTriggerFired(esd_evt, AliTriggerAnalysis::kV0A);
+    Bool_t isV0C = fTrigger->IsOfflineTriggerFired(esd_evt, AliTriggerAnalysis::kV0C);
+    UInt_t isSTGTriggerFired;
+    const AliMultiplicity *mult = (AliMultiplicity*)esd_evt->GetMultiplicity();
+    TBits foMap = mult->GetFastOrFiredChips();
+    isSTGTriggerFired  = IsSTGFired(&foMap,0) ? (1<<0) : 0;
+    for (Int_t ii=1; ii<=10; ii++) {
+        isSTGTriggerFired |= IsSTGFired(&foMap,ii) ? (1<<ii) : 0;
+    }
+    if (isV0A || isV0C || !isSTGTriggerFired) return kFALSE;
+    // !V0
+    // is encorporated in CCUP13
+    // !AD
+    Bool_t isADA = fTrigger->IsOfflineTriggerFired(esd_evt, AliTriggerAnalysis::kADA);
+    Bool_t isADC = fTrigger->IsOfflineTriggerFired(esd_evt, AliTriggerAnalysis::kADC);
+    if (isADA || isADC) return kFALSE;
+    // *FO>=1 (to replay OSMB) && *FO<=trks
+    Short_t nFiredChips[4] = {0};
+    nFiredChips[0] = mult->GetNumberOfFiredChips(0);
+    nFiredChips[1] = mult->GetNumberOfFiredChips(1);
+    for (Int_t ii=0;    ii<400; ii++) nFiredChips[2] += foMap[ii]>0 ? 1 : 0;
+    for (Int_t ii=400; ii<1200; ii++) nFiredChips[3] += foMap[ii]>0 ? 1 : 0;
+    Bool_t firedChipsOK = kTRUE;
+    for (Int_t ii=0; ii<4; ii++) {
+      firedChipsOK =
+        firedChipsOK &&
+        (nFiredChips[ii]>=1) &&
+        (nFiredChips[ii]<=nTracksAccept);
+    }
+    if (!firedChipsOK) return kFALSE;
+
+    // if the cuts are passed the filter returns true
+    return kTRUE;
+}
+
