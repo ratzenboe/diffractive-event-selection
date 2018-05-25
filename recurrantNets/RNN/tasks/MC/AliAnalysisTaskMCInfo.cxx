@@ -471,6 +471,21 @@ TLorentzVector AliAnalysisTaskMCInfo::GetXLorentzVector(AliMCEvent* MCevent)
 }
 
 //_____________________________________________________________________________
+void AliAnalysisTaskMCInfo::PrintTracks(AliESDEvent* esd_evt)
+{
+    printf("------------ Tracks --------------------\n");
+    for (Int_t ii(0); ii<esd_evt->GetNumberOfTracks(); ii++){
+        AliESDtrack* trk = esd_evt->GetTrack(ii);
+        printf("Track label: %i", trk->GetLabel());
+        printf("  Track E: %-6.8f", trk->E());
+        printf("\n");
+    }
+    printf("------------ Tracks end ----------------\n");
+
+    return ;
+}
+
+//_____________________________________________________________________________
 void AliAnalysisTaskMCInfo::PrintStack(AliMCEvent* MCevent, Bool_t prim)
 {
     AliStack* stack = MCevent->Stack();
@@ -712,6 +727,45 @@ Bool_t AliAnalysisTaskMCInfo::UpdateGlobalVars()
     if (!fHitBranch) return kFALSE;
 
     return kTRUE;
+}
+
+//_____________________________________________________________________________
+void AliAnalysisTaskMCInfo::PrintEMCALHits(Bool_t isSignal)
+{
+    // For a comparion with the original particle we need the AliStack
+    /* AliStack* stack = fMCEvent->Stack(); */
+    /* Int_t nTransported = stack->GetNtransported(); */
+    /* printf("\n\nNumber of transported tracks: %i\n", nTransported); */
+    /* TParticle* part = 0x0; */
+
+    // a single particle may produce many hits in the emcal -> record particles 
+    // and if we see a duplicate we ignore it
+    std::vector<Int_t> parent_v;
+    for (Int_t iHit(0); iHit<fHitBranch->GetEntries(); iHit++){
+        fHitBranch->GetEntry(iHit);    
+        TIter next(fHitsArray);
+        AliEMCALHit* hit;
+        while( (hit=dynamic_cast<AliEMCALHit*>(next())) )
+        {
+            // if the parent particle has already been counted we continue
+            if(std::find(parent_v.begin(), parent_v.end(), hit->GetIparent()) 
+                    != parent_v.end()) continue;
+
+            printf("Initial energy of parent part: %-3.8f", hit->GetIenergy());
+            printf("  <- Parent Id: %i", hit->GetIparent());
+            printf("  <- GetPrimary(): %i", hit->GetPrimary());
+            printf("  <- Primary entrance E(): %-3.8f", hit->GetPe());
+            printf("  <- E depon: %-3.8f", hit->GetEnergy());
+            printf("  <- GetId(): %i", hit->GetId());
+            printf("\n");
+
+            parent_v.push_back(hit->GetIparent());
+
+            if (isSignal) fEMCalSecondaryE_SIG->Fill(hit->GetIenergy());
+            else fEMCalSecondaryE_BG->Fill(hit->GetIenergy());
+        }
+    }
+    fHitsArray->Clear();
 }
 
 //_____________________________________________________________________________
