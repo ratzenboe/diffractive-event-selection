@@ -5,6 +5,26 @@
 #ifndef AliAnalysisTaskMCInfo_H
 #define AliAnalysisTaskMCInfo_H
 
+#include "TBits.h"
+#include "TFile.h"
+#include "TTree.h"
+#include "TH1F.h"
+#include "TH2F.h"
+#include "TList.h"
+#include "TBranch.h"
+#include "TDirectory.h"
+#include "TClonesArray.h"
+#include "TString.h"
+#include "TList.h"
+#include "TArrayI.h"
+#include "TObjArray.h"
+#include "AliESDEvent.h"
+#include "AliMCEvent.h"
+#include "AliESDCaloCluster.h"
+#include "AliTriggerAnalysis.h"
+#include "AliCEPUtils.h"
+#include "AliEMCALGeometry.h"
+
 #include "AliAnalysisTaskSE.h"
 
 class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE  
