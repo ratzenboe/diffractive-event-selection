@@ -188,10 +188,15 @@ void runMCAna (
     ETmaskDG,ETpatternDG,ETmaskNDG,ETpatternNDG,
     TTmask,TTpattern
   );
-  
+
+  TChain* chain = new TChain("gAlice");
+  chain->Add("galice.root");
+
+  // hit file is EMCAL.Hits.root  
+  TString hitfile("EMCAL.Hits.root");
   gROOT->LoadMacro("AliAnalysisTaskMCInfo.cxx++g");
   gROOT->LoadMacro("AddMCTask.C");
-  AliAnalysisTaskSE* task = AddMCTask (tn2u,taskconfig, TTmask,TTpattern);
+  AliAnalysisTaskSE* task = AddMCTask (tn2u,taskconfig, TTmask,TTpattern,hitfile);
   
   // activate physics selection
   if (withPhysSel) {
@@ -210,7 +215,7 @@ void runMCAna (
 	mgr->PrintStatus();
 	Printf("Starting Analysis....");
 	
-  mgr->StartAnalysis(runtype,nentries,firstentry);
+  mgr->StartAnalysis(runtype,chain,nentries,firstentry);
 	// mgr->StartAnalysis(runtype);
   
 }
