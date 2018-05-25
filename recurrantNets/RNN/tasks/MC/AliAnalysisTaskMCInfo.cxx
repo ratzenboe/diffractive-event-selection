@@ -20,24 +20,23 @@
  */
 
 #include "TChain.h"
-#include "TH1F.h"
 #include "TMath.h"
-#include "TList.h"
 #include "TDatabasePDG.h"
+#include "TCollection.h"
 #include "AliAnalysisTask.h"
-#include "AliTriggerAnalysis.h"
 #include "AliAnalysisManager.h"
-#include "AliESDEvent.h"
+#include "AliEMCALHit.h"
 #include "AliESDInputHandler.h"
 
-#include "AliMCEvent.h"
 #include "AliStack.h"
 #include "AliESDtrack.h"
 #include "AliESDtrackCuts.h"
 #include "AliMultiplicitySelectionCP.h"
+#include "AliMC.h"
+#include "AliRunLoader.h"
 
 #include "AliCEPBase.h"
-#include "AliCEPUtils.h"
+/* #include "AliCEPUtils.h" */
 #include "AliAnalysisTaskMCInfo.h"
 
 #include <string>         // std::string
