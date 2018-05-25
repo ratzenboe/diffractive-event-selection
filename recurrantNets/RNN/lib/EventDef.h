@@ -59,7 +59,7 @@ class EventDef
 
     Int_t                           TreeLooper(Int_t mother);
     // Get certain track
-    Int_t                           GetTrackIndexInVector(Int_t number) const;
+    Int_t                           GetParticleIndexFromNumber(Int_t number) const;
 
     ClassDef(EventDef, 1)
 };
