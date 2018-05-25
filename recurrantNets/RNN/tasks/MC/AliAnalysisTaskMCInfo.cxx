@@ -61,11 +61,15 @@ AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo()
   , fHitBranch(0)
   , fHitDir(0)
   , fCurrentDir("")
+  , fGeometry(0)
+  , fRunNumber(0)
   , fAnalysisStatus(AliCEPBase::kBitConfigurationSet)
   , fTTmask(AliCEPBase::kTTBaseLine)
   , fTTpattern(AliCEPBase::kTTBaseLine) 
   , fOutList(0)
   , fGammaE(0)
+  , fEMCalSecondaryE_SIG(0)
+  , fEMCalSecondaryE_BG(0)
   , fNeutralPDG(0)
   , fEmcalHitMothers_SIG(0)
   , fEmcalHitMothers_BG(0)
@@ -116,11 +120,15 @@ AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo(const char* name,
   , fHitBranch(0)
   , fHitDir(0)
   , fCurrentDir("")
+  , fGeometry(0)
+  , fRunNumber(0)
   , fAnalysisStatus(state)
   , fTTmask(TTmask)
   , fTTpattern(TTpattern)
   , fOutList(0)
   , fGammaE(0)
+  , fEMCalSecondaryE_SIG(0)
+  , fEMCalSecondaryE_BG(0)
   , fNeutralPDG(0)
   , fEmcalHitMothers_SIG(0)
   , fEmcalHitMothers_BG(0)
@@ -191,6 +199,8 @@ void AliAnalysisTaskMCInfo::UserCreateOutputObjects()
     //
     // this function is called ONCE at the start of the analysis (RUNTIME)
     // here the histograms and other objects are created
+    fRunNumber = fCurrentRunNumber;
+
     fHitsArray = new TClonesArray("AliEMCALHit",1000);
 
     fTrackStatus = new TArrayI();
@@ -218,6 +228,8 @@ void AliAnalysisTaskMCInfo::UserCreateOutputObjects()
     fOutList->SetOwner(kTRUE);          // memory stuff: the list is owner of all objects 
                                         // it contains and will delete them if requested 
     fGammaE  = new TH1F("fGammaE",  "fGammaE",  100, 0, 4);       
+    fEMCalSecondaryE_SIG = new TH1F("fEMCalSecondaryE_SIG", "fEMCalSecondaryE_SIG", 100, 0, 4);
+    fEMCalSecondaryE_BG  = new TH1F("fEMCalSecondaryE_BG",  "fEMCalSecondaryE_BG",  100, 0, 4);       
     fNeutralPDG = new TH1F("fNeutralPDG", "fNeutralPDG", 3500, 0, 3500);
     fEmcalHitMothers_SIG = new TH1F("fEmcalHitMothers_SIG", "fEmcalHitMothers_SIG", 100, 0, 2500);
     fEmcalHitMothers_BG = new TH1F("fEmcalHitMothers_BG", "fEmcalHitMothers_BG", 100, 0, 2500);
@@ -253,6 +265,8 @@ void AliAnalysisTaskMCInfo::UserCreateOutputObjects()
     fEMCal_dphiEta_BG =  new TH1F("emc_dphieta_bg", "emc_dphieta_bg", 500,0,10);
   
     fOutList->Add(fGammaE);          
+    fOutList->Add(fEMCalSecondaryE_SIG);          
+    fOutList->Add(fEMCalSecondaryE_BG);          
     fOutList->Add(fNeutralPDG);          
     fOutList->Add(fEmcalHitMothers_SIG);          
     fOutList->Add(fEmcalHitMothers_BG);          
@@ -679,6 +693,9 @@ TString AliAnalysisTaskMCInfo::GetDirFromFullPath(const char* fullpath)
 //_____________________________________________________________________________
 Bool_t AliAnalysisTaskMCInfo::UpdateGlobalVars()
 {
+    if (fCurrentRunNumber!=fRunNumber)
+        fGeometry = AliEMCALGeometry::GetInstanceFromRunNumber(fCurrentRunNumber);
+
     if (fCurrentDir=="" || fCurrentDir != GetDirFromFullPath(CurrentFileName())) {
         fCurrentDir = GetDirFromFullPath(CurrentFileName());
         fHitFile = TFile::Open(fCurrentDir+fHitFileName);
