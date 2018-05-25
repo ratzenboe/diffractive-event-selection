@@ -563,180 +563,180 @@ Stefan Meyer Institut\\
 
 %------------------------------------------------ 
 
-% \begin{frame}
-%     \frametitle{Decision tree learning}
-%     \vspace*{-7mm}
-%     \begin{block}{Training}
-%         \emph{Recursively} split feature space into sub-spaces at each step\\
-%         $\to$ Measures to evaluate split
-%         \begin{itemize}
-%             \item Error rate
-%             \item Information gain
-%             \item Gini index
-%         \end{itemize}
-%     \end{block}
-% \end{frame}
-
-%------------------------------------------------ 
-
-% \begin{frame}
-%     \frametitle{Decision tree learning}
-%     \centering\begin{tikzpicture}
-%         \node[inner sep=0pt] (featspace) at (0,0)
-%             {\includegraphics[height=3cm,keepaspectratio]{pics/DT-feature-space.png}};
-%         \node (featspaceTop) [above=1mm of featspace, color=black]  {Feature space};
-%         \node[inner sep=0pt] (nodes) at (3,-3.5)
-%             {\includegraphics[height=3.3cm,keepaspectratio]{pics/DT-fullygrown_nodes.png}};%
-%         \node (nodesTxt) [above=1mm of nodes, color=black]  {Decision tree};
-%         \node[inner sep=0pt] (DTapply) at (-3,-3.5)
-%             {\includegraphics[height=3.3cm,keepaspectratio]{pics/DT-fullygrown_feature_space.png}};
-%         \node (DTTxt) [above=1mm of DTapply, color=black]  {Classification};
-
-%         \draw[->,thick] (featspace.east) to [out=0,in=90] (nodesTxt.north) node[midway,above] {};
-%         \draw[->,thick] (featspace.west) to [out=180,in=90] (DTTxt.north) node[midway,above] {};
-%     \end{tikzpicture}
-% \end{frame}
-
-% %------------------------------------------------ 
-
-% \begin{frame}
-%     \frametitle{Decision tree learning}
-%     1) We compute a measure for \emph{each possible split} in each feature\\\hspace*{5mm}$\to$ here \textbf{absolute error rate} (AER)
-%     \\
-%     \vspace*{3mm}
-%     \centering\begin{tikzpicture}
-%         \node[inner sep=0pt, visible on=<1>] (feat1) at (0,0)
-%             {\includegraphics[height=4.5cm,keepaspectratio]{pics/DT-ER-y.png}};
-%         \node (feat1Txt) [above=1mm of feat1, color=black]  {\emph{y} split AER};
-%         % \node[inner sep=0pt, visible on=<2>] (feat2) at (0,0)
-%         %     {\includegraphics[height=4.5cm,keepaspectratio]{pics/DT-ER-x.png}};
-%         % \node (feat2Txt) [above=1mm of feat1, color=black,visible on=<2>]  {\emph{x}-\emph{y} split AER};
-%     \end{tikzpicture}
- 
-% \end{frame}
-
-% %------------------------------------------------ 
-
-% \begin{frame}
-%     \frametitle{Decision tree learning}
-%     1) We compute a measure for \emph{each possible split} in each feature\\\hspace*{5mm}$\to$ here \textbf{absolute error rate} (AER)
-%     \\
-%     \vspace*{3mm}
-%     \centering\begin{tikzpicture}
-%         \node[inner sep=0pt] (feat2) at (0,0)
-%             {\includegraphics[height=4.5cm,keepaspectratio]{pics/DT-ER-x.png}};
-%         \node (feat2Txt) [above=1mm of feat1, color=black]  {\emph{x}-\emph{y} split AER};
-%         \pause
-%         \node (el) at (-0.53,-1.8) [ellipse, color=red, minimum height=5mm,minimum width=10mm,draw, ultra thick] {};
-%         \node (txt) at (3.5,-1.8) [color=red, ultra thick] {Minimum AER};
-%         \draw[->, color=red, ultra thick] (txt) to [out=160, in=20] (el);
-
-%     \end{tikzpicture}
- 
-% \end{frame}
-
-% %------------------------------------------------ 
-
-% \begin{frame}
-%     \frametitle{Decision tree learning}
-%     1) We compute a measure for \emph{each possible split} in each feature\\\hspace*{5mm}$\to$ here \textbf{absolute error rate} (AER)\\
-%     2) Recursively repead step (1) for each subspace until AER $\to 0$
-%     \\
-%     \vspace*{3mm}
-%     \centering\includegraphics<1>[height=4.3cm,keepaspectratio]{pics/DT_1_split.png}%
-%     \centering\includegraphics<2>[height=4.6cm,keepaspectratio]{pics/DT_2_split.png}%
-%     \centering\includegraphics<3>[height=4.6cm,keepaspectratio]{pics/DT_3_split.png}%
-%     \centering\includegraphics<4>[height=4.6cm,keepaspectratio]{pics/DT_4_split.png}%
-%     \centering\includegraphics<5>[height=4.6cm,keepaspectratio]{pics/DT_5_split.png}%
-%     \centering\includegraphics<6>[height=4.3cm,keepaspectratio]{pics/DT_final.png}%
-     
-% \end{frame}
+\begin{frame}
+    \frametitle{Decision tree learning}
+    \vspace*{-7mm}
+    \begin{block}{Training}
+        \emph{Recursively} split feature space into sub-spaces at each step\\
+        $\to$ Measures to evaluate split
+        \begin{itemize}
+            \item Error rate
+            \item Information gain
+            \item Gini index
+        \end{itemize}
+    \end{block}
+\end{frame}
 
 %------------------------------------------------ 
 
 \begin{frame}
     \frametitle{Decision tree learning}
-    Recursively split feature space into sub-spaces until they are pure\\
-    \vspace*{5mm}
-    % \centering\includegraphics<1>[height=4.3cm,keepaspectratio]{pics/DT_1_split.png}%
-    % \centering\includegraphics<2>[height=4.6cm,keepaspectratio]{pics/DT_2_split.png}%
-    % \centering\includegraphics<3>[height=4.6cm,keepaspectratio]{pics/DT_3_split.png}%
-    % \centering\includegraphics<4>[height=4.6cm,keepaspectratio]{pics/DT_4_split.png}%
-    % \centering\includegraphics<5>[height=4.6cm,keepaspectratio]{pics/DT_5_split.png}%
-    \centering\includegraphics[height=4.3cm,keepaspectratio]{pics/DT_final.png}%
-     
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (featspace) at (0,0)
+            {\includegraphics[height=3cm,keepaspectratio]{pics/DT-feature-space.png}};
+        \node (featspaceTop) [above=1mm of featspace, color=black]  {Feature space};
+        \node[inner sep=0pt] (nodes) at (3,-3.5)
+            {\includegraphics[height=3.3cm,keepaspectratio]{pics/DT-fullygrown_nodes.png}};%
+        \node (nodesTxt) [above=1mm of nodes, color=black]  {Decision tree};
+        \node[inner sep=0pt] (DTapply) at (-3,-3.5)
+            {\includegraphics[height=3.3cm,keepaspectratio]{pics/DT-fullygrown_feature_space.png}};
+        \node (DTTxt) [above=1mm of DTapply, color=black]  {Classification};
+
+        \draw[->,thick] (featspace.east) to [out=0,in=90] (nodesTxt.north) node[midway,above] {};
+        \draw[->,thick] (featspace.west) to [out=180,in=90] (DTTxt.north) node[midway,above] {};
+    \end{tikzpicture}
 \end{frame}
 
+%------------------------------------------------ 
 
-% %------------------------------------------------ 
-
-% \begin{frame}
-%     \frametitle{Decision tree classification}
-%     3) Classification
-%     \\
-%     \vspace*{3mm}
-%     \includegraphics[height=4.3cm,keepaspectratio]{pics/DT_classification.png}%
+\begin{frame}
+    \frametitle{Decision tree learning}
+    1) We compute a measure for \emph{each possible split} in each feature\\\hspace*{5mm}$\to$ here \textbf{absolute error rate} (AER)
+    \\
+    \vspace*{3mm}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt, visible on=<1>] (feat1) at (0,0)
+            {\includegraphics[height=4.5cm,keepaspectratio]{pics/DT-ER-y.png}};
+        \node (feat1Txt) [above=1mm of feat1, color=black]  {\emph{y} split AER};
+        % \node[inner sep=0pt, visible on=<2>] (feat2) at (0,0)
+        %     {\includegraphics[height=4.5cm,keepaspectratio]{pics/DT-ER-x.png}};
+        % \node (feat2Txt) [above=1mm of feat1, color=black,visible on=<2>]  {\emph{x}-\emph{y} split AER};
+    \end{tikzpicture}
  
-% \end{frame}
+\end{frame}
 
-% %------------------------------------------------ 
+%------------------------------------------------ 
 
-% \begin{frame}
-%     \frametitle{Decision tree improvements I}
-%     \begin{itemize}
-%         \item Use more sophisticated split measures 
-%             \begin{itemize}
-%                 \item \emph{Information gain} $\leftrightarrow$ (im-)purity of splitted sub-sets
-%             \end{itemize}
-%         \item Pruning 
-%         \item Ensemble trees (Random forest \& boosted DT)
-%     \end{itemize}
-%     \vspace*{3mm}
-%     \centering\begin{tikzpicture}
-%         \node[inner sep=0pt] (IG) at (3,0)
-%             {\includegraphics[height=3.5cm,keepaspectratio]{pics/DT_info-gain.png}};
-%         \node (IGtxt) [below=1mm of IG, color=black]  {Information gain};
-%         \node[inner sep=0pt] (AER) at (-3,0)
-%             {\includegraphics[height=3.5cm,keepaspectratio]{pics/DT_AER.png}};
-%         \node (AERtxt) [below=1mm of AER, color=black]  {Absolute error rate};
-%         \draw[->, color=red, ultra thick] (AER) to [out=0, in=180] (IG);
-%     \end{tikzpicture}
+\begin{frame}
+    \frametitle{Decision tree learning}
+    1) We compute a measure for \emph{each possible split} in each feature\\\hspace*{5mm}$\to$ here \textbf{absolute error rate} (AER)
+    \\
+    \vspace*{3mm}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (feat2) at (0,0)
+            {\includegraphics[height=4.5cm,keepaspectratio]{pics/DT-ER-x.png}};
+        \node (feat2Txt) [above=1mm of feat1, color=black]  {\emph{x}-\emph{y} split AER};
+        \pause
+        \node (el) at (-0.53,-1.8) [ellipse, color=red, minimum height=5mm,minimum width=10mm,draw, ultra thick] {};
+        \node (txt) at (3.5,-1.8) [color=red, ultra thick] {Minimum AER};
+        \draw[->, color=red, ultra thick] (txt) to [out=160, in=20] (el);
+
+    \end{tikzpicture}
  
-% \end{frame}
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Decision tree learning}
+    1) We compute a measure for \emph{each possible split} in each feature\\\hspace*{5mm}$\to$ here \textbf{absolute error rate} (AER)\\
+    2) Recursively repead step (1) for each subspace until AER $\to 0$
+    \\
+    \vspace*{3mm}
+    \centering\includegraphics<1>[height=4.3cm,keepaspectratio]{pics/DT_1_split.png}%
+    \centering\includegraphics<2>[height=4.6cm,keepaspectratio]{pics/DT_2_split.png}%
+    \centering\includegraphics<3>[height=4.6cm,keepaspectratio]{pics/DT_3_split.png}%
+    \centering\includegraphics<4>[height=4.6cm,keepaspectratio]{pics/DT_4_split.png}%
+    \centering\includegraphics<5>[height=4.6cm,keepaspectratio]{pics/DT_5_split.png}%
+    \centering\includegraphics<6>[height=4.3cm,keepaspectratio]{pics/DT_final.png}%
+     
+\end{frame}
 
 %------------------------------------------------ 
 
 % \begin{frame}
-%     \frametitle{Decision tree improvements II}
-%     \begin{columns}[T] % align columns        
-%         \begin{column}{.48\textwidth}
-%             \begin{block}{Random forest}
-%                 \begin{itemize}
-%                     \item<1-> Ensemble of DTs
-%                     \item<2-> For each tree use:
-%                     \begin{itemize}
-%                         \item<3-> Random sub-sample (=\emph{bootstrapping})
-%                         \item<4-> Random number of the original features\\
-%                                   $\to$ large number of rather shallow trees
-%                     \end{itemize}
-%                     \item<5-> Classify data by majority voting of individual trees
-%                 \end{itemize}
-%             \end{block}
-%         \end{column}%
-%         \hfill%
-%         \begin{column}{.48\textwidth}
-%             \begin{block}{Boosted DT}
-%                 \begin{itemize}
-%                     \item<6-> Sequential ensemble of evolving DTs
-%                     \item<7-> Assign weights to training samples $\to$ initially equal weights
-%                     \item<8-> Adjust weights \& give more importance to misclassified samples
-%                     \item<9-> Subsequent predictors thus should focus on those 
-%                 \end{itemize}
-%             \end{block}            
-%         \end{column}%
-%     \end{columns}
-
+%     \frametitle{Decision tree learning}
+%     Recursively split feature space into sub-spaces until they are pure\\
+%     \vspace*{5mm}
+%     % \centering\includegraphics<1>[height=4.3cm,keepaspectratio]{pics/DT_1_split.png}%
+%     % \centering\includegraphics<2>[height=4.6cm,keepaspectratio]{pics/DT_2_split.png}%
+%     % \centering\includegraphics<3>[height=4.6cm,keepaspectratio]{pics/DT_3_split.png}%
+%     % \centering\includegraphics<4>[height=4.6cm,keepaspectratio]{pics/DT_4_split.png}%
+%     % \centering\includegraphics<5>[height=4.6cm,keepaspectratio]{pics/DT_5_split.png}%
+%     \centering\includegraphics[height=4.3cm,keepaspectratio]{pics/DT_final.png}%
+     
 % \end{frame}
+
+
+% %------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Decision tree classification}
+    3) Classification
+    \\
+    \vspace*{3mm}
+    \includegraphics[height=4.3cm,keepaspectratio]{pics/DT_classification.png}%
+ 
+\end{frame}
+
+% %------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Decision tree improvements I}
+    \begin{itemize}
+        \item Use more sophisticated split measures 
+            \begin{itemize}
+                \item \emph{Information gain} $\leftrightarrow$ (im-)purity of splitted sub-sets
+            \end{itemize}
+        \item Pruning 
+        \item Ensemble trees (Random forest \& boosted DT)
+    \end{itemize}
+    \vspace*{3mm}
+    \centering\begin{tikzpicture}
+        \node[inner sep=0pt] (IG) at (3,0)
+            {\includegraphics[height=3.5cm,keepaspectratio]{pics/DT_info-gain.png}};
+        \node (IGtxt) [below=1mm of IG, color=black]  {Information gain};
+        \node[inner sep=0pt] (AER) at (-3,0)
+            {\includegraphics[height=3.5cm,keepaspectratio]{pics/DT_AER.png}};
+        \node (AERtxt) [below=1mm of AER, color=black]  {Absolute error rate};
+        \draw[->, color=red, ultra thick] (AER) to [out=0, in=180] (IG);
+    \end{tikzpicture}
+ 
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Decision tree improvements II}
+    \begin{columns}[T] % align columns        
+        \begin{column}{.48\textwidth}
+            \begin{block}{Random forest}
+                \begin{itemize}
+                    \item<1-> Ensemble of DTs
+                    \item<2-> For each tree use:
+                    \begin{itemize}
+                        \item<3-> Random sub-sample (=\emph{bootstrapping})
+                        \item<4-> Random number of the original features\\
+                                  $\to$ large number of rather shallow trees
+                    \end{itemize}
+                    \item<5-> Classify data by majority voting of individual trees
+                \end{itemize}
+            \end{block}
+        \end{column}%
+        \hfill%
+        \begin{column}{.48\textwidth}
+            \begin{block}{Boosted DT}
+                \begin{itemize}
+                    \item<6-> Sequential ensemble of evolving DTs
+                    \item<7-> Assign weights to training samples $\to$ initially equal weights
+                    \item<8-> Adjust weights \& give more importance to misclassified samples
+                    \item<9-> Subsequent predictors thus should focus on those 
+                \end{itemize}
+            \end{block}            
+        \end{column}%
+    \end{columns}
+
+\end{frame}
 
 %------------------------------------------------ 
 
