@@ -48,7 +48,7 @@ Int_t EventDef::GetTrackPdg(UInt_t i) const
 Int_t EventDef::GetTrackMotherPdg(UInt_t i) const
 {
     if (i>=fParticles.size()) return -999;
-    return GetTrackPdg(fParticles[i].MotherNumber]);
+    return GetTrackPdg(fParticles[i].MotherNumber);
 }
 
 //______________________________________________________________________________
@@ -77,9 +77,9 @@ void EventDef::AddTrack(Int_t number, Int_t pdg, Int_t mother_number,
     Particle new_part;
     new_part.Number = number;
     new_part.Pdg = pdg;
-    new_part.MotherPdg = mother_pdg;
     new_part.isFinal = isFinal;
-    new_part.DaughterNbs = {daugther_nb_1, daugther_nb_2};
+    new_part.DaughterNbs[0] = daugther_nb_1;
+    new_part.DaughterNbs[1] = daugther_nb_2;
     // and track
     fParticles.push_back(new_part);
     // sort the particles
@@ -92,7 +92,7 @@ Bool_t EventDef::operator==(const EventDef& other) const
     if (this->GetnUniqueParticles() != other.GetnUniqueParticles()) return kFALSE;
     for (Int_t ii(0); ii<this->GetnUniqueParticles(); ii++){
         if (fParticles[ii].Pdg != other.GetTrackPdg(ii) ||
-            fParticles[ii].MotherPdg != other.GetTrackMotherPdg(ii) ||
+            this->GetTrackMotherPdg(ii) != other.GetTrackMotherPdg(ii) ||
             fParticles[ii].isFinal != other.GetTrackIsFinal(ii) ) return kFALSE;  
     }
     return kTRUE;
@@ -120,11 +120,11 @@ TString EventDef::GetDecayStringShort() const
     TString number;
     decayString += "$\\textbf{X} \\to";
     for (UInt_t ii(0); ii<fParticles.size(); ii++){
-        if (!fParticles.isFinal) continue;
+        if (!fParticles[ii].isFinal) continue;
         particle_pdg = fParticles[ii].Pdg;
         decayString += fParticleCodes.at(particle_pdg);
-        if (fParticles[ii].MotherPdg > 10) {
-            particle_pdg = fParticles[ii].MotherPdg;
+        if (GetTrackMotherPdg(ii) > 10) {
+            particle_pdg = GetTrackMotherPdg(ii);
             decayString += "(" + fParticleCodes.at(particle_pdg) + ") ";
         }
     }
@@ -135,49 +135,29 @@ TString EventDef::GetDecayStringShort() const
 //______________________________________________________________________________
 TString EventDef::GetDecayStringLong() const
 {
-    TString decayString("");
+    /* TString decayString(""); */
 
-    std::vector<Particle> particles_copy = fParticles;
-    std::vector<Int_t> eraseIndexVec;
+    /* Int_t particle_pdg; */
+    /* TString number; */
+    /* decayString += "\\begin{tikzpicture}[dirtree, baseline=(current bounding box.center)]"; */
+    /* decayString += "\\centering\\node{$X$}"; */
+    /*     // this means that the particle is a final one */
+    /* decayString += " child { node {$" + fParticleCodes.at(particles_copy[ii].Pdg) + "$}"; */
+    /* if (particles_copy[ii].isFinal) decayString+="}"; */
 
-    Int_t particle_pdg;
-    TString number;
-    decayString += "\\begin{tikzpicture}[dirtree, baseline=(current bounding box.center)]";
-    decayString += "\\centering\\node{$X$}";
-    while (particles_copy.size()>0) {
-        Int_t ii = 0;
-        eraseIndexVec.clear();
-        if (abs(particles_copy[ii].MotherPdg) < 10) {
-            // this means that the particle is a final one
-            decayString += " child { node {$" + fParticleCodes.at(particles_copy[ii].Pdg) + "$}";
-            if (particles_copy[ii].isFinal) { 
-                decayString+="}";
-                
-            }
-            else { 
-                /* for */ 
-            
-            }
-            for (UInt_t kk(0); kk<eraseIndexVec.size(); kk++)
-                particles_copy.erase(particles_copy.begin() + eraseIndexVec[kk]);
-        }
-        else ii++;
-    }
-            
-
-        /* if (fParticles[ii].MotherPdg > 10) { */
-        /*     particle_pdg = fParticles[ii].MotherPdg; */
-        /*     decayString += "(" + fParticleCodes.at(particle_pdg) + ") "; */
-        /* } */
-    }
-    decayString += "$";
-    return decayString;
+    /*     /1* if (fParticles[ii].MotherPdg > 10) { *1/ */
+    /*     /1*     particle_pdg = fParticles[ii].MotherPdg; *1/ */
+    /*     /1*     decayString += "(" + fParticleCodes.at(particle_pdg) + ") "; *1/ */
+    /*     /1* } *1/ */
+    /* } */
+    /* decayString += "$"; */
+    /* return decayString; */
 }
 
 //______________________________________________________________________________
-Int_t EventDef::GetTrackIndexInVector(Int_t number) const
+Int_t EventDef::GetParticleIndexFromNumber(Int_t number) const
 {
-    for(UInt_t ii(0); ii<fParticles.size(); ii++;){
+    for(UInt_t ii(0); ii<fParticles.size(); ii++){
         if (fParticles[ii].Number == number) return ii; 
     }
     // if that number does not correspond to a particle we return -1
@@ -187,14 +167,15 @@ Int_t EventDef::GetTrackIndexInVector(Int_t number) const
 //______________________________________________________________________________
 Int_t EventDef::TreeLooper(Int_t mother)
 {
-    if (mother==-1 || mother>=fParticles.size()) return -1;
-    printf("Particle: %s, number: %i\n", 
+    mother = GetParticleIndexFromNumber(mother);
+    if (mother==-1 || mother>=fParticles.size()) return -1; 
+    printf("Particle: %i, number: %i\n", 
             fParticles[mother].Pdg, mother); 
     if (fParticles[mother].isFinal) return -1;
     for (Int_t ii(fParticles[mother].DaughterNbs[0]); 
             ii<=fParticles[mother].DaughterNbs[1]; ii++) 
     {
-        TreeLooper(ii);
+        TreeLooper(GetParticleIndexFromNumber(ii));
     }
     return -1;
 }
