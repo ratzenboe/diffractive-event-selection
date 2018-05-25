@@ -60,14 +60,17 @@ class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE
         TClonesArray*           fHitsArray;         //! EMCal hit clones array
         TString                 fCurrentDir;        //  current ESD-working directory 
 
+        AliEMCALGeometry*       fGeometry;          //! emcal geometry
+        Int_t                   fRunNumber;         // run number
+
         Long_t                  fAnalysisStatus;    //  stores the analysis-status 
         UInt_t                  fTTmask;            //  track conditions
         UInt_t                  fTTpattern;         //  track conditions
         // Output objects 
         TList*                  fOutList;           //! output list
         TH1F*                   fGammaE;            //! energies of primarily produced gammas 
-        /* TH1F*                   fSecondaryE_SIG; //! energies of primarily produced gammas */ 
-        /* TH1F*                   fSecondaryE_BG;  //! energies of primarily produced gammas */ 
+        TH1F*                   fEMCalSecondaryE_SIG; //! energy of parts reaching the emcal SIG
+        TH1F*                   fEMCalSecondaryE_BG;  //! energy of parts reaching the emcal BG
         /* TH1F*                   fGammaE_secondary;  //! energies of gammas in emcal */ 
         TH1F*                   fNeutralPDG;        //! neutral particles pdg
         // emcal hists
@@ -116,6 +119,10 @@ class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE
         TLorentzVector          GetXLorentzVector(AliMCEvent* MCevent);
         // print particle stack
         void                    PrintStack(AliMCEvent* MCevent, Bool_t prim=kTRUE);
+        // print particle stack
+        void                    PrintTracks(AliESDEvent* esd_evt);
+         // print emcal hits
+        void                    PrintEMCALHits(Bool_t isSignal);
         // filling the histograms
         void                    EMCalAnalysis(Bool_t isSignal, Int_t nTracksTT, 
                                               TArrayI* TTindices);
@@ -123,7 +130,7 @@ class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE
         Bool_t                  MatchTracks(AliESDCaloCluster* clust, Int_t nTracksTT, 
                                             TArrayI* TTindices, Double_t& dPhiEtaMin);
         // check if calo-cluster originates from certain particle (including secondaries)
-        Bool_t                  IsClusterFromPDG(AliESDCaloCluster* clust, Int_t pdg);
+        Bool_t                  IsClusterFromPDG(AliESDCaloCluster* clust, Int_t& pdg);
         // get directory from full path to AliESDs.root file
         TString                 GetDirFromFullPath(const char* fullpath);
         // update global variables as well as the hit-tree/branch
