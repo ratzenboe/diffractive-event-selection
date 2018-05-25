@@ -8,7 +8,8 @@
 
 
 
-AliAnalysisTaskSE* AddMCTask(TString name = "name", Long_t state, UInt_t TTmask, UInt_t TTpattern)
+AliAnalysisTaskSE* AddMCTask(TString name = "name", Long_t state, UInt_t TTmask, UInt_t TTpattern,
+        TString hitfile)
 {
     // get the manager via the static access member. since it's static, there is no need
     // for an instance of the class to call the function
@@ -31,7 +32,8 @@ AliAnalysisTaskSE* AddMCTask(TString name = "name", Long_t state, UInt_t TTmask,
     TString fileName = AliAnalysisManager::GetCommonFileName();
     fileName += ":MCTask";      // create a subfolder in the file
     // now we create an instance of the MC task
-    AliAnalysisTaskMCInfo* task = new AliAnalysisTaskMCInfo(name.Data(),state,TTmask,TTpattern);   
+    AliAnalysisTaskMCInfo* task = new AliAnalysisTaskMCInfo(
+            name.Data(),state,TTmask,TTpattern,hitfile);   
     if(!task) return 0x0;
     task->SelectCollisionCandidates(AliVEvent::kAnyINT);
     // add your task to the manager
