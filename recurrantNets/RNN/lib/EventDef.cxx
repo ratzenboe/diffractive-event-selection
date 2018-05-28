@@ -16,7 +16,7 @@ ClassImp(EventDef)
 //______________________________________________________________________________
 EventDef::EventDef() 
  : fnParticles(0)
- , fnParticlesFromX(0)
+ , fDecayOccurance(1)
 {
     this->Reset();
 }
@@ -33,8 +33,8 @@ void EventDef::Reset()
     // reset all private variables
     fParticles.clear();
     SetParticleCodes();
-    fnParticles      = 0;
-    fnParticlesFromX = 0;
+    fnParticles = 0;
+    fDecayOccurance = 1;
 }
 
 //______________________________________________________________________________
@@ -62,9 +62,10 @@ Int_t EventDef::GetTrackIsFinal(UInt_t i) const
 void EventDef::SortParticles()
 {
     std::sort(fParticles.begin(), fParticles.end(), 
-              // sorts particles by an ascending Number
+              // sorts particles by an ascending pdg value (important for compaison)
               [](const Particle& a, const Particle& b) { 
-                    return abs(a.Number) < abs(b.Number); } );
+                    return (abs(a.Pdg) == abs(b.Pdg)) ? (a.Pdg<b.Pdg) : (abs(a.Pdg)<abs(b.Pdg)); 
+              } );
 }
 
 //______________________________________________________________________________
@@ -76,14 +77,62 @@ void EventDef::AddTrack(Int_t number, Int_t pdg, Int_t mother_number,
     // create the new particle
     Particle new_part;
     new_part.Number = number;
+    new_part.MotherNumber = mother_number;
     new_part.Pdg = pdg;
     new_part.isFinal = isFinal;
-    new_part.DaughterNbs[0] = daugther_nb_1;
-    new_part.DaughterNbs[1] = daugther_nb_2;
+    new_part.DaughterVec.clear();
+    for (Int_t ii(daugther_nb_1); ii<=daugther_nb_2; ii++) new_part.DaughterVec.push_back(ii);
     // and track
     fParticles.push_back(new_part);
-    // sort the particles
+}
+
+//______________________________________________________________________________
+void EventDef::FinalizeEvent()
+{
+    std::vector<Int_t> eraseVec, daughtersOfX;
+    Int_t Xnumber(-1);
+    eraseVec.clear();
+    daughtersOfX.clear();
+    // C++11 loop-style
+    for (Particle part : fParticles) {
+        if (abs(part.Pdg) < 10 || part.Pdg == 21) { eraseVec.push_back(part.Number); continue; }
+        // we rewrite the initial system X to number 1
+        if (part.Pdg==9900110) { Xnumber = part.Number; continue; }
+        // this means that every particle X decays into has to have mother 1:
+        if (IsFromX(part.Number)) { daughtersOfX.push_back(part.Number); }
+    }
+    // now set the daugthers of X to the correct daughters-vector
+    for (Int_t nb : daughtersOfX) fParticles[GetParticleIndexFromNumber(nb)].MotherNumber = 1;
+    fParticles[GetParticleIndexFromNumber(Xnumber)].Number = 1;
+    fParticles[GetParticleIndexFromNumber(1)].DaughterVec = daughtersOfX;
+    // erase the gluons and quarks
+    for (Int_t nb : eraseVec) {
+          Int_t element = GetParticleIndexFromNumber(nb);
+          fParticles.erase(fParticles.begin()+element);
+    }
     SortParticles();
+    OrderDaugthers();
+}
+
+//______________________________________________________________________________
+Bool_t EventDef::IsFromX(Int_t number) const
+{
+    Int_t motherNumber = fParticles[GetParticleIndexFromNumber(number)].MotherNumber;
+    Int_t motherPdg    = fParticles[GetParticleIndexFromNumber(motherNumber)].Pdg;
+    // loopexiter:
+    Int_t prevMotherNumber;
+    // sign of the X particle: pdg==9900110 -> if X is parent
+    while (kTRUE)
+    {   // if parent is gluon or quark we search for the next parent
+        prevMotherNumber = motherNumber;
+        if (motherPdg==9900110) return kTRUE;
+        if (abs(motherPdg)<10 || motherPdg==21) {
+            motherNumber = fParticles[GetParticleIndexFromNumber(motherNumber)].MotherNumber;     
+            motherPdg    = fParticles[GetParticleIndexFromNumber(motherNumber)].Pdg;     
+        } else return kFALSE;
+        if (prevMotherNumber==motherNumber) break;
+    }
+    return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -135,29 +184,26 @@ TString EventDef::GetDecayStringShort() const
 //______________________________________________________________________________
 TString EventDef::GetDecayStringLong() const
 {
-    /* TString decayString(""); */
+    TString decayString("");
+    TString numberString;
+    Int_t fDecayOccurance = 100;
+    numberString.Form("%i", fDecayOccurance);
 
-    /* Int_t particle_pdg; */
-    /* TString number; */
-    /* decayString += "\\begin{tikzpicture}[dirtree, baseline=(current bounding box.center)]"; */
-    /* decayString += "\\centering\\node{$X$}"; */
-    /*     // this means that the particle is a final one */
-    /* decayString += " child { node {$" + fParticleCodes.at(particles_copy[ii].Pdg) + "$}"; */
-    /* if (particles_copy[ii].isFinal) decayString+="}"; */
-
-    /*     /1* if (fParticles[ii].MotherPdg > 10) { *1/ */
-    /*     /1*     particle_pdg = fParticles[ii].MotherPdg; *1/ */
-    /*     /1*     decayString += "(" + fParticleCodes.at(particle_pdg) + ") "; *1/ */
-    /*     /1* } *1/ */
-    /* } */
-    /* decayString += "$"; */
-    /* return decayString; */
+    Int_t particle_pdg;
+    TString number;
+    decayString += "\\begin{tikzpicture}[dirtree, baseline=(current bounding box.center)]";
+    decayString += "\\centering\\node{$X$}";
+    TreeLooper(1, decayString); 
+    decayString += ";";
+    decayString += "\\addvmargin{1mm}\\end{tikzpicture}  & " + numberString;
+    decayString += "\\\\ \\hline";
+    return decayString;
 }
 
 //______________________________________________________________________________
 Int_t EventDef::GetParticleIndexFromNumber(Int_t number) const
 {
-    for(UInt_t ii(0); ii<fParticles.size(); ii++){
+    for(UInt_t ii(0); ii<fParticles.size(); ii++) {
         if (fParticles[ii].Number == number) return ii; 
     }
     // if that number does not correspond to a particle we return -1
@@ -165,17 +211,41 @@ Int_t EventDef::GetParticleIndexFromNumber(Int_t number) const
 }
 
 //______________________________________________________________________________
-Int_t EventDef::TreeLooper(Int_t mother)
+Int_t EventDef::TreeLooper(Int_t mother, TString& decaystring) const
 {
     mother = GetParticleIndexFromNumber(mother);
-    if (mother==-1 || mother>=fParticles.size()) return -1; 
-    printf("Particle: %i, number: %i\n", 
-            fParticles[mother].Pdg, mother); 
-    if (fParticles[mother].isFinal) return -1;
-    for (Int_t ii(fParticles[mother].DaughterNbs[0]); 
-            ii<=fParticles[mother].DaughterNbs[1]; ii++) 
+    if (mother==-1 || mother>=(Int_t)fParticles.size()) return -1; 
+    if ( fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() ) 
+        decaystring += "child { node {$" + fParticleCodes.at(fParticles[mother].Pdg) + "$} ";
+    if (fParticles[mother].isFinal) { decaystring += "} "; return -1; }
+    // C++11 loop style
+    for (Int_t it : fParticles[mother].DaughterVec)
     {
-        TreeLooper(GetParticleIndexFromNumber(ii));
+        TreeLooper(it, decaystring);
+    }
+    if ( fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() ) decaystring+="} ";
+    return -1;
+}
+
+//______________________________________________________________________________
+Int_t EventDef::OrderDaugthers(Int_t mother)
+{
+    mother = GetParticleIndexFromNumber(mother);
+    if (mother==-1 || mother>=(Int_t)fParticles.size() || fParticles[mother].isFinal) return -1; 
+    // here: order the daugthers by pdg value
+    std::sort(fParticles[mother].DaughterVec.begin(), fParticles[mother].DaughterVec.end(),
+            // sort daugthers 
+            [this](const Int_t& a, const Int_t& b) 
+            {
+                Int_t a_DaugtherPdg = fParticles[GetParticleIndexFromNumber(a)].Pdg;
+                Int_t b_DaugtherPdg = fParticles[GetParticleIndexFromNumber(b)].Pdg;
+                if (abs(a_DaugtherPdg)==abs(b_DaugtherPdg)) return a_DaugtherPdg>b_DaugtherPdg;
+                else return abs(a_DaugtherPdg)<abs(b_DaugtherPdg);
+            });
+    // C++11 loop style
+    for (Int_t it : fParticles[mother].DaughterVec)
+    {
+        OrderDaugthers(it);
     }
     return -1;
 }
