@@ -55,6 +55,7 @@ class EventDef
     Int_t                           GetTrackPdg(UInt_t i) const;
     Int_t                           GetTrackMotherPdg(UInt_t i) const;
     Int_t                           GetTrackIsFinal(UInt_t i) const;
+    Int_t                           GetTrackOccurance(UInt_t i) const;
 
     TString                         GetDecayStringShort() const;
     TString                         GetDecayStringLong(Int_t nEvts=1) const;
