@@ -134,7 +134,8 @@ void EventDef::FinalizeEvent()
                     // delete the second particle from the mothers daugthervector
                     fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.erase(
                       std::find(
-                        fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.begin(),                        fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.end(), 
+                        fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.begin(),                        
+                        fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.end(), 
                         b.Number));
                     return kTRUE;
                 } else return kFALSE;
