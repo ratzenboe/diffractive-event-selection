@@ -14,10 +14,12 @@
 ClassImp(EventDef)
 
 //______________________________________________________________________________
-EventDef::EventDef() 
+EventDef::EventDef(Int_t rootpdg, TString rootstr) 
  : fnParticles(0)
  , fDecayOccurance(1)
  , fIsFinalized(kFALSE)
+ , fRootPDG(rootpdg)
+ , fRootString(std::string(rootstr.Data()))
 {
     this->Reset();
 }
@@ -100,7 +102,7 @@ void EventDef::FinalizeEvent()
     for (Particle part : fParticles) {
         if (abs(part.Pdg) < 10 || part.Pdg == 21) { eraseVec.push_back(part.Number); continue; }
         // we rewrite the initial system X to number 1
-        if (part.Pdg==9900110) { Xnumber = part.Number; continue; }
+        if (part.Pdg==fRootPDG) { Xnumber = part.Number; continue; }
         // this means that every particle X decays into has to have mother 1:
         if (IsFromX(part.Number)) { daughtersOfX.push_back(part.Number); }
     }
@@ -129,7 +131,7 @@ Bool_t EventDef::IsFromX(Int_t number) const
     while (kTRUE)
     {   // if parent is gluon or quark we search for the next parent
         prevMotherNumber = motherNumber;
-        if (motherPdg==9900110) return kTRUE;
+        if (motherPdg==fRootPDG) return kTRUE;
         if (abs(motherPdg)<10 || motherPdg==21) {
             motherNumber = fParticles[GetParticleIndexFromNumber(motherNumber)].MotherNumber;     
             motherPdg    = fParticles[GetParticleIndexFromNumber(motherNumber)].Pdg;     
@@ -186,16 +188,16 @@ TString EventDef::GetDecayStringShort() const
 }
 
 //______________________________________________________________________________
-TString EventDef::GetDecayStringLong() const
+TString EventDef::GetDecayStringLong(Int_t nEvts) const
 {
     TString decayString("");
     TString numberString;
-    numberString.Form("%i", fDecayOccurance);
+    numberString.Form("%.2f", Double_t(fDecayOccurance)/Double_t(nEvts)*100.);
 
     Int_t particle_pdg;
     TString number;
     decayString += "\\begin{tikzpicture}[dirtree, baseline=(current bounding box.center)]";
-    decayString += "\\centering\\node{$X$}";
+    decayString += "\\centering";
     TreeLooper(1, decayString); 
     decayString += ";";
     decayString += "\\addvmargin{1mm}\\end{tikzpicture}  & " + numberString;
@@ -218,8 +220,12 @@ Int_t EventDef::TreeLooper(Int_t mother, TString& decaystring) const
 {
     mother = GetParticleIndexFromNumber(mother);
     if (mother==-1 || mother>=(Int_t)fParticles.size()) return -1; 
-    if ( fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() ) 
+    // formulate the string
+    if ( fParticles[mother].Pdg == fRootPDG ) 
+        decaystring += "\\node{$" + fParticleCodes.at(fRootPDG) + "$} ";
+    else if ( fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end())
         decaystring += "child { node {$" + fParticleCodes.at(fParticles[mother].Pdg) + "$} ";
+    else printf("The pdg value %i is not contained in the particle-list!\n",fParticles[mother].Pdg);
     if (fParticles[mother].isFinal) { decaystring += "} "; return -1; }
     // C++11 loop style
     for (Int_t it : fParticles[mother].DaughterVec)
@@ -275,4 +281,5 @@ void EventDef::SetParticleCodes()
     fParticleCodes[130]  = "\\K^{0}_{L}";
     fParticleCodes[321]  = "\\K^{+}";
     fParticleCodes[-321] = "\\K^{-}";
+    fParticleCodes[fRootPDG] = fRootString;
 }
