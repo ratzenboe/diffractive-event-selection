@@ -17,6 +17,7 @@ ClassImp(EventDef)
 EventDef::EventDef() 
  : fnParticles(0)
  , fDecayOccurance(1)
+ , fIsFinalized(kFALSE)
 {
     this->Reset();
 }
@@ -35,6 +36,7 @@ void EventDef::Reset()
     SetParticleCodes();
     fnParticles = 0;
     fDecayOccurance = 1;
+    fIsFinalized = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -72,6 +74,7 @@ void EventDef::SortParticles()
 void EventDef::AddTrack(Int_t number, Int_t pdg, Int_t mother_number,
         Int_t daugther_nb_1, Int_t daugther_nb_2, Bool_t isFinal)
 {
+    if (fIsFinalized) { printf("<W> event is already finalized! Track is not added!"); return ; }
     // add track to next element
     fnParticles++;
     // create the new particle
@@ -112,6 +115,7 @@ void EventDef::FinalizeEvent()
     }
     SortParticles();
     OrderDaugthers();
+    fIsFinalized = kTRUE;
 }
 
 //______________________________________________________________________________
@@ -186,7 +190,6 @@ TString EventDef::GetDecayStringLong() const
 {
     TString decayString("");
     TString numberString;
-    Int_t fDecayOccurance = 100;
     numberString.Form("%i", fDecayOccurance);
 
     Int_t particle_pdg;
