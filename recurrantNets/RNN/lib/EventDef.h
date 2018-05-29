@@ -21,6 +21,12 @@ class EventDef
         Int_t MotherNumber; 
         std::vector<Int_t> DaughterVec;
         Bool_t isFinal; 
+        Int_t PartOccurance;
+        // equality comparison
+        bool operator==(const Particle& a) const
+        {
+            return (Pdg==a.Pdg && MotherNumber==a.MotherNumber && isFinal==a.isFinal);
+        }
     } ;
 
     // Modifiers
