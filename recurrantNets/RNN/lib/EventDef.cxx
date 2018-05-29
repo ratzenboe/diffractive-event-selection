@@ -63,6 +63,13 @@ Int_t EventDef::GetTrackIsFinal(UInt_t i) const
 }
 
 //______________________________________________________________________________
+Int_t EventDef::GetTrackOccurance(UInt_t i) const 
+{
+    if (i>=fParticles.size()) return -999;
+    return fParticles[i].PartOccurance;
+}
+
+//______________________________________________________________________________
 void EventDef::SortParticles()
 {
     std::sort(fParticles.begin(), fParticles.end(), 
@@ -85,6 +92,7 @@ void EventDef::AddTrack(Int_t number, Int_t pdg, Int_t mother_number,
     new_part.MotherNumber = mother_number;
     new_part.Pdg = pdg;
     new_part.isFinal = isFinal;
+    new_part.PartOccurance = 1;
     new_part.DaughterVec.clear();
     for (Int_t ii(daugther_nb_1); ii<=daugther_nb_2; ii++) new_part.DaughterVec.push_back(ii);
     // and track
@@ -116,7 +124,33 @@ void EventDef::FinalizeEvent()
           fParticles.erase(fParticles.begin()+element);
     }
     SortParticles();
+    // loop again through the particle list and combine same decay-particles 
+    // works only on a pre-sorted vector
+    std::vector<Particle>::iterator it = std::unique(fParticles.begin(), fParticles.end(), 
+            [this](Particle& a, const Particle& b) { 
+                if (a==b && a.isFinal && b.isFinal){
+                    // increase the particle occurance of the first particle
+                    a.PartOccurance++;
+                    // delete the second particle from the mothers daugthervector
+                    fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.erase(
+                      std::find(
+                        fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.begin(),                        fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.end(), 
+                        b.Number));
+                    return kTRUE;
+                } else return kFALSE;
+            } );
+    fParticles.resize( std::distance(fParticles.begin(),it) );
+
+    SortParticles();
     OrderDaugthers();
+    // just to check if everything worked
+    /* for (Particle part : fParticles) { */
+    /*     printf("Number: %i, pdg: %i, mothernumber: %i, isFinal: %i, PartOccurance: %i", */
+    /*             part.Number, part.Pdg, part.MotherNumber,part.isFinal, part.PartOccurance); */
+    /*     printf(", DaughterNumbers: "); */
+    /*     for (Int_t nb : part.DaughterVec) printf("%i ", nb); */
+    /*     printf("\n"); */
+    /* } */
     fIsFinalized = kTRUE;
 }
 
@@ -148,7 +182,8 @@ Bool_t EventDef::operator==(const EventDef& other) const
     for (Int_t ii(0); ii<this->GetnUniqueParticles(); ii++){
         if (fParticles[ii].Pdg != other.GetTrackPdg(ii) ||
             this->GetTrackMotherPdg(ii) != other.GetTrackMotherPdg(ii) ||
-            fParticles[ii].isFinal != other.GetTrackIsFinal(ii) ) return kFALSE;  
+            fParticles[ii].isFinal != other.GetTrackIsFinal(ii) || 
+            fParticles[ii].PartOccurance != other.GetTrackOccurance(ii)) return kFALSE;  
     }
     return kTRUE;
 }
@@ -223,16 +258,26 @@ Int_t EventDef::TreeLooper(Int_t mother, TString& decaystring) const
     // formulate the string
     if ( fParticles[mother].Pdg == fRootPDG ) 
         decaystring += "\\node{$" + fParticleCodes.at(fRootPDG) + "$} ";
-    else if ( fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end())
-        decaystring += "child { node {$" + fParticleCodes.at(fParticles[mother].Pdg) + "$} ";
-    else printf("The pdg value %i is not contained in the particle-list!\n",fParticles[mother].Pdg);
+    else if ( fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end()) {
+        decaystring += "child { node {$"; 
+        if (fParticles[mother].PartOccurance>1) {
+            TString particleOccurance;
+            particleOccurance.Form("%i",fParticles[mother].PartOccurance);
+            decaystring += particleOccurance;
+        }
+        decaystring += fParticleCodes.at(fParticles[mother].Pdg);
+        decaystring += "$} ";
+    } else {
+        printf("Pdg value %i is not contained in the particle-list!\n",fParticles[mother].Pdg);
+    }
     if (fParticles[mother].isFinal) { decaystring += "} "; return -1; }
     // C++11 loop style
     for (Int_t it : fParticles[mother].DaughterVec)
     {
         TreeLooper(it, decaystring);
     }
-    if ( fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() ) decaystring+="} ";
+    if ( fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() && 
+            fParticles[mother].Pdg != fRootPDG ) decaystring+="} ";
     return -1;
 }
 
