@@ -11,7 +11,7 @@
 class EventDef
 {
   public:
-                                    EventDef();
+                                    EventDef(Int_t rootpdg=9900110, TString rootstr="X");
                                     ~EventDef();
 
     // Structure holding particle-information
@@ -43,12 +43,15 @@ class EventDef
     Int_t                           GetnParticles() const { return fnParticles; }
     Int_t                           GetnUniqueParticles() const { return fParticles.size(); }
 
+    Int_t                           GetOccurance() const { return fDecayOccurance; }
+    Int_t                           GetIsFinalized() const { return fIsFinalized; }
+
     Int_t                           GetTrackPdg(UInt_t i) const;
     Int_t                           GetTrackMotherPdg(UInt_t i) const;
     Int_t                           GetTrackIsFinal(UInt_t i) const;
 
     TString                         GetDecayStringShort() const;
-    TString                         GetDecayStringLong() const;
+    TString                         GetDecayStringLong(Int_t nEvts=1) const;
 
     void                            PrintEvent(TString filename="decaymodes.tex") const;
     
@@ -62,6 +65,8 @@ class EventDef
     std::map<Int_t, std::string>    fParticleCodes;
     Int_t                           fDecayOccurance;
     Bool_t                          fIsFinalized;
+    Int_t                           fRootPDG;
+    std::string                     fRootString;
 
     void                            SetParticleCodes();
     // Get certain track
