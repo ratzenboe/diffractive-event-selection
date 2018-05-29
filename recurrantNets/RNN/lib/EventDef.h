@@ -35,6 +35,9 @@ class EventDef
     // The class only displays the event in a compact way; 
     // the comparison is only correctly done after this function is called
     void                            FinalizeEvent();
+    
+    // Setter
+    void                            IncreaseDecayOccurance() { fDecayOccurance++; }
 
     // Getters
     Int_t                           GetnParticles() const { return fnParticles; }
