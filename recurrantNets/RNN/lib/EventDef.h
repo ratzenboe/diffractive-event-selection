@@ -61,6 +61,7 @@ class EventDef
     Int_t                           fnParticles;
     std::map<Int_t, std::string>    fParticleCodes;
     Int_t                           fDecayOccurance;
+    Bool_t                          fIsFinalized;
 
     void                            SetParticleCodes();
     // Get certain track
