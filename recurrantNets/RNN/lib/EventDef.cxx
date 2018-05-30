@@ -107,6 +107,7 @@ void EventDef::FinalizeEvent()
     eraseVec.clear();
     daughtersOfX.clear();
     // C++11 loop-style
+    printf("DEBUG: first loop\n");
     for (Particle part : fParticles) {
         if (abs(part.Pdg) < 10 || part.Pdg == 21) { eraseVec.push_back(part.Number); continue; }
         // we rewrite the initial system X to number 1
@@ -123,35 +124,42 @@ void EventDef::FinalizeEvent()
           Int_t element = GetParticleIndexFromNumber(nb);
           fParticles.erase(fParticles.begin()+element);
     }
+    printf("DEBUG: sort particles\n");
     SortParticles();
     // loop again through the particle list and combine same decay-particles 
     // works only on a pre-sorted vector
-    std::vector<Particle>::iterator it = std::unique(fParticles.begin(), fParticles.end(), 
-            [this](Particle& a, const Particle& b) { 
-                if (a==b && a.isFinal && b.isFinal){
-                    // increase the particle occurance of the first particle
-                    a.PartOccurance++;
-                    // delete the second particle from the mothers daugthervector
-                    fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.erase(
-                      std::find(
-                        fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.begin(),                        
-                        fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.end(), 
-                        b.Number));
-                    return kTRUE;
-                } else return kFALSE;
-            } );
-    fParticles.resize( std::distance(fParticles.begin(),it) );
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // redo this function!!!!!!!!!!!
+    /* printf("DEBUG: unique parts\n"); */
+    /* std::vector<Particle>::iterator it = std::unique(fParticles.begin(), fParticles.end(), */ 
+    /*         [this](Particle& a, const Particle& b) { */ 
+    /*             if (a==b && a.isFinal && b.isFinal){ */
+    /*                 // increase the particle occurance of the first particle */
+    /*                 a.PartOccurance++; */
+    /*                 // delete the second particle from the mothers daugthervector */
+    /*                 fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.erase( */
+    /*                   std::find( */
+    /*                     fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.begin(), */                        
+    /*                     fParticles[GetParticleIndexFromNumber(b.MotherNumber)].DaughterVec.end(), */ 
+    /*                     b.Number)); */
+    /*                 return kTRUE; */
+    /*             } else return kFALSE; */
+    /*         } ); */
+    /* printf("DEBUG: resize particles\n"); */
+    /* fParticles.resize( std::distance(fParticles.begin(),it) ); */
 
+    printf("DEBUG: sort particles II\n");
     SortParticles();
+    printf("DEBUG: order daugthers\n");
     OrderDaugthers();
     // just to check if everything worked
-    /* for (Particle part : fParticles) { */
-    /*     printf("Number: %i, pdg: %i, mothernumber: %i, isFinal: %i, PartOccurance: %i", */
-    /*             part.Number, part.Pdg, part.MotherNumber,part.isFinal, part.PartOccurance); */
-    /*     printf(", DaughterNumbers: "); */
-    /*     for (Int_t nb : part.DaughterVec) printf("%i ", nb); */
-    /*     printf("\n"); */
-    /* } */
+    for (Particle part : fParticles) {
+        printf("Number: %i, pdg: %i, mothernumber: %i, isFinal: %i, PartOccurance: %i",
+                part.Number, part.Pdg, part.MotherNumber,part.isFinal, part.PartOccurance);
+        printf(", DaughterNumbers: ");
+        for (Int_t nb : part.DaughterVec) printf("%i ", nb);
+        printf("\n");
+    }
     fIsFinalized = kTRUE;
 }
 
@@ -271,7 +279,8 @@ Int_t EventDef::TreeLooper(Int_t mother, TString& decaystring) const
     } else {
         printf("Pdg value %i is not contained in the particle-list!\n",fParticles[mother].Pdg);
     }
-    if (fParticles[mother].isFinal) { decaystring += "} "; return -1; }
+    if (fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() && 
+            fParticles[mother].isFinal) { decaystring += "} "; return -1; }
     // C++11 loop style
     for (Int_t it : fParticles[mother].DaughterVec)
     {
@@ -322,10 +331,10 @@ void EventDef::SetParticleCodes()
     fParticleCodes[113]  = "\\rho^{0}";
     fParticleCodes[213]  = "\\rho^{+}";
     fParticleCodes[-213] = "\\rho^{-}";
-    fParticleCodes[311]  = "\\K^{0}";
-    fParticleCodes[310]  = "\\K^{0}_{S}";
-    fParticleCodes[130]  = "\\K^{0}_{L}";
-    fParticleCodes[321]  = "\\K^{+}";
-    fParticleCodes[-321] = "\\K^{-}";
+    fParticleCodes[311]  = "K^{0}";
+    fParticleCodes[310]  = "K^{0}_{S}";
+    fParticleCodes[130]  = "K^{0}_{L}";
+    fParticleCodes[321]  = "K^{+}";
+    fParticleCodes[-321] = "K^{-}";
     fParticleCodes[fRootPDG] = fRootString;
 }
