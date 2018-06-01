@@ -199,6 +199,8 @@ void AliAnalysisTaskMCInfo::UserCreateOutputObjects()
     //
     // this function is called ONCE at the start of the analysis (RUNTIME)
     // here the histograms and other objects are created
+    fEvtStorge = EventStorage();
+
     fRunNumber = fCurrentRunNumber;
 
     fHitsArray = new TClonesArray("AliEMCALHit",1000);
@@ -317,15 +319,13 @@ void AliAnalysisTaskMCInfo::UserExec(Option_t *)
     // the manager will retrieve the next event from the chain
     fESD = dynamic_cast<AliESDEvent*>(InputEvent()); 
     if(!fESD) return;
-    // the directory may have changed we therefore update the neccessary global vars
-    if (!UpdateGlobalVars()) return;
 
     // set global variables
     Int_t nTracks = fCEPUtil->AnalyzeTracks(fESD, fTracks, fTrackStatus);
     Int_t nTracksAccept(2), nTracksTT;
     TArrayI *TTindices  = new TArrayI();
     Bool_t isGoodEvt = lhc16filter(fESD, nTracksAccept, nTracksTT, TTindices);
-    /* if (!isGoodEvt) return ; */
+    if (!isGoodEvt) return ;
     // here we have now events which passed the track selection
     
     // get MC event (fMCEvent is member variable from AliAnalysisTaskSE)
@@ -372,13 +372,29 @@ void AliAnalysisTaskMCInfo::UserExec(Option_t *)
     if (m_diff < 0) m_diff = -m_diff;
     Bool_t isFullRecon(kFALSE);
     if (m_diff < 1e-5) isFullRecon = kTRUE;
-    PrintStack(fMCEvent, kFALSE);
-    /* PrintTracks(fESD); */
-    PrintEMCALHits(isFullRecon);
 
+    //////////////////////////////////////////////////////////////////////////////////
+    // ---------------------- Print the event stack ----------------------------------
+    /* PrintStack(fMCEvent, kFALSE); */
+    // ---------------------- Print the AliESDtracks ---------------------------------
+    /* PrintTracks(fESD); */
+    //////////////////////////////////////////////////////////////////////////////////
+    
+    //////////////////////////////////////////////////////////////////////////////////
+    // ----------------------- EMCAL Hits --------------------------------------------
+    // the directory may have changed we therefore update the neccessary global vars
+    if (UpdateGlobalVars()) PrintEMCALHits(isFullRecon);
+    //////////////////////////////////////////////////////////////////////////////////
+
+    EventDef ed;
     for (Int_t ii=4; ii<nTracksPrimMC; ii++) {
-        if (stack->Particle(ii)->GetStatusCode()==0) continue;
         TParticle* part = stack->Particle(ii);
+
+        ed.AddTrack(ii, part->GetPdgCode(), part->GetMother(0), 
+                part->GetDaughter(0), part->GetDaughter(1), 
+                (part->GetStatusCode()==0) ? kFALSE : kTRUE);
+
+        if (part->GetStatusCode()==0) continue;
         Int_t pdg = part->GetPdgCode();
         Double_t charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge();
         if (charge==0.) {
@@ -386,9 +402,13 @@ void AliAnalysisTaskMCInfo::UserExec(Option_t *)
             fNeutralPDG->Fill(pdg); 
         }
     }
+    // event storage specific actions
+    ed.FinalizeEvent();
+    fEvtStorge.AddEvent(ed);
+
     EMCalAnalysis(isFullRecon, nTracksTT, TTindices);
 
-    printf("\n\n\n\n----------------------------------------------------\n\n");
+    /* printf("\n\n\n\n----------------------------------------------------\n\n"); */
     PostData(1, fOutList);          // stream the results the analysis of this event to
                                     // the output manager which will take care of writing
                                     // it to a file
@@ -398,6 +418,7 @@ void AliAnalysisTaskMCInfo::Terminate(Option_t *)
 {
     // terminate
     // called at the END of the analysis (when all events are processed)
+    fEvtStorge.PrintNEvts();
 }
 //_____________________________________________________________________________
 //
@@ -636,15 +657,15 @@ Bool_t AliAnalysisTaskMCInfo::MatchTracks(AliESDCaloCluster* clust, Int_t nTrack
 {
     dPhiEtaMin = 999.;
      
-    printf("Distance to track in phi: %-6.2f, in eta: %-6.2f\n", 
-            clust->GetTrackDx(), clust->GetTrackDz());
+    /* printf("Distance to track in phi: %-6.2f, in eta: %-6.2f\n", */ 
+    /*         clust->GetTrackDx(), clust->GetTrackDz()); */
     Float_t x[3];
     clust->GetPosition(x);
     TVector3 v3(x[0], x[1], x[2]);
     // v3 phi is in the range [-pi,pi) -> map it to [0, 2pi)
     Double_t cluster_phi = (v3.Phi()>0.) ? v3.Phi() : v3.Phi() + 2.*TMath::Pi();
     Double_t cluster_eta = v3.Eta();
-    printf("EMCal cluster positions: phi: %-6.2f, eta: %-6.2f\n", cluster_phi, cluster_eta);
+    /* printf("EMCal cluster positions: phi: %-6.2f, eta: %-6.2f\n", cluster_phi, cluster_eta); */
 
     for (Int_t kk(0); kk<nTracksTT; kk++) {
         // proper pointer into fTracks and fTrackStatus
@@ -668,8 +689,8 @@ Bool_t AliAnalysisTaskMCInfo::MatchTracks(AliESDCaloCluster* clust, Int_t nTrack
         if (trkPhiOnEmc<0.) trkPhiOnEmc=-999.;
         Double_t trkEtaOnEmc = tmptrk->GetTrackEtaOnEMCal();
 
-        printf("Track %i: Phi on emcal: %-6.2f, eta: %-6.2f\n",
-                kk, trkPhiOnEmc, trkEtaOnEmc);
+        /* printf("Track %i: Phi on emcal: %-6.2f, eta: %-6.2f\n", */
+        /*         kk, trkPhiOnEmc, trkEtaOnEmc); */
         if (trkPhiOnEmc==-999. || trkEtaOnEmc==-999.) continue;
         // calculate distance in phi
         Double_t dEta = trkEtaOnEmc - cluster_eta;
@@ -678,7 +699,7 @@ Bool_t AliAnalysisTaskMCInfo::MatchTracks(AliESDCaloCluster* clust, Int_t nTrack
 
         dPhiEtaMin = (dPhiEtaMin<dPhiEta) ? dPhiEtaMin : dPhiEta;
     }
-    printf("Minimum distance to track in eta phi: %-6.2f\n", dPhiEtaMin);
+    /* printf("Minimum distance to track in eta phi: %-6.2f\n", dPhiEtaMin); */
     return (dPhiEtaMin==999.) ? kFALSE : kTRUE;
 }
 
@@ -697,7 +718,7 @@ Bool_t AliAnalysisTaskMCInfo::IsClusterFromPDG(AliESDCaloCluster* clust, Int_t& 
     }
     Bool_t isclusterfrompart = (particle_pdg==pdg);
     pdg = particle_pdg;
-    printf("Primary particle causing cluster: %i (pdg: %i)\n", mc_idx, particle_pdg); 
+    /* printf("Primary particle causing cluster: %i (pdg: %i)\n", mc_idx, particle_pdg); */ 
     return isclusterfrompart;
 }
 
@@ -723,6 +744,7 @@ Bool_t AliAnalysisTaskMCInfo::UpdateGlobalVars()
         fCurrentDir = GetDirFromFullPath(CurrentFileName());
         fHitFile = TFile::Open(fCurrentDir+fHitFileName);
     }
+    if (!fHitFile) return kFALSE;
     TString iev_str;
     iev_str.Form("Event%i", Entry());
     fHitDir = fHitFile->GetDirectory(iev_str);

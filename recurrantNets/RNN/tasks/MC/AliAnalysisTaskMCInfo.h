@@ -25,6 +25,9 @@
 #include "AliCEPUtils.h"
 #include "AliEMCALGeometry.h"
 
+#include "EventStorage.h"
+#include "EventDef.h"
+
 #include "AliAnalysisTaskSE.h"
 
 class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE  
@@ -106,6 +109,7 @@ class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE
         TH1F*                   fEMCal_dphiEta_SIG;  //! phi-eta distance of cluster hit to track
         TH1F*                   fEMCal_dphiEta_BG;   //! phi-eta distance of cluster hit to track
         
+        EventStorage            fEvtStorge;         
         // not implemented but neccessary
         AliAnalysisTaskMCInfo(const AliAnalysisTaskMCInfo&); 
         AliAnalysisTaskMCInfo& operator=(const AliAnalysisTaskMCInfo&); 
