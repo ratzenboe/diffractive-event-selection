@@ -56,6 +56,8 @@ AliAnalysisTaskBG3plus::AliAnalysisTaskBG3plus()
   , fTrackStatus(0)
   , fTracks(0)
   , fCEPUtil(0)
+  , fPIDCombined(0)
+  , fPIDResponse(0)
   , fAnalysisStatus(AliCEPBase::kBitConfigurationSet)
   , fTTmask(AliCEPBase::kTTBaseLine)
   , fTTpattern(AliCEPBase::kTTBaseLine) 
@@ -79,6 +81,8 @@ AliAnalysisTaskBG3plus::AliAnalysisTaskBG3plus(const char* name,
   , fTrackStatus(0)
   , fTracks(0)
   , fCEPUtil(0)
+  , fPIDCombined(0)
+  , fPIDResponse(0)
   , fAnalysisStatus(state)
   , fTTmask(TTmask)
   , fTTpattern(TTpattern)
@@ -119,6 +123,10 @@ AliAnalysisTaskBG3plus::~AliAnalysisTaskBG3plus()
         delete fTracks;
         fTracks = 0x0;
     }
+    if(fPIDCombined) {
+        delete fPIDCombined;
+        fPIDCombined = 0x0;
+    }
 }
 
 //_____________________________________________________________________________
@@ -148,6 +156,13 @@ void AliAnalysisTaskBG3plus::UserCreateOutputObjects()
             AliCEPBase::kBitisRun1,AliCEPBase::kBitisRun1);
     fCEPUtil->InitTrackCuts(isRun1,1);  
 
+    fPIDCombined = new AliPIDCombined();
+    fPIDCombined->SetSelectedSpecies(AliPID::kSPECIES);  // default
+    fPIDCombined->SetEnablePriors(kTRUE);
+    fPIDCombined->SetDefaultTPCPriors();
+    // use TPC and TOF for PID:
+    UInt_t Maskin = AliPIDResponse::kDetTPC | AliPIDResponse::kDetTOF;
+    fPIDCombined->SetDetectorMask(Maskin);
    
     // the histograms are added to a tlist which is in the end saved to an output file
     fOutList = new TList();             // this is a list which will contain all of your histograms
@@ -174,8 +189,13 @@ void AliAnalysisTaskBG3plus::UserExec(Option_t *)
     // and with the static function InputEvent() you have access to the current event. 
     // once you return from the UserExec function, 
     // the manager will retrieve the next event from the chain
+    if (!fInputHandler) { printf("<E> no input handler available!\n"); return ; }
     fESD = dynamic_cast<AliESDEvent*>(InputEvent()); 
     if(!fESD) return;
+    // check pid-response
+    fPIDResponse = (AliPIDResponse*)fInputHandler->GetPIDResponse();
+    if (!fPIDResponse) { printf("<E> no PID available!\n"); return ; }
+
     // ///////////////////////////////////////////////////////////////////////////////
     // get MC event (fMCEvent is member variable from AliAnalysisTaskSE)
     fMCEvent = MCEvent();
@@ -211,9 +231,10 @@ void AliAnalysisTaskBG3plus::UserExec(Option_t *)
 
     //////////////////////////////////////////////////////////////////////////////////
     // ---------------------- Print the event stack ----------------------------------
-    /* PrintStack(fMCEvent, kFALSE); */
+    PrintStack(fMCEvent, kFALSE);
     // ---------------------- Print the AliESDtracks ---------------------------------
-    /* PrintTracks(fESD); */
+    PrintTracks(fTracks, nTracksTT, TTindices);
+    printf("----------------------------- evt end ---------------------------------\n\n");
     //////////////////////////////////////////////////////////////////////////////////
     
     PostData(1, fOutList);          // stream the results the analysis of this event to
@@ -369,6 +390,32 @@ Bool_t AliAnalysisTaskBG3plus::EvtFullRecon(TObjArray* tracks, Int_t nTracksTT,
     if (m_diff < 1e-5) return kTRUE;
     else return kFALSE;
 }
+
+//_____________________________________________________________________________
+Bool_t AliAnalysisTaskBG3plus::IsPionEvt(TObjArray* tracks, Int_t nTracksTT, 
+                                         TArrayI* TTindices) const
+{
+    for (Int_t ii=0; ii<nTracksTT; ii++) {
+        // proper pointer into tracks and fTrackStatus
+        Int_t trkIndex = TTindices->At(ii);
+        // the original track
+        AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
+        // get MC truth
+        Int_t MCind = tmptrk->GetLabel();
+        part = GetPartByLabel(MCind, mcEvt);
+        // set lorentz vector 
+        TLorentzVector lv;
+        part->Momentum(lv);
+        // total lorentz-vector
+        measured_lor += lv;        
+    }
+    Double_t m_diff = measured_lor.M() - X_lor.M();
+    if (m_diff < 0) m_diff = -m_diff;
+    if (m_diff < 1e-5) return kTRUE;
+    else return kFALSE;
+}
+
+
 //_____________________________________________________________________________
 Bool_t AliAnalysisTaskBG3plus::lhc16filter(AliESDEvent* esd_evt, Int_t nTracksAccept, 
         Int_t& nTracksTT, TArrayI*& TTindices)
@@ -487,13 +534,18 @@ Bool_t AliAnalysisTaskBG3plus::IsSTGFired(TBits* fFOmap,Int_t dphiMin,Int_t dphi
 ///////////////////////////////////////////////////////////////////////////////
 // --------------------------- Print functions --------------------------------
 //_____________________________________________________________________________
-void AliAnalysisTaskBG3plus::PrintTracks(AliESDEvent* esd_evt) const
+void AliAnalysisTaskBG3plus::PrintTracks(TObjArray* tracks, Int_t nTracksTT, 
+                                         TArrayI* TTindices) const
 {
     printf("------------ Tracks --------------------\n");
-    for (Int_t ii(0); ii<esd_evt->GetNumberOfTracks(); ii++){
-        AliESDtrack* trk = esd_evt->GetTrack(ii);
-        printf("Track label: %i", trk->GetLabel());
-        printf("  Track E: %-6.8f", trk->E());
+    for (Int_t ii=0; ii<nTracksTT; ii++) 
+    {
+        // proper pointer into tracks and fTrackStatus
+        Int_t trkIndex = TTindices->At(ii);
+        // the original track
+        AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
+        printf("Track label: %i", tmptrk->GetLabel());
+        printf("  Track E: %-6.8f", tmptrk->E());
         printf("\n");
     }
     printf("------------ Tracks end ----------------\n");
@@ -517,6 +569,7 @@ void AliAnalysisTaskBG3plus::PrintStack(AliMCEvent* MCevent, Bool_t prim) const
                 ii, part->GetName(), part->Energy(), 
                 part->GetMother(0), part->GetDaughter(0), part->GetDaughter(1));
         if (part->GetStatusCode()==1) printf("   final");
+        printf("\n");
         if (ii==nPrimaries-1) printf("-------------- Primaries end ------------------\n");
     }
     printf("-----------------------------------------------\n");
