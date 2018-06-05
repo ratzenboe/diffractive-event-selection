@@ -23,7 +23,8 @@
 #include "AliESDCaloCluster.h"
 #include "AliTriggerAnalysis.h"
 #include "AliCEPUtils.h"
-#include "AliEMCALGeometry.h"
+#include "AliPIDResponse.h"
+#include "AliPIDCombined.h"
 
 #include "EventStorage.h"
 #include "EventDef.h"
@@ -54,6 +55,8 @@ class AliAnalysisTaskBG3plus : public AliAnalysisTaskSE
         TArrayI*                fTrackStatus;       //! array of track-status
         TObjArray*              fTracks;            //! array of AliESDtracks
         AliCEPUtils*            fCEPUtil;           //! AliCEPUtil object
+        AliPIDResponse*         fPIDResponse;       //! pid response
+        AliPIDCombined*         fPIDCombined;       //! bayes pid 
 
         Long_t                  fAnalysisStatus;    //  stores the analysis-status 
         UInt_t                  fTTmask;            //  track conditions
@@ -62,6 +65,7 @@ class AliAnalysisTaskBG3plus : public AliAnalysisTaskSE
         TList*                  fOutList;           //! output list
         TH1F*                   fInvMass_FD;        //! invariant mass of feed down evts
         TH1F*                   fInvMass_3trks;     //! invariant mass of 3 tracks bg
+        TH1F*                   fInvMass_3plusTrks; //! invariant mass of 3+ tracks (here: 3-10)
         
         // not implemented but neccessary
         AliAnalysisTaskBG3plus(const AliAnalysisTaskBG3plus&); 
@@ -72,10 +76,15 @@ class AliAnalysisTaskBG3plus : public AliAnalysisTaskSE
                                             Int_t& nTracksTT, TArrayI*& TTindices);
         Bool_t                  lhc16filter(AliESDEvent* esd_evt, std::vector<Int_t> nTrksAcc_vec, 
                                             Int_t& nTracksTT, TArrayI*& TTindices);
-         // heart of the lhc16-filter
+        // heart of the lhc16-filter
         Bool_t                  EventFilter(AliESDEvent* esd_evt, Int_t nTracksAccept);
         // part of the lhc16filter
         Bool_t                  IsSTGFired(TBits* fFOmap,Int_t dphiMin=0,Int_t dphiMax=10);
+        // Selection of pions
+        Bool_t                  IsPionEvt(TObjArray* tracks, Int_t nTracksTT, 
+                                          TArrayI* TTindices, 
+                                          AliPIDResponse* pidResponse, 
+                                          AliPIDCombined* pidCombined) const;
 
         // check if event is fully reconstructed
         Bool_t                  EvtFullRecon(TObjArray* tracks, Int_t nTracksTT, 
@@ -94,7 +103,9 @@ class AliAnalysisTaskBG3plus : public AliAnalysisTaskSE
         // print particle stack
         void                    PrintStack(AliMCEvent* MCevent, Bool_t prim=kTRUE) const;
         // print particle stack
-        void                    PrintTracks(AliESDEvent* esd_evt) const;
+        void                    PrintTracks(TObjArray* tracks, Int_t nTracksTT, 
+                                            TArrayI* TTindices) const;
+
 
         ClassDef(AliAnalysisTaskBG3plus, 1);
 };
