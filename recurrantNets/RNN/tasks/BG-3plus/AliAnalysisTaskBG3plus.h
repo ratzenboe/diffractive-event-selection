@@ -30,16 +30,17 @@
 #include "EventDef.h"
 
 #include "AliAnalysisTaskSE.h"
+#include "CEPBGBase.h"
 
-class AliAnalysisTaskBG3plus : public AliAnalysisTaskSE  
+class AliAnalysisTaskBG3plus : public AliAnalysisTaskSE, public CEPBGBase   
 {
     public:
                                 AliAnalysisTaskBG3plus();
                                 AliAnalysisTaskBG3plus(const char *name,
-                                                      Long_t state,
-                                                      UInt_t TTmask,
-                                                      UInt_t TTpattern,
-                                                      TString hitFileName);
+                                                       Long_t state,
+                                                       UInt_t TTmask,
+                                                       UInt_t TTpattern,
+                                                       TString hitFileName);
         virtual                 ~AliAnalysisTaskBG3plus();
 
         // these functions also exist in AliAnalysisTaskSE (SE=single event)
@@ -50,18 +51,7 @@ class AliAnalysisTaskBG3plus : public AliAnalysisTaskSE
         virtual void            Terminate(Option_t* option);
 
     private:
-        AliESDEvent*            fESD;               //! input event
-        AliTriggerAnalysis*     fTrigger;           //! trigger object
-        TArrayI*                fTrackStatus;       //! array of track-status
-        TObjArray*              fTracks;            //! array of AliESDtracks
-        AliCEPUtils*            fCEPUtil;           //! AliCEPUtil object
-        AliPIDResponse*         fPIDResponse;       //! pid response
-        AliPIDCombined*         fPIDCombined;       //! bayes pid 
-
-        Long_t                  fAnalysisStatus;    //  stores the analysis-status 
-        UInt_t                  fTTmask;            //  track conditions
-        UInt_t                  fTTpattern;         //  track conditions
-        // Output objects 
+        /* // Output objects */ 
         TList*                  fOutList;           //! output list
         TH1F*                   fInvMass_FD;        //! invariant mass of feed down evts
         TH1F*                   fInvMass_3trks;     //! invariant mass of 3 tracks bg
@@ -70,41 +60,6 @@ class AliAnalysisTaskBG3plus : public AliAnalysisTaskSE
         // not implemented but neccessary
         AliAnalysisTaskBG3plus(const AliAnalysisTaskBG3plus&); 
         AliAnalysisTaskBG3plus& operator=(const AliAnalysisTaskBG3plus&); 
-
-        // prefiltering 
-        Bool_t                  lhc16filter(AliESDEvent* esd_evt, Int_t nTracksAccept, 
-                                            Int_t& nTracksTT, TArrayI*& TTindices);
-        Bool_t                  lhc16filter(AliESDEvent* esd_evt, std::vector<Int_t> nTrksAcc_vec, 
-                                            Int_t& nTracksTT, TArrayI*& TTindices);
-        // heart of the lhc16-filter
-        Bool_t                  EventFilter(AliESDEvent* esd_evt, Int_t nTracksAccept);
-        // part of the lhc16filter
-        Bool_t                  IsSTGFired(TBits* fFOmap,Int_t dphiMin=0,Int_t dphiMax=10);
-        // Selection of pions
-        Bool_t                  IsPionEvt(TObjArray* tracks, Int_t nTracksTT, 
-                                          TArrayI* TTindices, 
-                                          AliPIDResponse* pidResponse, 
-                                          AliPIDCombined* pidCombined) const;
-
-        // check if event is fully reconstructed
-        Bool_t                  EvtFullRecon(TObjArray* tracks, Int_t nTracksTT, 
-                                             TArrayI* TTindices, AliMCEvent* MCevt) const;
-        TLorentzVector          GetXLorentzVector(AliMCEvent* MCevent) const;
-
-        // get lorentz vector of particle index
-        TParticle*              GetPartByLabel(Int_t MCind, AliMCEvent* MCevt) const;
-        // get mass of event
-        Double_t                GetMass(TObjArray* tracks, Int_t nTracksTT, 
-                                        TArrayI* TTindices, AliMCEvent* MCevt) const;
-        std::vector<Double_t>   GetMassPermute(TObjArray* tracks, Int_t nTracksTT, 
-                                               TArrayI* TTindices, AliMCEvent* MCevt) const;
-        //////////////////////////////////////////////////////////////////////////////////
-        // ------------------------------ Print functions --------------------------------
-        // print particle stack
-        void                    PrintStack(AliMCEvent* MCevent, Bool_t prim=kTRUE) const;
-        // print particle stack
-        void                    PrintTracks(TObjArray* tracks, Int_t nTracksTT, 
-                                            TArrayI* TTindices) const;
 
 
         ClassDef(AliAnalysisTaskBG3plus, 1);
