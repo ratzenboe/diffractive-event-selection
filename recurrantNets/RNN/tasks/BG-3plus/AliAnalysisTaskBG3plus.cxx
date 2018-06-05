@@ -30,15 +30,8 @@
 
 #include "AliStack.h"
 #include "AliESDtrack.h"
-#include "AliESDtrackCuts.h"
-#include "AliMultiplicitySelectionCP.h"
-#include "AliMC.h"
-#include "AliRunLoader.h"
-
-#include "AliPID.h"
 
 #include "AliCEPBase.h"
-/* #include "AliCEPUtils.h" */
 #include "AliAnalysisTaskBG3plus.h"
 
 #include <string>       // std::string
