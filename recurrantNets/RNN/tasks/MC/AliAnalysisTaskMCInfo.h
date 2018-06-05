@@ -63,9 +63,6 @@ class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE
         TClonesArray*           fHitsArray;         //! EMCal hit clones array
         TString                 fCurrentDir;        //  current ESD-working directory 
 
-        AliEMCALGeometry*       fGeometry;          //! emcal geometry
-        Int_t                   fRunNumber;         // run number
-
         Long_t                  fAnalysisStatus;    //  stores the analysis-status 
         UInt_t                  fTTmask;            //  track conditions
         UInt_t                  fTTpattern;         //  track conditions
@@ -114,18 +111,7 @@ class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE
         AliAnalysisTaskMCInfo(const AliAnalysisTaskMCInfo&); 
         AliAnalysisTaskMCInfo& operator=(const AliAnalysisTaskMCInfo&); 
 
-        // prefiltering 
-        Bool_t                  lhc16filter(AliESDEvent* esd_evt, Int_t nTracksAccept, 
-                                            Int_t& nTracksTT, TArrayI*& TTindices);
-        // part of the lhc16filter
-        Bool_t                  IsSTGFired(TBits* fFOmap,Int_t dphiMin=0,Int_t dphiMax=10);
-        // check if event is fully reconstructed
-        TLorentzVector          GetXLorentzVector(AliMCEvent* MCevent);
-        // print particle stack
-        void                    PrintStack(AliMCEvent* MCevent, Bool_t prim=kTRUE);
-        // print particle stack
-        void                    PrintTracks(AliESDEvent* esd_evt);
-         // print emcal hits
+        // print emcal hits
         void                    PrintEMCALHits(Bool_t isSignal);
         // filling the histograms
         void                    EMCalAnalysis(Bool_t isSignal, Int_t nTracksTT, 
