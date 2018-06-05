@@ -269,18 +269,30 @@ Int_t EventDef::TreeLooper(Int_t mother, TString& decaystring) const
         decaystring += "\\node{$" + fParticleCodes.at(fRootPDG) + "$} ";
     else if ( fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end()) {
         decaystring += "child { node {$"; 
-        if (fParticles[mother].PartOccurance>1) {
-            TString particleOccurance;
-            particleOccurance.Form("%i",fParticles[mother].PartOccurance);
-            decaystring += particleOccurance;
-        }
+        /* if (fParticles[mother].PartOccurance>1) { */
+        /*     TString particleOccurance; */
+        /*     particleOccurance.Form("%i",fParticles[mother].PartOccurance); */
+        /*     decaystring += particleOccurance; */
+        /* } */
         decaystring += fParticleCodes.at(fParticles[mother].Pdg);
         decaystring += "$} ";
     } else {
         printf("Pdg value %i is not contained in the particle-list!\n",fParticles[mother].Pdg);
     }
-    if (fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() && 
-            fParticles[mother].isFinal) { decaystring += "} "; return -1; }
+    // if the particle is final and its pdg is in the fParticleCodes we append a "}"
+    /* if (fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() && */ 
+    /*         fParticles[mother].isFinal) { decaystring += "} "; return -1; } */
+
+    // if all daugthers a final we just write them next to each other 
+    if (AllDaughtersFinal(fParticles[mother].Number)) {
+        decaystring += "child { node {$"; 
+        for (Int_t it : fParticles[mother].DaughterVec) {
+            decaystring += fParticleCodes.at(fParticles[GetParticleIndexFromNumber(it)].Pdg);
+        }
+        decaystring += "$} ";
+        return -1;
+    }
+
     // C++11 loop style
     for (Int_t it : fParticles[mother].DaughterVec)
     {
@@ -289,6 +301,17 @@ Int_t EventDef::TreeLooper(Int_t mother, TString& decaystring) const
     if ( fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() && 
             fParticles[mother].Pdg != fRootPDG ) decaystring+="} ";
     return -1;
+}
+
+//______________________________________________________________________________
+Bool_t EventDef::AllDaughtersFinal(Int_t mother_number) 
+{
+    Bool_t allFinal = kTRUE;
+    for (Int_t daugther_nb : fParticles[GetParticleIndexFromNumber(mother_number)].DaughterVec)
+    {
+        allFinal = allFinal & fParticles[GetParticleIndexFromNumber(daugther_nb)].isFinal;
+    }
+    return allFinal;
 }
 
 //______________________________________________________________________________
