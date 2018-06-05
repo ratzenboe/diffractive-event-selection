@@ -35,6 +35,8 @@
 #include "AliMC.h"
 #include "AliRunLoader.h"
 
+#include "AliPID.h"
+
 #include "AliCEPBase.h"
 /* #include "AliCEPUtils.h" */
 #include "AliAnalysisTaskBG3plus.h"
@@ -64,6 +66,7 @@ AliAnalysisTaskBG3plus::AliAnalysisTaskBG3plus()
   , fOutList(0)
   , fInvMass_FD(0)
   , fInvMass_3trks(0)
+  , fInvMass_3plusTrks(0)
 {
     // default constructor, don't allocate memory here!
     // this is used by root for IO purposes, it needs to remain empty
@@ -89,6 +92,7 @@ AliAnalysisTaskBG3plus::AliAnalysisTaskBG3plus(const char* name,
   , fOutList(0)
   , fInvMass_FD(0)
   , fInvMass_3trks(0)
+  , fInvMass_3plusTrks(0)
 {
     // constructor
     /* DefineInput(0, TChain::Class());    // define the input of the analysis: */ 
@@ -168,11 +172,13 @@ void AliAnalysisTaskBG3plus::UserCreateOutputObjects()
     fOutList = new TList();             // this is a list which will contain all of your histograms
     fOutList->SetOwner(kTRUE);          // memory stuff: the list is owner of all objects 
                                         // it contains and will delete them if requested 
-    fInvMass_3trks = new TH1F("fInvMass_3trks", "fInvMass_3trks",100, 0, 3);
     fInvMass_FD    = new TH1F("fInvMass_FD", "fInvMass_FD",100, 0, 3);
+    fInvMass_3trks = new TH1F("fInvMass_3trks", "fInvMass_3trks",100, 0, 3);
+    fInvMass_3plusTrks = new TH1F("fInvMass_3plusTrks", "fInvMass_3plusTrks",100, 0, 3);
   
-    fOutList->Add(fInvMass_3trks);          
     fOutList->Add(fInvMass_FD);          
+    fOutList->Add(fInvMass_3trks);          
+    fOutList->Add(fInvMass_3plusTrks);          
 
     PostData(1, fOutList);              // postdata will notify the analysis manager of changes 
                                         // and updates to the fOutList object. 
@@ -211,23 +217,27 @@ void AliAnalysisTaskBG3plus::UserExec(Option_t *)
     Int_t nTracksTT;
     std::vector<Int_t> nTracksAccept{ 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     TArrayI *TTindices  = new TArrayI();
-    Bool_t isGoodEvt = lhc16filter(fESD, nTracksAccept, nTracksTT, TTindices);
+    Bool_t isGoodEvt = lhc16filter(fESD, nTracksAccept, nTracksTT, TTindices) & 
+                       IsPionEvt(fTracks, nTracksTT, TTindices, fPIDResponse, fPIDCombined);
     if (!isGoodEvt) return ;
     // here we have now events which passed the track selection
     // ///////////////////////////////////////////////////////////////////////////////
-    if (nTracksTT==2){
-        // do not consider full recon evts in this class
-        if (EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent)) return ;
-        // here we only have 2-track fd-evts
-        fInvMass_FD->Fill(GetMass(fTracks, nTracksTT, TTindices, fMCEvent));
-        // event is finished
-    } else {
-        // otherwise the event has more than 2 particles and the BG can be simulated by 3+ tracks
+    if (!EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent)) {
+        if (nTracksTT==2){
+            Double_t mass = GetMass(fTracks, nTracksTT, TTindices, fMCEvent);
+            if (mass!=-1.) fInvMass_FD->Fill(mass);
+        }
         if (nTracksTT==3) {
-            std::vector<Double_t> mass_vec = GetMassPermute(fTracks,nTracksTT,TTindices,fMCEvent);
+            std::vector<Double_t> mass_vec = 
+                GetMassPermute(fTracks,nTracksTT,TTindices,fMCEvent);
             for (Double_t mass : mass_vec) fInvMass_3trks->Fill(mass);
         }
-    }
+        if (nTracksTT>2) {
+            std::vector<Double_t> mass_vec = 
+                GetMassPermute(fTracks,nTracksTT,TTindices,fMCEvent);
+            for (Double_t mass : mass_vec) fInvMass_3plusTrks->Fill(mass);
+        }
+    } else return ;
 
     //////////////////////////////////////////////////////////////////////////////////
     // ---------------------- Print the event stack ----------------------------------
@@ -235,6 +245,7 @@ void AliAnalysisTaskBG3plus::UserExec(Option_t *)
     // ---------------------- Print the AliESDtracks ---------------------------------
     PrintTracks(fTracks, nTracksTT, TTindices);
     printf("----------------------------- evt end ---------------------------------\n\n");
+    IsPionEvt(fTracks, nTracksTT, TTindices, fPIDResponse, fPIDCombined);
     //////////////////////////////////////////////////////////////////////////////////
     
     PostData(1, fOutList);          // stream the results the analysis of this event to
@@ -266,6 +277,7 @@ Double_t AliAnalysisTaskBG3plus::GetMass(TObjArray* tracks, Int_t nTracksTT,
         Int_t MCind = tmptrk->GetLabel();
         // get the particle corresponding to MCind
         part = GetPartByLabel(MCind, MCevt);
+        if (!part) return -1.;
         // set MC mass and momentum
         TLorentzVector lv;
         part->Momentum(lv);
@@ -294,6 +306,7 @@ std::vector<Double_t> AliAnalysisTaskBG3plus::GetMassPermute(TObjArray* tracks, 
         AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
         Int_t MCind = tmptrk->GetLabel();
         part_1 = GetPartByLabel(MCind, MCevt);
+        if (!part_1) continue;
         // set lorentz vector 1
         part_1->Momentum(v_lor_1);
         charge_1 = TDatabasePDG::Instance()->GetParticle(part_1->GetPdgCode())->Charge();
@@ -305,6 +318,7 @@ std::vector<Double_t> AliAnalysisTaskBG3plus::GetMassPermute(TObjArray* tracks, 
             AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
             Int_t MCind = tmptrk->GetLabel();
             part_2 = GetPartByLabel(MCind, MCevt);
+            if (!part_2) continue;
             charge_2 = TDatabasePDG::Instance()->GetParticle(part_2->GetPdgCode())->Charge();
             if (charge_2 == charge_1) continue;
             // set lorentz vector 2
@@ -326,11 +340,11 @@ TParticle* AliAnalysisTaskBG3plus::GetPartByLabel(Int_t MCind, AliMCEvent* MCevt
     if (MCind <= 0) {
         printf("<W> MC index below 0\nCorrection to absolute value!\n"); 
         if (abs(MCind) <= nPrimaries) MCind = abs(MCind);
-        else { printf("\n<E> No MC-particle info available!\n\n"); gSystem->Exit(1); }
+        else { printf("\n<E> No MC-particle info available!\n\n"); return 0x0; }
     }
 
     if (MCevt) part = stack->Particle(MCind);
-    else { printf("\n<E> No MC-particle info available!\n\n"); gSystem->Exit(1); }
+    else { printf("\n<E> No MC-particle info available!\n\n"); return 0x0; }
 
     return part;
 }
@@ -379,6 +393,7 @@ Bool_t AliAnalysisTaskBG3plus::EvtFullRecon(TObjArray* tracks, Int_t nTracksTT,
         // get MC truth
         Int_t MCind = tmptrk->GetLabel();
         part = GetPartByLabel(MCind, mcEvt);
+        if (!part) return kFALSE;
         // set lorentz vector 
         TLorentzVector lv;
         part->Momentum(lv);
@@ -393,26 +408,28 @@ Bool_t AliAnalysisTaskBG3plus::EvtFullRecon(TObjArray* tracks, Int_t nTracksTT,
 
 //_____________________________________________________________________________
 Bool_t AliAnalysisTaskBG3plus::IsPionEvt(TObjArray* tracks, Int_t nTracksTT, 
-                                         TArrayI* TTindices) const
+                                         TArrayI* TTindices, 
+                                         AliPIDResponse* pidResponse,
+                                         AliPIDCombined* pidCombined) const
 {
-    for (Int_t ii=0; ii<nTracksTT; ii++) {
-        // proper pointer into tracks and fTrackStatus
+    Bool_t isPionEvt = kTRUE;
+    TParticle* part = 0x0;
+    Double_t stat, probs[AliPID::kSPECIES];
+    for (Int_t ii=0; ii<nTracksTT; ii++) 
+    {
         Int_t trkIndex = TTindices->At(ii);
-        // the original track
         AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
+        
+        stat = pidCombined->ComputeProbabilities(tmptrk, pidResponse, probs);
+        isPionEvt = isPionEvt & (probs[AliPID::kPion]>=0.9);
+
         // get MC truth
-        Int_t MCind = tmptrk->GetLabel();
-        part = GetPartByLabel(MCind, mcEvt);
-        // set lorentz vector 
-        TLorentzVector lv;
-        part->Momentum(lv);
-        // total lorentz-vector
-        measured_lor += lv;        
+        /* part = GetPartByLabel(tmptrk->GetLabel(), fMCEvent); */
+        /* if (!part) continue; */
+        /* printf("Particle-PDG: %i", part->GetPdgCode()); */
+        /* printf("  pion-proba: %-6.3f\n", probs[AliPID::kPion]); */
     }
-    Double_t m_diff = measured_lor.M() - X_lor.M();
-    if (m_diff < 0) m_diff = -m_diff;
-    if (m_diff < 1e-5) return kTRUE;
-    else return kFALSE;
+    return isPionEvt;
 }
 
 
