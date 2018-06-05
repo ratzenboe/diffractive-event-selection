@@ -61,7 +61,6 @@ AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo()
   , fHitBranch(0)
   , fHitDir(0)
   , fCurrentDir("")
-  , fGeometry(0)
   , fRunNumber(0)
   , fAnalysisStatus(AliCEPBase::kBitConfigurationSet)
   , fTTmask(AliCEPBase::kTTBaseLine)
@@ -120,7 +119,6 @@ AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo(const char* name,
   , fHitBranch(0)
   , fHitDir(0)
   , fCurrentDir("")
-  , fGeometry(0)
   , fRunNumber(0)
   , fAnalysisStatus(state)
   , fTTmask(TTmask)
@@ -464,111 +462,6 @@ Bool_t AliAnalysisTaskMCInfo::IsSTGFired(TBits* fFOmap,Int_t dphiMin,Int_t dphiM
 }
 
 //_____________________________________________________________________________
-TLorentzVector AliAnalysisTaskMCInfo::GetXLorentzVector(AliMCEvent* MCevent)
-{
-    AliStack* stack = MCevent->Stack();
-    Int_t nPrimaries = stack->GetNprimary();
-    // MC generator and process type
-    /* TString MCGenerator; */
-    /* Int_t MCProcess; */ 
-    /* fCEPUtil->DetermineMCprocessType(MCEvent,MCGenerator,MCProcess); */
-
-    TLorentzVector lvtmp;
-    TLorentzVector lvprod = TLorentzVector(0,0,0,0);
-    /* if ( MCGenerator.EqualTo("Pythia") && MCProcess==106 ) */
-    /* { */
-    stack->Particle(4)->Momentum(lvtmp);
-    lvprod  = lvtmp;
-    for (Int_t ii=5; ii<nPrimaries; ii++) {
-        if (stack->Particle(ii)->GetMother(0)==0) {
-            stack->Particle(ii)->Momentum(lvtmp);
-            lvprod += lvtmp;
-        }
-    }
-    /* } else { printf("<E> MC-generator not pythia CEP!"); gSystem->Exit(1); } */
-    return lvprod;
-}
-
-//_____________________________________________________________________________
-void AliAnalysisTaskMCInfo::PrintTracks(AliESDEvent* esd_evt)
-{
-    printf("------------ Tracks --------------------\n");
-    for (Int_t ii(0); ii<esd_evt->GetNumberOfTracks(); ii++){
-        AliESDtrack* trk = esd_evt->GetTrack(ii);
-        printf("Track label: %i", trk->GetLabel());
-        printf("  Track E: %-6.8f", trk->E());
-        printf("\n");
-    }
-    printf("------------ Tracks end ----------------\n");
-
-    return ;
-}
-
-//_____________________________________________________________________________
-void AliAnalysisTaskMCInfo::PrintStack(AliMCEvent* MCevent, Bool_t prim)
-{
-    AliStack* stack = MCevent->Stack();
-    Int_t nPrimaries = stack->GetNprimary();
-    Int_t nTracks = stack->GetNtrack();
-
-    /* TLorentzVector lvtmp; */
-    printf("\n-----------------------------------------------\n");
-    Int_t nParticles = prim ? nPrimaries : nTracks;
-    for (Int_t ii(4); ii<nParticles; ii++) {
-        TParticle* part = stack->Particle(ii);
-        printf("%i: %-13s: E=%-6.8f, Mother: %i, Daugther 0: %i, 1: %i", 
-                ii, part->GetName(), part->Energy(), 
-                part->GetMother(0), part->GetDaughter(0), part->GetDaughter(1));
-
-        if (part->GetStatusCode()==1) printf("   final");
-        if (fGeometry->IsInEMCALOrDCAL(part->Vx(), part->Vy(), part->Vz())) 
-            printf("    VERTEX IN EMCAL"); 
-        printf("\n");
-        if (ii==nPrimaries-1) printf("-------------- Primaries end ------------------\n");
-        /* if (stack->Particle(ii)->GetMother(0)==0) { */
-    }
-    printf("-----------------------------------------------\n");
-    AliESDCaloCells* emcal_cells = fESD->GetEMCALCells();
-    AliESDCaloCells* phos_cells  = fESD->GetPHOSCells();
-
-    if (emcal_cells->GetNumberOfCells()>0){ 
-        printf("MC labels of particles in emcal cells:\n");
-        for (Int_t kk(0); kk<emcal_cells->GetNumberOfCells(); kk++)
-            printf("%i: MC label: %i,  E:%-6.2f, Time: %-.3e\n", 
-                    kk, 
-                    emcal_cells->GetMCLabel(kk), 
-                    emcal_cells->GetAmplitude(kk), 
-                    emcal_cells->GetTime(kk));
-        printf("Emcal clusters: %i\n", fESD->GetNumberOfCaloClusters());
-        if (fESD->GetNumberOfCaloClusters()>0) {
-            for (Int_t kk(0); kk<fESD->GetNumberOfCaloClusters(); kk++){
-                if (fESD->GetCaloCluster(kk)->IsPHOS()) continue;
-                printf("%i: MC label: %i, E:%-6.2f, Dx:%-6.2f, Dphi:%-6.2f\n", 
-                        kk,
-                        fESD->GetCaloCluster(kk)->GetLabel(),
-                        fESD->GetCaloCluster(kk)->E(),
-                        fESD->GetCaloCluster(kk)->GetTrackDx(),
-                        fESD->GetCaloCluster(kk)->GetTrackDz());
-            }
-        }
-        printf("-----------------------------------------------\n");
-    }
-
-    if (phos_cells->GetNumberOfCells()>0){ 
-        printf("MC labels of particles in PHOS:\n");
-        for (Int_t kk(0); kk<phos_cells->GetNumberOfCells(); kk++)
-            printf("%i: MC label: %i,  E:%-6.2f, Time: %-.3e\n", 
-                    kk, 
-                    phos_cells->GetMCLabel(kk), 
-                    phos_cells->GetAmplitude(kk), 
-                    phos_cells->GetTime(kk));
-        printf("-----------------------------------------------\n");
-    }
-
-    return ;
-}
-
-//_____________________________________________________________________________
 void AliAnalysisTaskMCInfo::EMCalAnalysis(Bool_t isSignal, Int_t nTracksTT, TArrayI *TTindices)
 {
     Int_t nEMCClus(0), nPHOSClus(0), nEMCClus_matched(0), partpdg(0);
@@ -737,9 +630,6 @@ TString AliAnalysisTaskMCInfo::GetDirFromFullPath(const char* fullpath)
 //_____________________________________________________________________________
 Bool_t AliAnalysisTaskMCInfo::UpdateGlobalVars()
 {
-    if (fCurrentRunNumber!=fRunNumber)
-        fGeometry = AliEMCALGeometry::GetInstanceFromRunNumber(fCurrentRunNumber);
-
     if (fCurrentDir=="" || fCurrentDir != GetDirFromFullPath(CurrentFileName())) {
         fCurrentDir = GetDirFromFullPath(CurrentFileName());
         fHitFile = TFile::Open(fCurrentDir+fHitFileName);
@@ -796,57 +686,5 @@ void AliAnalysisTaskMCInfo::PrintEMCALHits(Bool_t isSignal)
         }
     }
     fHitsArray->Clear();
-}
-
-//_____________________________________________________________________________
-Bool_t AliAnalysisTaskMCInfo::lhc16filter(AliESDEvent* esd_evt, Int_t nTracksAccept, 
-        Int_t& nTracksTT, TArrayI*& TTindices)
-{
-    // here we filter for events that satisfy the condition (filter-bit 107 in CEP evts)
-    // 0: remove pileup
-    // 1: CCUP13
-    // 3: !V0
-    // 5: !AD
-    // 6: *FO>=1 (to replay OSMB) && *FO<=trks
-    // - nTracksAccept
-    nTracksTT = fCEPUtil->countstatus(fTrackStatus, fTTmask, fTTpattern, TTindices);
-    if (nTracksTT!=nTracksAccept) return kFALSE;
-    
-    // remove pileup
-    if (esd_evt->IsPileupFromSPD(3,0.8,3.,2.,5.)) return kFALSE;
-    // CCUP13
-    Bool_t isV0A = fTrigger->IsOfflineTriggerFired(esd_evt, AliTriggerAnalysis::kV0A);
-    Bool_t isV0C = fTrigger->IsOfflineTriggerFired(esd_evt, AliTriggerAnalysis::kV0C);
-    UInt_t isSTGTriggerFired;
-    const AliMultiplicity *mult = (AliMultiplicity*)esd_evt->GetMultiplicity();
-    TBits foMap = mult->GetFastOrFiredChips();
-    isSTGTriggerFired  = IsSTGFired(&foMap,0) ? (1<<0) : 0;
-    for (Int_t ii=1; ii<=10; ii++) {
-        isSTGTriggerFired |= IsSTGFired(&foMap,ii) ? (1<<ii) : 0;
-    }
-    if (isV0A || isV0C || !isSTGTriggerFired) return kFALSE;
-    // !V0
-    // is encorporated in CCUP13
-    // !AD
-    Bool_t isADA = fTrigger->IsOfflineTriggerFired(esd_evt, AliTriggerAnalysis::kADA);
-    Bool_t isADC = fTrigger->IsOfflineTriggerFired(esd_evt, AliTriggerAnalysis::kADC);
-    if (isADA || isADC) return kFALSE;
-    // *FO>=1 (to replay OSMB) && *FO<=trks
-    Short_t nFiredChips[4] = {0};
-    nFiredChips[0] = mult->GetNumberOfFiredChips(0);
-    nFiredChips[1] = mult->GetNumberOfFiredChips(1);
-    for (Int_t ii=0;    ii<400; ii++) nFiredChips[2] += foMap[ii]>0 ? 1 : 0;
-    for (Int_t ii=400; ii<1200; ii++) nFiredChips[3] += foMap[ii]>0 ? 1 : 0;
-    Bool_t firedChipsOK = kTRUE;
-    for (Int_t ii=0; ii<4; ii++) {
-      firedChipsOK =
-        firedChipsOK &&
-        (nFiredChips[ii]>=1) &&
-        (nFiredChips[ii]<=nTracksAccept);
-    }
-    if (!firedChipsOK) return kFALSE;
-
-    // if the cuts are passed the filter returns true
-    return kTRUE;
 }
 
