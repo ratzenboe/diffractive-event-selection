@@ -60,6 +60,7 @@ AliAnalysisTaskBG3plus::AliAnalysisTaskBG3plus()
   , fTTmask(AliCEPBase::kTTBaseLine)
   , fTTpattern(AliCEPBase::kTTBaseLine) 
   , fOutList(0)
+  , fInvMass_FD(0)
   , fInvMass_3trks(0)
 {
     // default constructor, don't allocate memory here!
@@ -82,6 +83,7 @@ AliAnalysisTaskBG3plus::AliAnalysisTaskBG3plus(const char* name,
   , fTTmask(TTmask)
   , fTTpattern(TTpattern)
   , fOutList(0)
+  , fInvMass_FD(0)
   , fInvMass_3trks(0)
 {
     // constructor
@@ -152,8 +154,10 @@ void AliAnalysisTaskBG3plus::UserCreateOutputObjects()
     fOutList->SetOwner(kTRUE);          // memory stuff: the list is owner of all objects 
                                         // it contains and will delete them if requested 
     fInvMass_3trks = new TH1F("fInvMass_3trks", "fInvMass_3trks",100, 0, 3);
+    fInvMass_FD    = new TH1F("fInvMass_FD", "fInvMass_FD",100, 0, 3);
   
     fOutList->Add(fInvMass_3trks);          
+    fOutList->Add(fInvMass_FD);          
 
     PostData(1, fOutList);              // postdata will notify the analysis manager of changes 
                                         // and updates to the fOutList object. 
@@ -242,6 +246,7 @@ Double_t AliAnalysisTaskBG3plus::GetMass(TObjArray* tracks, Int_t nTracksTT,
         // get the particle corresponding to MCind
         part = GetPartByLabel(MCind, MCevt);
         // set MC mass and momentum
+        TLorentzVector lv;
         part->Momentum(lv);
         v_lor += lv;        
     }
@@ -253,7 +258,7 @@ Double_t AliAnalysisTaskBG3plus::GetMass(TObjArray* tracks, Int_t nTracksTT,
 std::vector<Double_t> AliAnalysisTaskBG3plus::GetMassPermute(TObjArray* tracks, Int_t nTracksTT, 
                                          TArrayI* TTindices, AliMCEvent* MCevt) const
 {
-    TParticle* part_1(0x0), part_2(0x0);
+    TParticle *part_1(0x0), *part_2(0x0);
     Double_t charge_1, charge_2;
     TLorentzVector v_lor_1, v_lor_2;
     // output vector
@@ -262,7 +267,7 @@ std::vector<Double_t> AliAnalysisTaskBG3plus::GetMassPermute(TObjArray* tracks, 
 
     // construct invariant mass:
     //      -> combine each possible combination of pi+pi-
-    for (Int_t ii(0); ii<TTindices-1; ii++) 
+    for (Int_t ii(0); ii<nTracksTT-1; ii++) 
     {
         Int_t trkIndex = TTindices->At(ii);
         AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
@@ -294,13 +299,13 @@ std::vector<Double_t> AliAnalysisTaskBG3plus::GetMassPermute(TObjArray* tracks, 
 TParticle* AliAnalysisTaskBG3plus::GetPartByLabel(Int_t MCind, AliMCEvent* MCevt) const
 {
     TParticle* part = 0x0;
-    AliStack* stack = MCevent->Stack();
+    AliStack* stack = MCevt->Stack();
     Int_t nPrimaries = stack->GetNprimary();
 
     if (MCind <= 0) {
         printf("<W> MC index below 0\nCorrection to absolute value!\n"); 
         if (abs(MCind) <= nPrimaries) MCind = abs(MCind);
-        else return { printf("\n<E> No MC-particle info available!\n\n"); gSystem->Exit(1); }
+        else { printf("\n<E> No MC-particle info available!\n\n"); gSystem->Exit(1); }
     }
 
     if (MCevt) part = stack->Particle(MCind);
@@ -339,11 +344,9 @@ TLorentzVector AliAnalysisTaskBG3plus::GetXLorentzVector(AliMCEvent* MCevent) co
 Bool_t AliAnalysisTaskBG3plus::EvtFullRecon(TObjArray* tracks, Int_t nTracksTT, 
                                             TArrayI* TTindices, AliMCEvent* mcEvt) const
 {
-    AliStack* stack = mcEvt->Stack();
-    Int_t nTracksPrimMC = stack->GetNprimary();
-    
     // get lorentzvector of the X particle
     TLorentzVector X_lor = GetXLorentzVector(mcEvt);
+    TParticle* part = 0x0;
     
     // calculate the lorentzvector of the measured particles and check if they agree with X_lor
     TLorentzVector measured_lor = TLorentzVector(0,0,0,0);
@@ -354,22 +357,15 @@ Bool_t AliAnalysisTaskBG3plus::EvtFullRecon(TObjArray* tracks, Int_t nTracksTT,
         AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
         // get MC truth
         Int_t MCind = tmptrk->GetLabel();
-        if (MCind <= 0) {
-            printf("<W> MC index below 0\nCorrection to absolute value!\n"); 
-            if (abs(MCind) <= nTracksPrimMC) MCind = abs(MCind);
-            else return ;
-        }
-        if (fMCEvent) {
-            TParticle* part = stack->Particle(MCind);
-            // set MC mass and momentum
-            TLorentzVector lv;
-            part->Momentum(lv);
-            measured_lor += lv;        
-        } else { printf("\n<E> No MC-particle info available!\n\n"); gSystem->Exit(1); }
+        part = GetPartByLabel(MCind, mcEvt);
+        // set lorentz vector 
+        TLorentzVector lv;
+        part->Momentum(lv);
+        // total lorentz-vector
+        measured_lor += lv;        
     }
     Double_t m_diff = measured_lor.M() - X_lor.M();
     if (m_diff < 0) m_diff = -m_diff;
-    Bool_t isFullRecon(kFALSE);
     if (m_diff < 1e-5) return kTRUE;
     else return kFALSE;
 }
