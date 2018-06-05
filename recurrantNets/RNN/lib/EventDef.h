@@ -81,6 +81,8 @@ class EventDef
     // recursive function looping over the decay tree formulating the 
     Int_t                           TreeLooper(Int_t mother, TString& decaystring) const;
 
+    // check if all daughters are final
+    Bool_t                          AllDaughtersFinal(Int_t mother_number) const;
     // particle sorting, neccessary for event comparison
     void                            SortParticles();
     // order the daugther particles in an acending pdg-code order (make each decay-string equal)
