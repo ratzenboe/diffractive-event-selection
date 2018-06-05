@@ -338,38 +338,6 @@ void AliAnalysisTaskMCInfo::UserExec(Option_t *)
         return ;
         /* gSystem->Exit(1); */ 
     }
-    // get information if event is fully-reconstructed or not
-    Int_t nTracksPrimMC = stack->GetNprimary();
-    
-    // get lorentzvector of the X particle
-    TLorentzVector X_lor = GetXLorentzVector(fMCEvent);
-    
-    // calculate the lorentzvector of the measured particles and check if they agree with X_lor
-    TLorentzVector measured_lor = TLorentzVector(0,0,0,0);
-    for (Int_t ii=0; ii<nTracksTT; ii++) {
-        // proper pointer into fTracks and fTrackStatus
-        Int_t trkIndex = TTindices->At(ii);
-        // the original track
-        AliESDtrack *tmptrk = (AliESDtrack*) fTracks->At(trkIndex);
-        // get MC truth
-        Int_t MCind = tmptrk->GetLabel();
-        if (MCind <= 0) {
-            printf("<W> MC index below 0\nCorrection to absolute value!\n"); 
-            if (abs(MCind) <= nTracksPrimMC) MCind = abs(MCind);
-            else return ;
-        }
-        if (fMCEvent) {
-            TParticle* part = stack->Particle(MCind);
-            // set MC mass and momentum
-            TLorentzVector lv;
-            part->Momentum(lv);
-            measured_lor += lv;        
-        } else { printf("\n<E> No MC-particle info available!\n\n"); gSystem->Exit(1); }
-    }
-    Double_t m_diff = measured_lor.M() - X_lor.M();
-    if (m_diff < 0) m_diff = -m_diff;
-    Bool_t isFullRecon(kFALSE);
-    if (m_diff < 1e-5) isFullRecon = kTRUE;
 
     //////////////////////////////////////////////////////////////////////////////////
     // ---------------------- Print the event stack ----------------------------------
@@ -417,48 +385,6 @@ void AliAnalysisTaskMCInfo::Terminate(Option_t *)
     // terminate
     // called at the END of the analysis (when all events are processed)
     fEvtStorge.PrintNEvts();
-}
-//_____________________________________________________________________________
-//
-//
-//------------------------------------------------------------------------------
-// code to check if the STG trigger had fired
-// code from Evgeny Kryshen
-// dphiMin/dphiMax specifies the range for the angle between two tracks
-Bool_t AliAnalysisTaskMCInfo::IsSTGFired(TBits* fFOmap,Int_t dphiMin,Int_t dphiMax)
-{
-
-  Int_t hitcnt = 0;
-  Bool_t stg = kFALSE;
-  
-  if (!fFOmap) {
-    // printf("<AliAnalysisTaskCEP::IsSTGFired> Problem with F0map - a!\n");
-    return stg;
-  }
-
-  Int_t n1 = fFOmap->CountBits(400);
-  Int_t n0 = fFOmap->CountBits()-n1;
-  if (n0<1 || n1<1) {
-    // printf("<AliAnalysisTaskCEP::IsSTGFired> Problem with F0map - b!\n");
-    return stg;
-  }
-  
-  Bool_t l0[20]={0};
-  Bool_t l1[40]={0};
-  Bool_t phi[20]={0};
-  for (Int_t i=0;   i< 400; ++i) if (fFOmap->TestBitNumber(i)) l0[      i/20] = 1;
-  for (Int_t i=400; i<1200; ++i) if (fFOmap->TestBitNumber(i)) l1[(i-400)/20] = 1;
-  for (Int_t i=0; i<20; ++i) phi[i] = l0[i] & (l1[(2*i)%40] | l1[(2*i+1)%40] | l1[(2*i+2)%40] | l1[(2*i+39)%40]);
-  for (Int_t dphi=dphiMin;dphi<=dphiMax;dphi++) {
-    for (Int_t i=0; i<20; ++i) {
-      stg |= phi[i] & phi[(i+dphi)%20];
-      if (phi[i] & phi[(i+dphi)%20]) hitcnt++;
-    }
-  }
-  // printf("hitcnt: %i\n",hitcnt);
-
-  return stg;
-
 }
 
 //_____________________________________________________________________________
