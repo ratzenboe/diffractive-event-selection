@@ -516,51 +516,10 @@ void AliAnalysisTaskBG3plus::PrintStack(AliMCEvent* MCevent, Bool_t prim) const
         printf("%i: %-13s: E=%-6.8f, Mother: %i, Daugther 0: %i, 1: %i", 
                 ii, part->GetName(), part->Energy(), 
                 part->GetMother(0), part->GetDaughter(0), part->GetDaughter(1));
-
         if (part->GetStatusCode()==1) printf("   final");
-        if (fGeometry->IsInEMCALOrDCAL(part->Vx(), part->Vy(), part->Vz())) 
-            printf("    VERTEX IN EMCAL"); 
-        printf("\n");
         if (ii==nPrimaries-1) printf("-------------- Primaries end ------------------\n");
-        /* if (stack->Particle(ii)->GetMother(0)==0) { */
     }
     printf("-----------------------------------------------\n");
-    AliESDCaloCells* emcal_cells = fESD->GetEMCALCells();
-    AliESDCaloCells* phos_cells  = fESD->GetPHOSCells();
-
-    if (emcal_cells->GetNumberOfCells()>0){ 
-        printf("MC labels of particles in emcal cells:\n");
-        for (Int_t kk(0); kk<emcal_cells->GetNumberOfCells(); kk++)
-            printf("%i: MC label: %i,  E:%-6.2f, Time: %-.3e\n", 
-                    kk, 
-                    emcal_cells->GetMCLabel(kk), 
-                    emcal_cells->GetAmplitude(kk), 
-                    emcal_cells->GetTime(kk));
-        printf("Emcal clusters: %i\n", fESD->GetNumberOfCaloClusters());
-        if (fESD->GetNumberOfCaloClusters()>0) {
-            for (Int_t kk(0); kk<fESD->GetNumberOfCaloClusters(); kk++){
-                if (fESD->GetCaloCluster(kk)->IsPHOS()) continue;
-                printf("%i: MC label: %i, E:%-6.2f, Dx:%-6.2f, Dphi:%-6.2f\n", 
-                        kk,
-                        fESD->GetCaloCluster(kk)->GetLabel(),
-                        fESD->GetCaloCluster(kk)->E(),
-                        fESD->GetCaloCluster(kk)->GetTrackDx(),
-                        fESD->GetCaloCluster(kk)->GetTrackDz());
-            }
-        }
-        printf("-----------------------------------------------\n");
-    }
-
-    if (phos_cells->GetNumberOfCells()>0){ 
-        printf("MC labels of particles in PHOS:\n");
-        for (Int_t kk(0); kk<phos_cells->GetNumberOfCells(); kk++)
-            printf("%i: MC label: %i,  E:%-6.2f, Time: %-.3e\n", 
-                    kk, 
-                    phos_cells->GetMCLabel(kk), 
-                    phos_cells->GetAmplitude(kk), 
-                    phos_cells->GetTime(kk));
-        printf("-----------------------------------------------\n");
-    }
 
     return ;
 }
