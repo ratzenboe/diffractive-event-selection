@@ -304,7 +304,7 @@ Int_t EventDef::TreeLooper(Int_t mother, TString& decaystring) const
 }
 
 //______________________________________________________________________________
-Bool_t EventDef::AllDaughtersFinal(Int_t mother_number) 
+Bool_t EventDef::AllDaughtersFinal(Int_t mother_number) const
 {
     Bool_t allFinal = kTRUE;
     for (Int_t daugther_nb : fParticles[GetParticleIndexFromNumber(mother_number)].DaughterVec)
