@@ -181,65 +181,29 @@ void AliAnalysisTaskBG3plus::UserExec(Option_t *)
     else { printf("<E> No MC-event available!\n"); return ; }
     // ///////////////////////////////////////////////////////////////////////////////
 
-    
-    // -----------------------------------------------------------------------------------------
-    // Here: section where we plot the feed down contribution 
-    //      -> lhc16filter with 2 accepted tracks and EvtFullRecon == kFALSE
-    Int_t nTracks = fCEPUtil->AnalyzeTracks(fESD, fTracks, fTrackStatus);
-    Int_t nTracksTT;
-    TArrayI *TTindices  = new TArrayI();
-    Bool_t isGoodEvt = lhc16filter(fESD, /*nTracksAccept=*/ 2, nTracksTT, TTindices);
-    if (isGoodEvt && !EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent)) {
-        // here: make invariant mass 
-        TLorentzVector v_lor = TLorentzVector(0,0,0,0);
-        for (Int_t ii=0; ii<nTracksTT; ii++) {
-            // proper pointer into tracks and fTrackStatus
-            Int_t trkIndex = TTindices->At(ii);
-            // the original track
-            AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
-            // get MC truth
-            Int_t MCind = tmptrk->GetLabel();
-            if (MCind <= 0) {
-                printf("<W> MC index below 0\nCorrection to absolute value!\n"); 
-                if (abs(MCind) <= nTracksPrimMC) MCind = abs(MCind);
-                else return ;
-            }
-            if (fMCEvent) {
-                TParticle* part = stack->Particle(MCind);
-                // set MC mass and momentum
-                TLorentzVector lv;
-                part->Momentum(lv);
-                v_lor += lv;        
-            } else { printf("\n<E> No MC-particle info available!\n\n"); gSystem->Exit(1); }
-        }
-        fInvMass_FD->Fill(v_lor.M());
-    }
-    delete TTindices;
-    // -----------------------------------------------------------------------------------------
-
     // ///////////////////////////////////////////////////////////////////////////////
     // ------------------------- event filter ----------------------------------------
     Int_t nTracks = fCEPUtil->AnalyzeTracks(fESD, fTracks, fTrackStatus);
     Int_t nTracksTT;
-    std::vector<Int_t> nTracksAccept{ 3, 4, 5, 6, 7, 8, 9, 10 };
+    std::vector<Int_t> nTracksAccept{ 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     TArrayI *TTindices  = new TArrayI();
     Bool_t isGoodEvt = lhc16filter(fESD, nTracksAccept, nTracksTT, TTindices);
     if (!isGoodEvt) return ;
     // here we have now events which passed the track selection
     // ///////////////////////////////////////////////////////////////////////////////
-    
-    // ///////////////////////////////////////////////////////////////////////////////
-    // check if event is fully reconstructed
-    // does not matter now as we are just focussing on tracks with 3+ tracks
-    /* Bool_t isFullRecon = EvtFullRecon(TObjArray* tracks, Int_t nTracksTT, TArrayI* TTindices, */ 
-    /*                                   AliMCEvent* MCevt); */
-    /* if (isFullRecon) return ; */
-
-
-    
-    //////////////////////////////////////////////////////////////////////////////////
-    // ------------------------- Event here are feed down ---------------------------
-    
+    if (nTracksTT==2){
+        // do not consider full recon evts in this class
+        if (EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent)) return ;
+        // here we only have 2-track fd-evts
+        fInvMass_FD->Fill(GetMass(fTracks, nTracksTT, TTindices, fMCEvent));
+        // event is finished
+    } else {
+        // otherwise the event has more than 2 particles and the BG can be simulated by 3+ tracks
+        if (nTracksTT==3) {
+            std::vector<Double_t> mass_vec = GetMassPermute(fTracks,nTracksTT,TTindices,fMCEvent);
+            for (Double_t mass : mass_vec) fInvMass_3trks->Fill(mass);
+        }
+    }
 
     //////////////////////////////////////////////////////////////////////////////////
     // ---------------------- Print the event stack ----------------------------------
@@ -248,23 +212,6 @@ void AliAnalysisTaskBG3plus::UserExec(Option_t *)
     /* PrintTracks(fESD); */
     //////////////////////////////////////////////////////////////////////////////////
     
-    for (Int_t ii=4; ii<nTracksPrimMC; ii++) {
-        TParticle* part = stack->Particle(ii);
-
-        ed.AddTrack(ii, part->GetPdgCode(), part->GetMother(0), 
-                part->GetDaughter(0), part->GetDaughter(1), 
-                (part->GetStatusCode()==0) ? kFALSE : kTRUE);
-
-        if (part->GetStatusCode()==0) continue;
-        Int_t pdg = part->GetPdgCode();
-        Double_t charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge();
-        if (charge==0.) {
-            if (pdg==22) fGammaE->Fill(part->Energy()); 
-            fNeutralPDG->Fill(pdg); 
-        }
-    }
-
-    /* printf("\n\n\n\n----------------------------------------------------\n\n"); */
     PostData(1, fOutList);          // stream the results the analysis of this event to
                                     // the output manager which will take care of writing
                                     // it to a file
@@ -277,7 +224,93 @@ void AliAnalysisTaskBG3plus::Terminate(Option_t *)
 }
 
 //_____________________________________________________________________________
-TLorentzVector AliAnalysisTaskBG3plus::GetXLorentzVector(AliMCEvent* MCevent)
+Double_t AliAnalysisTaskBG3plus::GetMass(TObjArray* tracks, Int_t nTracksTT, 
+                                         TArrayI* TTindices, AliMCEvent* MCevt) const
+{
+    TParticle* part = 0x0;
+    // construct invariant mass 
+    TLorentzVector v_lor = TLorentzVector(0,0,0,0);
+    // loop thru the particles of the event
+    for (Int_t ii=0; ii<nTracksTT; ii++) 
+    {
+        // proper pointer into tracks and fTrackStatus
+        Int_t trkIndex = TTindices->At(ii);
+        // the original track
+        AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
+        // get MC truth
+        Int_t MCind = tmptrk->GetLabel();
+        // get the particle corresponding to MCind
+        part = GetPartByLabel(MCind, MCevt);
+        // set MC mass and momentum
+        part->Momentum(lv);
+        v_lor += lv;        
+    }
+
+    return v_lor.M();
+}
+
+//_____________________________________________________________________________
+std::vector<Double_t> AliAnalysisTaskBG3plus::GetMassPermute(TObjArray* tracks, Int_t nTracksTT, 
+                                         TArrayI* TTindices, AliMCEvent* MCevt) const
+{
+    TParticle* part_1(0x0), part_2(0x0);
+    Double_t charge_1, charge_2;
+    TLorentzVector v_lor_1, v_lor_2;
+    // output vector
+    std::vector<Double_t> mass_vec;
+    mass_vec.clear();
+
+    // construct invariant mass:
+    //      -> combine each possible combination of pi+pi-
+    for (Int_t ii(0); ii<TTindices-1; ii++) 
+    {
+        Int_t trkIndex = TTindices->At(ii);
+        AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
+        Int_t MCind = tmptrk->GetLabel();
+        part_1 = GetPartByLabel(MCind, MCevt);
+        // set lorentz vector 1
+        part_1->Momentum(v_lor_1);
+        charge_1 = TDatabasePDG::Instance()->GetParticle(part_1->GetPdgCode())->Charge();
+
+        // combine the masses of two pions to 
+        for (Int_t kk=ii+1; kk<nTracksTT; kk++) 
+        {
+            Int_t trkIndex = TTindices->At(kk);
+            AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
+            Int_t MCind = tmptrk->GetLabel();
+            part_2 = GetPartByLabel(MCind, MCevt);
+            charge_2 = TDatabasePDG::Instance()->GetParticle(part_2->GetPdgCode())->Charge();
+            if (charge_2 == charge_1) continue;
+            // set lorentz vector 2
+            part_2->Momentum(v_lor_2);
+            mass_vec.push_back((v_lor_1+v_lor_2).M());
+        }
+    }
+
+    return mass_vec;
+}
+
+//_____________________________________________________________________________
+TParticle* AliAnalysisTaskBG3plus::GetPartByLabel(Int_t MCind, AliMCEvent* MCevt) const
+{
+    TParticle* part = 0x0;
+    AliStack* stack = MCevent->Stack();
+    Int_t nPrimaries = stack->GetNprimary();
+
+    if (MCind <= 0) {
+        printf("<W> MC index below 0\nCorrection to absolute value!\n"); 
+        if (abs(MCind) <= nPrimaries) MCind = abs(MCind);
+        else return { printf("\n<E> No MC-particle info available!\n\n"); gSystem->Exit(1); }
+    }
+
+    if (MCevt) part = stack->Particle(MCind);
+    else { printf("\n<E> No MC-particle info available!\n\n"); gSystem->Exit(1); }
+
+    return part;
+}
+
+//_____________________________________________________________________________
+TLorentzVector AliAnalysisTaskBG3plus::GetXLorentzVector(AliMCEvent* MCevent) const
 {
     AliStack* stack = MCevent->Stack();
     Int_t nPrimaries = stack->GetNprimary();
@@ -304,7 +337,7 @@ TLorentzVector AliAnalysisTaskBG3plus::GetXLorentzVector(AliMCEvent* MCevent)
 
 //_____________________________________________________________________________
 Bool_t AliAnalysisTaskBG3plus::EvtFullRecon(TObjArray* tracks, Int_t nTracksTT, 
-                                                    TArrayI* TTindices, AliMCEvent* mcEvt)
+                                            TArrayI* TTindices, AliMCEvent* mcEvt) const
 {
     AliStack* stack = mcEvt->Stack();
     Int_t nTracksPrimMC = stack->GetNprimary();
@@ -340,86 +373,6 @@ Bool_t AliAnalysisTaskBG3plus::EvtFullRecon(TObjArray* tracks, Int_t nTracksTT,
     if (m_diff < 1e-5) return kTRUE;
     else return kFALSE;
 }
-
-//_____________________________________________________________________________
-void AliAnalysisTaskBG3plus::PrintTracks(AliESDEvent* esd_evt)
-{
-    printf("------------ Tracks --------------------\n");
-    for (Int_t ii(0); ii<esd_evt->GetNumberOfTracks(); ii++){
-        AliESDtrack* trk = esd_evt->GetTrack(ii);
-        printf("Track label: %i", trk->GetLabel());
-        printf("  Track E: %-6.8f", trk->E());
-        printf("\n");
-    }
-    printf("------------ Tracks end ----------------\n");
-
-    return ;
-}
-
-//_____________________________________________________________________________
-void AliAnalysisTaskBG3plus::PrintStack(AliMCEvent* MCevent, Bool_t prim)
-{
-    AliStack* stack = MCevent->Stack();
-    Int_t nPrimaries = stack->GetNprimary();
-    Int_t nTracks = stack->GetNtrack();
-
-    /* TLorentzVector lvtmp; */
-    printf("\n-----------------------------------------------\n");
-    Int_t nParticles = prim ? nPrimaries : nTracks;
-    for (Int_t ii(4); ii<nParticles; ii++) {
-        TParticle* part = stack->Particle(ii);
-        printf("%i: %-13s: E=%-6.8f, Mother: %i, Daugther 0: %i, 1: %i", 
-                ii, part->GetName(), part->Energy(), 
-                part->GetMother(0), part->GetDaughter(0), part->GetDaughter(1));
-
-        if (part->GetStatusCode()==1) printf("   final");
-        if (fGeometry->IsInEMCALOrDCAL(part->Vx(), part->Vy(), part->Vz())) 
-            printf("    VERTEX IN EMCAL"); 
-        printf("\n");
-        if (ii==nPrimaries-1) printf("-------------- Primaries end ------------------\n");
-        /* if (stack->Particle(ii)->GetMother(0)==0) { */
-    }
-    printf("-----------------------------------------------\n");
-    AliESDCaloCells* emcal_cells = fESD->GetEMCALCells();
-    AliESDCaloCells* phos_cells  = fESD->GetPHOSCells();
-
-    if (emcal_cells->GetNumberOfCells()>0){ 
-        printf("MC labels of particles in emcal cells:\n");
-        for (Int_t kk(0); kk<emcal_cells->GetNumberOfCells(); kk++)
-            printf("%i: MC label: %i,  E:%-6.2f, Time: %-.3e\n", 
-                    kk, 
-                    emcal_cells->GetMCLabel(kk), 
-                    emcal_cells->GetAmplitude(kk), 
-                    emcal_cells->GetTime(kk));
-        printf("Emcal clusters: %i\n", fESD->GetNumberOfCaloClusters());
-        if (fESD->GetNumberOfCaloClusters()>0) {
-            for (Int_t kk(0); kk<fESD->GetNumberOfCaloClusters(); kk++){
-                if (fESD->GetCaloCluster(kk)->IsPHOS()) continue;
-                printf("%i: MC label: %i, E:%-6.2f, Dx:%-6.2f, Dphi:%-6.2f\n", 
-                        kk,
-                        fESD->GetCaloCluster(kk)->GetLabel(),
-                        fESD->GetCaloCluster(kk)->E(),
-                        fESD->GetCaloCluster(kk)->GetTrackDx(),
-                        fESD->GetCaloCluster(kk)->GetTrackDz());
-            }
-        }
-        printf("-----------------------------------------------\n");
-    }
-
-    if (phos_cells->GetNumberOfCells()>0){ 
-        printf("MC labels of particles in PHOS:\n");
-        for (Int_t kk(0); kk<phos_cells->GetNumberOfCells(); kk++)
-            printf("%i: MC label: %i,  E:%-6.2f, Time: %-.3e\n", 
-                    kk, 
-                    phos_cells->GetMCLabel(kk), 
-                    phos_cells->GetAmplitude(kk), 
-                    phos_cells->GetTime(kk));
-        printf("-----------------------------------------------\n");
-    }
-
-    return ;
-}
-
 //_____________________________________________________________________________
 Bool_t AliAnalysisTaskBG3plus::lhc16filter(AliESDEvent* esd_evt, Int_t nTracksAccept, 
         Int_t& nTracksTT, TArrayI*& TTindices)
@@ -533,6 +486,87 @@ Bool_t AliAnalysisTaskBG3plus::IsSTGFired(TBits* fFOmap,Int_t dphiMin,Int_t dphi
 
   return stg;
 
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// --------------------------- Print functions --------------------------------
+//_____________________________________________________________________________
+void AliAnalysisTaskBG3plus::PrintTracks(AliESDEvent* esd_evt) const
+{
+    printf("------------ Tracks --------------------\n");
+    for (Int_t ii(0); ii<esd_evt->GetNumberOfTracks(); ii++){
+        AliESDtrack* trk = esd_evt->GetTrack(ii);
+        printf("Track label: %i", trk->GetLabel());
+        printf("  Track E: %-6.8f", trk->E());
+        printf("\n");
+    }
+    printf("------------ Tracks end ----------------\n");
+
+    return ;
+}
+
+//_____________________________________________________________________________
+void AliAnalysisTaskBG3plus::PrintStack(AliMCEvent* MCevent, Bool_t prim) const
+{
+    AliStack* stack = MCevent->Stack();
+    Int_t nPrimaries = stack->GetNprimary();
+    Int_t nTracks = stack->GetNtrack();
+
+    /* TLorentzVector lvtmp; */
+    printf("\n-----------------------------------------------\n");
+    Int_t nParticles = prim ? nPrimaries : nTracks;
+    for (Int_t ii(4); ii<nParticles; ii++) {
+        TParticle* part = stack->Particle(ii);
+        printf("%i: %-13s: E=%-6.8f, Mother: %i, Daugther 0: %i, 1: %i", 
+                ii, part->GetName(), part->Energy(), 
+                part->GetMother(0), part->GetDaughter(0), part->GetDaughter(1));
+
+        if (part->GetStatusCode()==1) printf("   final");
+        if (fGeometry->IsInEMCALOrDCAL(part->Vx(), part->Vy(), part->Vz())) 
+            printf("    VERTEX IN EMCAL"); 
+        printf("\n");
+        if (ii==nPrimaries-1) printf("-------------- Primaries end ------------------\n");
+        /* if (stack->Particle(ii)->GetMother(0)==0) { */
+    }
+    printf("-----------------------------------------------\n");
+    AliESDCaloCells* emcal_cells = fESD->GetEMCALCells();
+    AliESDCaloCells* phos_cells  = fESD->GetPHOSCells();
+
+    if (emcal_cells->GetNumberOfCells()>0){ 
+        printf("MC labels of particles in emcal cells:\n");
+        for (Int_t kk(0); kk<emcal_cells->GetNumberOfCells(); kk++)
+            printf("%i: MC label: %i,  E:%-6.2f, Time: %-.3e\n", 
+                    kk, 
+                    emcal_cells->GetMCLabel(kk), 
+                    emcal_cells->GetAmplitude(kk), 
+                    emcal_cells->GetTime(kk));
+        printf("Emcal clusters: %i\n", fESD->GetNumberOfCaloClusters());
+        if (fESD->GetNumberOfCaloClusters()>0) {
+            for (Int_t kk(0); kk<fESD->GetNumberOfCaloClusters(); kk++){
+                if (fESD->GetCaloCluster(kk)->IsPHOS()) continue;
+                printf("%i: MC label: %i, E:%-6.2f, Dx:%-6.2f, Dphi:%-6.2f\n", 
+                        kk,
+                        fESD->GetCaloCluster(kk)->GetLabel(),
+                        fESD->GetCaloCluster(kk)->E(),
+                        fESD->GetCaloCluster(kk)->GetTrackDx(),
+                        fESD->GetCaloCluster(kk)->GetTrackDz());
+            }
+        }
+        printf("-----------------------------------------------\n");
+    }
+
+    if (phos_cells->GetNumberOfCells()>0){ 
+        printf("MC labels of particles in PHOS:\n");
+        for (Int_t kk(0); kk<phos_cells->GetNumberOfCells(); kk++)
+            printf("%i: MC label: %i,  E:%-6.2f, Time: %-.3e\n", 
+                    kk, 
+                    phos_cells->GetMCLabel(kk), 
+                    phos_cells->GetAmplitude(kk), 
+                    phos_cells->GetTime(kk));
+        printf("-----------------------------------------------\n");
+    }
+
+    return ;
 }
 
 

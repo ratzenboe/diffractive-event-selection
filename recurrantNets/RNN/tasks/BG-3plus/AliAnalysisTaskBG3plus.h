@@ -73,20 +73,28 @@ class AliAnalysisTaskBG3plus : public AliAnalysisTaskSE
         Bool_t                  lhc16filter(AliESDEvent* esd_evt, std::vector<Int_t> nTrksAcc_vec, 
                                             Int_t& nTracksTT, TArrayI*& TTindices);
          // heart of the lhc16-filter
-        Bool_t                  EventFilter(AliESDEvent* esd_evt, Int_t nTracksAccept)
+        Bool_t                  EventFilter(AliESDEvent* esd_evt, Int_t nTracksAccept);
         // part of the lhc16filter
         Bool_t                  IsSTGFired(TBits* fFOmap,Int_t dphiMin=0,Int_t dphiMax=10);
+
         // check if event is fully reconstructed
-        TLorentzVector          GetXLorentzVector(AliMCEvent* MCevent);
-
         Bool_t                  EvtFullRecon(TObjArray* tracks, Int_t nTracksTT, 
-                                             TArrayI* TTindices, AliMCEvent* MCevt);
+                                             TArrayI* TTindices, AliMCEvent* MCevt) const;
+        TLorentzVector          GetXLorentzVector(AliMCEvent* MCevent) const;
 
-        
+        // get lorentz vector of particle index
+        TParticle*              GetPartByLabel(Int_t MCind, AliMCEvent* MCevt) const;
+        // get mass of event
+        Double_t                GetMass(TObjArray* tracks, Int_t nTracksTT, 
+                                        TArrayI* TTindices, AliMCEvent* MCevt) const;
+        std::vector<Double_t>   GetMassPermute(TObjArray* tracks, Int_t nTracksTT, 
+                                               TArrayI* TTindices, AliMCEvent* MCevt) const;
+        //////////////////////////////////////////////////////////////////////////////////
+        // ------------------------------ Print functions --------------------------------
         // print particle stack
-        void                    PrintStack(AliMCEvent* MCevent, Bool_t prim=kTRUE);
+        void                    PrintStack(AliMCEvent* MCevent, Bool_t prim=kTRUE) const;
         // print particle stack
-        void                    PrintTracks(AliESDEvent* esd_evt);
+        void                    PrintTracks(AliESDEvent* esd_evt) const;
 
         ClassDef(AliAnalysisTaskBG3plus, 1);
 };
