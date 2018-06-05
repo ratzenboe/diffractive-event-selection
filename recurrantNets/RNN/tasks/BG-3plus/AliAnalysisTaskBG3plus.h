@@ -2,10 +2,9 @@
 /* See cxx source for full Copyright notice */
 /* $Id$ */
 
-#ifndef AliAnalysisTaskMCInfo_H
-#define AliAnalysisTaskMCInfo_H
+#ifndef AliAnalysisTaskBG3plus_H
+#define AliAnalysisTaskBG3plus_H
 
-#include "TBits.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1F.h"
@@ -16,15 +15,7 @@
 #include "TClonesArray.h"
 #include "TString.h"
 #include "TList.h"
-#include "TArrayI.h"
-#include "TObjArray.h"
-#include "AliESDEvent.h"
 #include "AliMCEvent.h"
-#include "AliESDCaloCluster.h"
-#include "AliTriggerAnalysis.h"
-#include "AliCEPUtils.h"
-#include "AliPIDResponse.h"
-#include "AliPIDCombined.h"
 
 #include "EventStorage.h"
 #include "EventDef.h"
