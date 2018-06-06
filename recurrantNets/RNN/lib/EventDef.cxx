@@ -107,7 +107,7 @@ void EventDef::FinalizeEvent()
     eraseVec.clear();
     daughtersOfX.clear();
     // C++11 loop-style
-    printf("DEBUG: first loop\n");
+    /* printf("DEBUG: first loop\n"); */
     for (Particle part : fParticles) {
         if (abs(part.Pdg) < 10 || part.Pdg == 21) { eraseVec.push_back(part.Number); continue; }
         // we rewrite the initial system X to number 1
@@ -124,8 +124,8 @@ void EventDef::FinalizeEvent()
           Int_t element = GetParticleIndexFromNumber(nb);
           fParticles.erase(fParticles.begin()+element);
     }
-    printf("DEBUG: sort particles\n");
     SortParticles();
+    OrderDaugthers();
     // loop again through the particle list and combine same decay-particles 
     // works only on a pre-sorted vector
     ////////////////////////////////////////////////////////////////////////////////////////
@@ -148,18 +148,14 @@ void EventDef::FinalizeEvent()
     /* printf("DEBUG: resize particles\n"); */
     /* fParticles.resize( std::distance(fParticles.begin(),it) ); */
 
-    printf("DEBUG: sort particles II\n");
-    SortParticles();
-    printf("DEBUG: order daugthers\n");
-    OrderDaugthers();
     // just to check if everything worked
-    for (Particle part : fParticles) {
-        printf("Number: %i, pdg: %i, mothernumber: %i, isFinal: %i, PartOccurance: %i",
-                part.Number, part.Pdg, part.MotherNumber,part.isFinal, part.PartOccurance);
-        printf(", DaughterNumbers: ");
-        for (Int_t nb : part.DaughterVec) printf("%i ", nb);
-        printf("\n");
-    }
+    /* for (Particle part : fParticles) { */
+    /*     printf("Number: %i, pdg: %i, mothernumber: %i, isFinal: %i, PartOccurance: %i", */
+    /*             part.Number, part.Pdg, part.MotherNumber,part.isFinal, part.PartOccurance); */
+    /*     printf(", DaughterNumbers: "); */
+    /*     for (Int_t nb : part.DaughterVec) printf("%i ", nb); */
+    /*     printf("\n"); */
+    /* } */
     fIsFinalized = kTRUE;
 }
 
@@ -279,25 +275,27 @@ Int_t EventDef::TreeLooper(Int_t mother, TString& decaystring) const
     } else {
         printf("Pdg value %i is not contained in the particle-list!\n",fParticles[mother].Pdg);
     }
-    // if the particle is final and its pdg is in the fParticleCodes we append a "}"
-    /* if (fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() && */ 
-    /*         fParticles[mother].isFinal) { decaystring += "} "; return -1; } */
-
-    // if all daugthers a final we just write them next to each other 
+ 
     if (AllDaughtersFinal(fParticles[mother].Number)) {
         decaystring += "child { node {$"; 
         for (Int_t it : fParticles[mother].DaughterVec) {
             decaystring += fParticleCodes.at(fParticles[GetParticleIndexFromNumber(it)].Pdg);
         }
-        decaystring += "$} ";
-        return -1;
+        // need 2 closing parentesis as we close child and node
+        decaystring += "$} } ";
+    } else {
+        for (Int_t it : fParticles[mother].DaughterVec)
+        {
+            TreeLooper(it, decaystring);
+        }
     }
 
+    // if the particle is final and its pdg is in the fParticleCodes we append a "}"
+    /* if (fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() && */ 
+    /*         fParticles[mother].isFinal) { decaystring += "} "; return -1; } */
+
+    // if all daugthers a final we just write them next to each other 
     // C++11 loop style
-    for (Int_t it : fParticles[mother].DaughterVec)
-    {
-        TreeLooper(it, decaystring);
-    }
     if ( fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() && 
             fParticles[mother].Pdg != fRootPDG ) decaystring+="} ";
     return -1;
