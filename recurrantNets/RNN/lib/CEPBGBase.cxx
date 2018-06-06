@@ -69,7 +69,7 @@ CEPBGBase::CEPBGBase()
   , fHitBranch(0)
   , fHitDir(0)
   , fCurrentDir("")
-  , fEvtStorge(0)
+  /* , fEvtStorge(0) */
 {
     // default constructor, don't allocate memory here!
     // this is used by root for IO purposes, it needs to remain empty
@@ -98,7 +98,7 @@ CEPBGBase::CEPBGBase(
   , fHitBranch(0)
   , fHitDir(0)
   , fCurrentDir("")
-  , fEvtStorge(0)
+  /* , fEvtStorge(0) */
 {
     // constructor
 }
@@ -129,10 +129,10 @@ CEPBGBase::~CEPBGBase()
         delete fPIDResponse;
         fPIDResponse = 0x0;
     }
-    if (fEvtStorge) {
-        delete fEvtStorge;
-        fEvtStorge = 0x0; 
-    }
+    /* if (fEvtStorge) { */
+    /*     delete fEvtStorge; */
+    /*     fEvtStorge = 0x0; */ 
+    /* } */
 }
 
 //_____________________________________________________________________________
@@ -166,7 +166,7 @@ void CEPBGBase::Initialize()
     fPIDCombined->SetDetectorMask(Maskin);
 
     // event storage
-    fEvtStorge = new EventStorage();
+    fEvtStorge = EventStorage();
 
     // emcal hits
     fHitsArray = new TClonesArray("AliEMCALHit",1000);
@@ -188,7 +188,7 @@ void CEPBGBase::NewEvent(AliMCEvent* MCevt)
     }
     // event storage specific actions
     ed.FinalizeEvent();
-    fEvtStorge->AddEvent(ed);
+    fEvtStorge.AddEvent(ed);
     return ;
 }
 
