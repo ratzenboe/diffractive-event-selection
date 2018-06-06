@@ -316,5 +316,40 @@ void EventDef::SetParticleCodes()
     fParticleCodes[130]  = "K^{0}_{L}";
     fParticleCodes[321]  = "K^{+}";
     fParticleCodes[-321] = "K^{-}";
+
+    fParticleCodes[-313] = "\\overline{K^{\\ast 0}}";
+    fParticleCodes[313] = "K^{\\ast 0}";
+    fParticleCodes[323] = "K^{\\ast +}";
+    fParticleCodes[-323] = "K^{\\ast -}";
+    fParticleCodes[2112] = "N";
+    fParticleCodes[-2112] = "\\overline{N}";
+    fParticleCodes[2224] = "\\Delta^{++}";
+    fParticleCodes[2214] = "\\Delta^{+}";
+    fParticleCodes[2114] = "\\Delta^{0}";
+    fParticleCodes[1114] = "\\Delta^{-}";
+    fParticleCodes[2212] = "P";
+    fParticleCodes[-2212] = "\\overline{P}";
+
+    fParticleCodes[3112]  = "\\Sigma^{-}";
+    fParticleCodes[-3112] = "\\overline{\\Sigma^{-}}";
+    fParticleCodes[11]    = "e^{-}";
+    fParticleCodes[-11]   = "e^{+}";
+    fParticleCodes[311]   = "K^{0}";
+    fParticleCodes[-311]  = "\\overline{K^{0}}";
+    fParticleCodes[3114]  = "\\Sigma^{\\ast -}";
+    fParticleCodes[-3114] = "\\overline{\\Sigma^{\\ast -}}";
+    fParticleCodes[-2224] = "\\overline{\\Delta^{++}}";
+    fParticleCodes[990]   = "XXX";
+    fParticleCodes[3122]  = "\\Lambda";
+    fParticleCodes[-3122] = "\\overline{\\Lambda}";
+    fParticleCodes[3222]  = "\\Sigma^{+}";
+    fParticleCodes[-3222] = "\\overline{\\Sigma^{+}}";
+    fParticleCodes[1114]  = "\\Delta^{-}";
+    fParticleCodes[-1114] = "\\overline{\\Delta^{-}}";
+    fParticleCodes[3212]  = "\\Sigma^{0}";
+    fParticleCodes[-3212] = "\\overline{\\Sigma^{0}}";
+    fParticleCodes[2114]  = "\\Sigma^{0}";
+    fParticleCodes[-2114] = "\\overline{\\Sigma^{0}}";
+
     fParticleCodes[fRootPDG] = fRootString;
 }
