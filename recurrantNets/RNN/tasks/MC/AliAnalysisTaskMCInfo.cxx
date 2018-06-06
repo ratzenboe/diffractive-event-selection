@@ -145,31 +145,7 @@ void AliAnalysisTaskMCInfo::UserCreateOutputObjects()
     //
     // this function is called ONCE at the start of the analysis (RUNTIME)
     // here the histograms and other objects are created
-    fEvtStorge = EventStorage();
-
-    fRunNumber = fCurrentRunNumber;
-
-    fHitsArray = new TClonesArray("AliEMCALHit",1000);
-
-    fTrackStatus = new TArrayI();
-    fTracks = new TObjArray();
-
-    fTrigger = new AliTriggerAnalysis();
-    fTrigger->SetDoFMD(kTRUE);
-    fTrigger->SetFMDThreshold(0.3,0.5);
-    fTrigger->ApplyPileupCuts(kTRUE);
-    
-    // AliCEPUtils
-    fCEPUtil = new AliCEPUtils();
-    fCEPUtil->SetTPCnclsS(3);             // limit for number of shared clusters
-    fCEPUtil->SetTrackDCA(500);           // limit for DCA
-    fCEPUtil->SetTrackDCAz(6);            // limit for DCAz
-    fCEPUtil->SetTrackEtaRange(-0.9,0.9); // accepted eta range
-
-    Bool_t isRun1 = fCEPUtil->checkstatus(fAnalysisStatus,
-            AliCEPBase::kBitisRun1,AliCEPBase::kBitisRun1);
-    fCEPUtil->InitTrackCuts(isRun1,1);  
-
+    Initialize();
    
     // the histograms are added to a tlist which is in the end saved to an output file
     fOutList = new TList();             // this is a list which will contain all of your histograms
@@ -234,64 +210,50 @@ void AliAnalysisTaskMCInfo::UserExec(Option_t *)
     // and with the static function InputEvent() you have access to the current event. 
     // once you return from the UserExec function, 
     // the manager will retrieve the next event from the chain
+    if (!fInputHandler) { printf("<E> no input handler available!\n"); return ; }
+    // fESD is (protected) member of CEPBGBase
     fESD = dynamic_cast<AliESDEvent*>(InputEvent()); 
     if(!fESD) return;
+    // check pid-response (protected member of CEPBGBase)
+    fPIDResponse = (AliPIDResponse*)fInputHandler->GetPIDResponse();
+    if (!fPIDResponse) { printf("<E> no PID available!\n"); return ; }
 
-    // set global variables
-    Int_t nTracks = fCEPUtil->AnalyzeTracks(fESD, fTracks, fTrackStatus);
-    Int_t nTracksAccept(2), nTracksTT;
-    TArrayI *TTindices  = new TArrayI();
-    Bool_t isGoodEvt = lhc16filter(fESD, nTracksAccept, nTracksTT, TTindices);
-    if (!isGoodEvt) return ;
-    // here we have now events which passed the track selection
-    
-    // get MC event (fMCEvent is member variable from AliAnalysisTaskSE)
+    // ///////////////////////////////////////////////////////////////////////////////
+    // get MC event (member of AliAnalysisTaskSE)
     fMCEvent = MCEvent();
-    if (fMCEvent) {  
-        if (fMCEvent->Stack()==NULL) fMCEvent=NULL;
-    }
+    if (fMCEvent) { if (fMCEvent->Stack()==NULL) fMCEvent=NULL; }
     AliStack *stack = NULL;
     if (fMCEvent) stack = fMCEvent->Stack();
-    else { 
-        printf("<E> No MC-event available!\n"); 
-        return ;
-        /* gSystem->Exit(1); */ 
-    }
-
+    else { printf("<E> No MC-event available!\n"); return ; }
+    // ///////////////////////////////////////////////////////////////////////////////
+    
+    // ///////////////////////////////////////////////////////////////////////////////
+    // ------------------------- event filter ----------------------------------------
+    Int_t nTracks = fCEPUtil->AnalyzeTracks(fESD, fTracks, fTrackStatus); 
+    Int_t nTracksTT, nTracksAccept=2;
+    TArrayI *TTindices  = new TArrayI();
+    Bool_t isGoodEvt = lhc16filter(fESD,nTracksAccept,fTTmask,fTTpattern,nTracksTT,TTindices) & 
+                       IsPionEvt(fTracks, nTracksTT, TTindices, fPIDResponse, fPIDCombined);
+    if (!isGoodEvt) return ;
+ 
     //////////////////////////////////////////////////////////////////////////////////
     // ---------------------- Print the event stack ----------------------------------
     /* PrintStack(fMCEvent, kFALSE); */
     // ---------------------- Print the AliESDtracks ---------------------------------
-    /* PrintTracks(fESD); */
+    /* PrintTracks(fTracks, nTracksTT, TTindices); */
+    /* printf("----------------------------- evt end ---------------------------------\n\n"); */
     //////////////////////////////////////////////////////////////////////////////////
     
     //////////////////////////////////////////////////////////////////////////////////
     // ----------------------- EMCAL Hits --------------------------------------------
     // the directory may have changed we therefore update the neccessary global vars
-    if (UpdateGlobalVars()) PrintEMCALHits(isFullRecon);
+    if (UpdateGlobalVars(CurrentFileName(), Entry())) PrintEMCALHits();
     //////////////////////////////////////////////////////////////////////////////////
 
-    EventDef ed;
-    for (Int_t ii=4; ii<nTracksPrimMC; ii++) {
-        TParticle* part = stack->Particle(ii);
+    NewEvent(fMCEvent);
 
-        ed.AddTrack(ii, part->GetPdgCode(), part->GetMother(0), 
-                part->GetDaughter(0), part->GetDaughter(1), 
-                (part->GetStatusCode()==0) ? kFALSE : kTRUE);
-
-        if (part->GetStatusCode()==0) continue;
-        Int_t pdg = part->GetPdgCode();
-        Double_t charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge();
-        if (charge==0.) {
-            if (pdg==22) fGammaE->Fill(part->Energy()); 
-            fNeutralPDG->Fill(pdg); 
-        }
-    }
-    // event storage specific actions
-    ed.FinalizeEvent();
-    fEvtStorge.AddEvent(ed);
-
-    EMCalAnalysis(isFullRecon, nTracksTT, TTindices);
+    EMCalAnalysis(EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent), 
+                  fMCEvent, fTracks, nTracksTT, TTindices);
 
     /* printf("\n\n\n\n----------------------------------------------------\n\n"); */
     PostData(1, fOutList);          // stream the results the analysis of this event to
@@ -345,163 +307,26 @@ void AliAnalysisTaskMCInfo::EMCalAnalysis(Bool_t isSignal, AliMCEvent* MCevt, TO
     if (isSignal) fEMC_nClusVSnMatched_SIG->Fill(nEMCClus, nEMCClus_matched);
     else fEMC_nClusVSnMatched_BG->Fill(nEMCClus, nEMCClus_matched);
 
-    if (isSignal) fPHOSnClus_SIG->Fill(nPHOSClus);
-    else fPHOSnClus_BG->Fill(nPHOSClus);
-
     if (isSignal)     fEMCenergy_SIG->Fill(EMCEne);
     else fEMCenergy_BG->Fill(EMCEne); 
-
-    if (isSignal) fPHOSenergy_SIG->Fill(PHOSEne);
-    else fPHOSenergy_BG->Fill(PHOSEne);
 
     if (isSignal) fEMC_nClusVSenergy_SIG->Fill(nEMCClus,EMCEne);
     else fEMC_nClusVSenergy_BG->Fill(nEMCClus,EMCEne); 
 
-    if (isSignal) fPHOS_nClusVSenergy_SIG->Fill(nPHOSClus,PHOSEne);
-    else fPHOS_nClusVSenergy_BG->Fill(nPHOSClus,PHOSEne);  
-}
 
-//_____________________________________________________________________________
+    AliStack* stack = MCevt->Stack();
+    Int_t nTracksPrimMC = stack->GetNprimary();
 
-Bool_t AliAnalysisTaskMCInfo::MatchTracks(AliESDCaloCluster* clust, Int_t nTracksTT, TArrayI* TTindices, Double_t& dPhiEtaMin)
-{
-    dPhiEtaMin = 999.;
-     
-    /* printf("Distance to track in phi: %-6.2f, in eta: %-6.2f\n", */ 
-    /*         clust->GetTrackDx(), clust->GetTrackDz()); */
-    Float_t x[3];
-    clust->GetPosition(x);
-    TVector3 v3(x[0], x[1], x[2]);
-    // v3 phi is in the range [-pi,pi) -> map it to [0, 2pi)
-    Double_t cluster_phi = (v3.Phi()>0.) ? v3.Phi() : v3.Phi() + 2.*TMath::Pi();
-    Double_t cluster_eta = v3.Eta();
-    /* printf("EMCal cluster positions: phi: %-6.2f, eta: %-6.2f\n", cluster_phi, cluster_eta); */
-
-    for (Int_t kk(0); kk<nTracksTT; kk++) {
-        // proper pointer into fTracks and fTrackStatus
-        Int_t trkIndex = TTindices->At(kk);
-        // the original track
-        AliESDtrack *tmptrk = (AliESDtrack*) fTracks->At(trkIndex);
-        Int_t MCind = tmptrk->GetLabel();
-        AliStack* stack = fMCEvent->Stack();
-        if (MCind <= 0) {
-            printf("<W> MC index below 0\nCorrection to absolute value!\n"); 
-            if (abs(MCind) <= stack->GetNprimary()) MCind = abs(MCind);
-            else return kFALSE;
-        }
-        TParticle* part = stack->Particle(MCind);
-        // set MC mass and momentum
-        TLorentzVector lv;
-        part->Momentum(lv);
-        Double_t trkPhiOnEmc = tmptrk->GetTrackPhiOnEMCal();
-        // Map phi to [0,2pi)
-        trkPhiOnEmc = (trkPhiOnEmc>0.) ? trkPhiOnEmc : trkPhiOnEmc+2.*TMath::Pi();
-        if (trkPhiOnEmc<0.) trkPhiOnEmc=-999.;
-        Double_t trkEtaOnEmc = tmptrk->GetTrackEtaOnEMCal();
-
-        /* printf("Track %i: Phi on emcal: %-6.2f, eta: %-6.2f\n", */
-        /*         kk, trkPhiOnEmc, trkEtaOnEmc); */
-        if (trkPhiOnEmc==-999. || trkEtaOnEmc==-999.) continue;
-        // calculate distance in phi
-        Double_t dEta = trkEtaOnEmc - cluster_eta;
-        Double_t dPhi = trkPhiOnEmc - cluster_phi;
-        Double_t dPhiEta = TMath::Sqrt( dEta*dEta + dPhi*dPhi );
-
-        dPhiEtaMin = (dPhiEtaMin<dPhiEta) ? dPhiEtaMin : dPhiEta;
-    }
-    /* printf("Minimum distance to track in eta phi: %-6.2f\n", dPhiEtaMin); */
-    return (dPhiEtaMin==999.) ? kFALSE : kTRUE;
-}
-
-//_____________________________________________________________________________
-Bool_t AliAnalysisTaskMCInfo::IsClusterFromPDG(AliESDCaloCluster* clust, Int_t& pdg)
-{
-    AliStack* stack = fMCEvent->Stack();
-    Int_t MCClusterIndex = clust->GetLabel();
-    Int_t particle_pdg = abs(stack->Particle(MCClusterIndex)->GetPdgCode());
-    // we check if the cluster is made by a scondary originating from a primary particle
-    Int_t mc_idx = MCClusterIndex;
-    while (!stack->IsPhysicalPrimary(mc_idx)) {
-        // check if mother particle is primary
-        mc_idx = stack->Particle(mc_idx)->GetMother(0);
-        particle_pdg = abs(stack->Particle(mc_idx)->GetPdgCode());
-    }
-    Bool_t isclusterfrompart = (particle_pdg==pdg);
-    pdg = particle_pdg;
-    /* printf("Primary particle causing cluster: %i (pdg: %i)\n", mc_idx, particle_pdg); */ 
-    return isclusterfrompart;
-}
-
-//_____________________________________________________________________________
-TString AliAnalysisTaskMCInfo::GetDirFromFullPath(const char* fullpath)
-{
-    std::string curr_dir(fullpath);
-    // find last occurance of "/" (determining the full path to the directory)
-    std::size_t path_end_idx = curr_dir.find_last_of("/\\");
-    // take only the substring to the last occurance (+1 to also get the slash /)
-    TString outstr((curr_dir.substr(0,path_end_idx+1)).c_str());
-
-    return outstr;
-}
-
-//_____________________________________________________________________________
-Bool_t AliAnalysisTaskMCInfo::UpdateGlobalVars()
-{
-    if (fCurrentDir=="" || fCurrentDir != GetDirFromFullPath(CurrentFileName())) {
-        fCurrentDir = GetDirFromFullPath(CurrentFileName());
-        fHitFile = TFile::Open(fCurrentDir+fHitFileName);
-    }
-    if (!fHitFile) return kFALSE;
-    TString iev_str;
-    iev_str.Form("Event%i", Entry());
-    fHitDir = fHitFile->GetDirectory(iev_str);
-    if (!fHitDir) return kFALSE;
-    // get the hit-tree corresponding to the event 
-    fHitDir->GetObject("TreeH", fHitTree);
-    if (!fHitTree) return kFALSE;
-    fHitBranch = fHitTree->GetBranch("EMCAL");
-    fHitBranch->SetAddress(&fHitsArray);
-    if (!fHitBranch) return kFALSE;
-
-    return kTRUE;
-}
-
-//_____________________________________________________________________________
-void AliAnalysisTaskMCInfo::PrintEMCALHits(Bool_t isSignal)
-{
-    // For a comparion with the original particle we need the AliStack
-    /* AliStack* stack = fMCEvent->Stack(); */
-    /* Int_t nTransported = stack->GetNtransported(); */
-    /* printf("\n\nNumber of transported tracks: %i\n", nTransported); */
-    /* TParticle* part = 0x0; */
-
-    // a single particle may produce many hits in the emcal -> record particles 
-    // and if we see a duplicate we ignore it
-    std::vector<Int_t> parent_v;
-    for (Int_t iHit(0); iHit<fHitBranch->GetEntries(); iHit++){
-        fHitBranch->GetEntry(iHit);    
-        TIter next(fHitsArray);
-        AliEMCALHit* hit;
-        while( (hit=dynamic_cast<AliEMCALHit*>(next())) )
-        {
-            // if the parent particle has already been counted we continue
-            if(std::find(parent_v.begin(), parent_v.end(), hit->GetIparent()) 
-                    != parent_v.end()) continue;
-
-            printf("Initial energy of parent part: %-3.8f", hit->GetIenergy());
-            printf("  <- Parent Id: %i", hit->GetIparent());
-            printf("  <- GetPrimary(): %i", hit->GetPrimary());
-            printf("  <- Primary entrance E(): %-3.8f", hit->GetPe());
-            printf("  <- E depon: %-3.8f", hit->GetEnergy());
-            printf("  <- GetId(): %i", hit->GetId());
-            printf("\n");
-
-            parent_v.push_back(hit->GetIparent());
-
-            if (isSignal) fEMCalSecondaryE_SIG->Fill(hit->GetIenergy());
-            else fEMCalSecondaryE_BG->Fill(hit->GetIenergy());
+    for (Int_t ii=4; ii<nTracksPrimMC; ii++) {
+        TParticle* part = stack->Particle(ii);
+        if (part->GetStatusCode()==0) continue;
+        Int_t pdg = part->GetPdgCode();
+        Double_t charge = TDatabasePDG::Instance()->GetParticle(pdg)->Charge();
+        if (charge==0.) {
+            if (pdg==22) fGammaE->Fill(part->Energy()); 
         }
     }
-    fHitsArray->Clear();
+
+
 }
 
