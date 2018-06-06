@@ -52,7 +52,7 @@ class CEPBGBase
         TDirectory*             fHitDir;            //! hits are stored event-wise in directories
         TString                 fCurrentDir;        //  current ESD-working directory
         // Class storing the event for printing 
-        EventStorage*           fEvtStorge;         //! event printing class
+        EventStorage            fEvtStorge;         //! event printing class
  
         Long_t                  fAnalysisStatus;    //  stores the analysis-status 
         UInt_t                  fTTmask;            //  track conditions
