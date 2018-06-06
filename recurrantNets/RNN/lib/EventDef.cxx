@@ -227,21 +227,25 @@ Int_t EventDef::TreeLooper(Int_t mother, TString& decaystring) const
         decaystring += "\\node{$" + fParticleCodes.at(fRootPDG) + "$} ";
     else if ( fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end()) {
         decaystring += "child { node {$"; 
-        /* if (fParticles[mother].PartOccurance>1) { */
-        /*     TString particleOccurance; */
-        /*     particleOccurance.Form("%i",fParticles[mother].PartOccurance); */
-        /*     decaystring += particleOccurance; */
-        /* } */
         decaystring += fParticleCodes.at(fParticles[mother].Pdg);
         decaystring += "$} ";
     } else {
         printf("Pdg value %i is not contained in the particle-list!\n",fParticles[mother].Pdg);
     }
+    // if the particle is final and its pdg is in the fParticleCodes we append a "}"
+    if (fParticleCodes.find(fParticles[mother].Pdg) != fParticleCodes.end() && 
+            fParticles[mother].isFinal) { decaystring += "} "; return -1; }
  
     if (AllDaughtersFinal(fParticles[mother].Number)) {
         decaystring += "child { node {$"; 
         for (Int_t it : fParticles[mother].DaughterVec) {
-            decaystring += fParticleCodes.at(fParticles[GetParticleIndexFromNumber(it)].Pdg);
+            Int_t pdg_daugther = fParticles[GetParticleIndexFromNumber(it)].Pdg;
+            printf("Daughter it: %i, pdg: %i\n", it, pdg_daugther);
+            if (fParticleCodes.find(pdg_daugther) != fParticleCodes.end()) {
+                decaystring += fParticleCodes.at(fParticles[GetParticleIndexFromNumber(it)].Pdg);
+            } else { 
+                printf("Pdg value %i not contained in particle-list!\n", pdg_daugther);
+            }
         }
         // need 2 closing parentesis as we close child and node
         decaystring += "$} } ";
