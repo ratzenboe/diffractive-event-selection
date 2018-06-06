@@ -265,7 +265,7 @@ void AliAnalysisTaskMCInfo::Terminate(Option_t *)
 {
     // terminate
     // called at the END of the analysis (when all events are processed)
-    fEvtStorge->PrintNEvts();
+    fEvtStorge.PrintNEvts();
 }
 
 //_____________________________________________________________________________
