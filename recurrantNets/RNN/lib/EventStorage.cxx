@@ -43,7 +43,7 @@ void EventStorage::AddEvent(EventDef event)
     fnEvents++;
     // check if event already exists, the == operator of EventDef is overloaded:
     for (UInt_t ii(0); ii<fEvents.size(); ii++) {
-        if (fEvents[ii] == event) { fEvents[ii].IncreaseDecayOccurance(); return ; } 
+        if (event == fEvents[ii]) { fEvents[ii].IncreaseDecayOccurance(); return ; } 
     }
     // a new event-class: add it to the event vector
     fEvents.push_back(event);
@@ -56,8 +56,11 @@ void EventStorage::SortEvents()
     std::sort(fEvents.begin(), fEvents.end(), 
               // sorts events by occurance and number of particles
               [](const EventDef& a, const EventDef& b) { 
-                    return (a.GetOccurance()==b.GetOccurance()) ? 
-                       (a.GetnParticles()<b.GetnParticles()) : (a.GetOccurance()>b.GetOccurance()); 
+                    if (a.GetOccurance()==b.GetOccurance()) 
+                        return (a.GetnParticles()<b.GetnParticles());
+                    else return (a.GetOccurance()>b.GetOccurance());
+                    /* return (a.GetOccurance()==b.GetOccurance()) ? */ 
+                    /*    (a.GetnParticles()<b.GetnParticles()) : (a.GetOccurance()>=b.GetOccurance()); */ 
               } );
 }
 
