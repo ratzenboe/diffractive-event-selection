@@ -1,5 +1,6 @@
 \documentclass[]{article}
 \usepackage{tikz}
+\usepackage{longtable}
 
 \makeatletter
 \newcount\dirtree@lvl
@@ -37,17 +38,17 @@
 
 \makeatother
 \begin{document}
-\begin{center}
-    \setlength{\tabcolsep}{9mm} % separator between columns
-    \def\arraystretch{1.25} % vertical stretch factor
-    \centering
-    \begin{tabular}{c | c} 
-        Decay & Occurance[\%] \\ 
-        \hline
-        \hline
-        \input{decaymodes.tex}
-    \end{tabular}
-\end{center}
+% \begin{center}
+%     \setlength{\tabcolsep}{9mm} % separator between columns
+%     \def\arraystretch{1.25} % vertical stretch factor
+%     \centering
+%     \begin{tabular}{c | c} 
+%         Decay & Occurance[\%] \\ 
+%         \hline
+%         \hline
+\input{decaymodes.tex}
+% \end{tabular}
+% \end{center}
 
 
 \end{document}
