@@ -354,6 +354,7 @@ Bool_t CEPBGBase::MatchTracks(AliESDCaloCluster* clust, TObjArray* tracks, Int_t
         // the original track
         AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
         TParticle* part = GetPartByLabel(tmptrk->GetLabel(), MCevt);
+        if (!part) continue;
         // set MC mass and momentum
         TLorentzVector lv;
         part->Momentum(lv);
