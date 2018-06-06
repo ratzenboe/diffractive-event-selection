@@ -50,52 +50,26 @@ ClassImp(AliAnalysisTaskMCInfo) // classimp: necessary for root
 
 AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo() 
   : AliAnalysisTaskSE()
-  , fESD(0)
-  , fTrigger(0)
-  , fTrackStatus(0)
-  , fTracks(0)
-  , fCEPUtil(0)
-  , fHitFileName("EMCAL.Hits.root")
-  , fHitFile(0)
-  , fHitTree(0)
-  , fHitBranch(0)
-  , fHitDir(0)
-  , fCurrentDir("")
-  , fRunNumber(0)
-  , fAnalysisStatus(AliCEPBase::kBitConfigurationSet)
-  , fTTmask(AliCEPBase::kTTBaseLine)
-  , fTTpattern(AliCEPBase::kTTBaseLine) 
+  , CEPBGBase(AliCEPBase::kBitConfigurationSet,
+              AliCEPBase::kTTBaseLine,
+              AliCEPBase::kTTBaseLine,
+              "EMCAL.Hits.root")
   , fOutList(0)
   , fGammaE(0)
   , fEMCalSecondaryE_SIG(0)
   , fEMCalSecondaryE_BG(0)
-  , fNeutralPDG(0)
-  , fEmcalHitMothers_SIG(0)
-  , fEmcalHitMothers_BG(0)
-  , fDistBadChannel_SIG(0)
-  , fDistBadChannel_BG(0)
   , fEMCnClus_SIG(0)
   , fEMCnClus_BG(0)
   , fEMCnMatchedClus_SIG(0)
   , fEMCnMatchedClus_BG(0)
   , fEMC_nClusVSnMatched_SIG(0)
   , fEMC_nClusVSnMatched_BG(0)
-  , fPHOSnClus_SIG(0)
-  , fPHOSnClus_BG(0)
-  , fPHOSenergy_SIG(0)
-  , fPHOSenergy_BG(0)
   , fEMCenergy_SIG(0)
   , fEMCenergy_BG(0)
   , fEMC_nClusVSenergy_SIG(0)
   , fEMC_nClusVSenergy_BG(0)
-  , fPHOS_nClusVSenergy_SIG(0)
-  , fPHOS_nClusVSenergy_BG(0)
-  , fEMCDphi_SIG(0)
-  , fEMCDphi_BG(0)
-  , fEMCDz_SIG(0)
-  , fEMCDz_BG(0)
-  , fEMCal_dphiEta_SIG(0)
-  , fEMCal_dphiEta_BG(0)
+  , fEMCal_dphiEta_pion(0)
+  , fEMCal_dphiEta_gamma(0)
 {
     // default constructor, don't allocate memory here!
     // this is used by root for IO purposes, it needs to remain empty
@@ -108,52 +82,26 @@ AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo(const char* name,
   UInt_t TTpattern,
   TString hitFileName) 
   : AliAnalysisTaskSE(name)
-  , fESD(0)
-  , fTrigger(0)
-  , fTrackStatus(0)
-  , fTracks(0)
-  , fCEPUtil(0)
-  , fHitFileName(hitFileName)
-  , fHitFile(0)
-  , fHitTree(0)
-  , fHitBranch(0)
-  , fHitDir(0)
-  , fCurrentDir("")
-  , fRunNumber(0)
-  , fAnalysisStatus(state)
-  , fTTmask(TTmask)
-  , fTTpattern(TTpattern)
+  , CEPBGBase(state,
+              TTmask,
+              TTpattern,
+              hitFileName)
   , fOutList(0)
   , fGammaE(0)
   , fEMCalSecondaryE_SIG(0)
   , fEMCalSecondaryE_BG(0)
-  , fNeutralPDG(0)
-  , fEmcalHitMothers_SIG(0)
-  , fEmcalHitMothers_BG(0)
-  , fDistBadChannel_SIG(0)
-  , fDistBadChannel_BG(0)
   , fEMCnClus_SIG(0)
   , fEMCnClus_BG(0)
   , fEMCnMatchedClus_SIG(0)
   , fEMCnMatchedClus_BG(0)
   , fEMC_nClusVSnMatched_SIG(0)
   , fEMC_nClusVSnMatched_BG(0)
-  , fPHOSnClus_SIG(0)
-  , fPHOSnClus_BG(0)
-  , fPHOSenergy_SIG(0)
-  , fPHOSenergy_BG(0)
   , fEMCenergy_SIG(0)
   , fEMCenergy_BG(0)
   , fEMC_nClusVSenergy_SIG(0)
   , fEMC_nClusVSenergy_BG(0)
-  , fPHOS_nClusVSenergy_SIG(0)
-  , fPHOS_nClusVSenergy_BG(0)
-  , fEMCDphi_SIG(0)
-  , fEMCDphi_BG(0)
-  , fEMCDz_SIG(0)
-  , fEMCDz_BG(0)
-  , fEMCal_dphiEta_SIG(0)
-  , fEMCal_dphiEta_BG(0)
+  , fEMCal_dphiEta_pion(0)
+  , fEMCal_dphiEta_gamma(0)
 {
     // constructor
     /* DefineInput(0, TChain::Class());    // define the input of the analysis: */ 
@@ -230,75 +178,46 @@ void AliAnalysisTaskMCInfo::UserCreateOutputObjects()
     fGammaE  = new TH1F("fGammaE",  "fGammaE",  100, 0, 4);       
     fEMCalSecondaryE_SIG = new TH1F("fEMCalSecondaryE_SIG", "fEMCalSecondaryE_SIG", 100, 0, 4);
     fEMCalSecondaryE_BG  = new TH1F("fEMCalSecondaryE_BG",  "fEMCalSecondaryE_BG",  100, 0, 4);       
-    fNeutralPDG = new TH1F("fNeutralPDG", "fNeutralPDG", 3500, 0, 3500);
-    fEmcalHitMothers_SIG = new TH1F("fEmcalHitMothers_SIG", "fEmcalHitMothers_SIG", 100, 0, 2500);
-    fEmcalHitMothers_BG = new TH1F("fEmcalHitMothers_BG", "fEmcalHitMothers_BG", 100, 0, 2500);
-
-    fDistBadChannel_SIG = new TH1F("dBadChannel_sig", "dBadChannel_sig", 100, 0, 50);
-    fDistBadChannel_BG = new TH1F("dBadChannel_bg", "dBadChannel_bg", 10, 0, 50);
     fEMCnClus_SIG = new TH1F("EMCnClusters_sig", "EMCnClusters_sig", 10, 0, 10); 
     fEMCnClus_BG = new TH1F("EMCnClusters_bg", "EMCnClusters_bg", 10, 0, 10);  
-    fPHOSnClus_SIG = new TH1F("PHOSnClusters_sig", "PHOSnClusters_sig", 10, 0, 10); 
-    fPHOSnClus_BG = new TH1F("PHOSnClusters_bg", "PHOSnClusters_bg", 10, 0, 10);   
 
     fEMCnMatchedClus_SIG = new TH1F("EMCnMatchedClus_sig", "EMCnMatchedClus_sig", 10,0,10);
     fEMCnMatchedClus_BG = new TH1F("EMCnMatchedClus_bg", "EMCnMatchedClus_bg", 10,0,10);
+
     fEMC_nClusVSnMatched_SIG = new TH2F("EMC_nClusVSnMatched_sig", "EMC_nClusVSnMatched_sig", 
             10,0,10, 10,0,10);
     fEMC_nClusVSnMatched_BG = new TH2F("EMC_nClusVSnMatched_bg", "EMC_nClusVSnMatched_bg", 
             10,0,10, 10,0,10);
-    fEMCDphi_SIG = new TH1F("emc_dphi_sig", "emc_dphi_sig", 100,0,3.2);
-    fEMCDphi_BG = new TH1F("emc_dphi_bg", "emc_dphi_bg", 100,0,3.2);
-    fEMCDz_SIG = new TH1F("emc_dz_sig", "emc_dz_sig", 100,0,3.2);
-    fEMCDz_BG = new TH1F("emc_dz_bg", "emc_dz_bg", 100,0,3.2);
 
     fEMCenergy_SIG = new TH1F("EMCenergy_sig", "EMCenergy_sig", 100, 0, 3);   
     fEMCenergy_BG = new TH1F("EMCenergy_bg", "EMCenergy_bg", 100, 0, 3);     
-    fPHOSenergy_SIG = new TH1F("PHOSenergy_sig", "PHOSenergy_sig", 100, 0, 3);    
-    fPHOSenergy_BG = new TH1F("PHOSenergy_bg", "PHOSenergy_bg", 100, 0, 3);      
     fEMC_nClusVSenergy_SIG = new TH2F("emc_n_vs_e_sig", "emc_n_vs_e_sig", 10,0,10,100,0,3);
     fEMC_nClusVSenergy_BG = new TH2F("emc_n_vs_e_bg", "emc_n_vs_e_bg", 10,0,10,100,0,3);
-    fPHOS_nClusVSenergy_SIG = new TH2F("phos_n_vs_e_sig", "phos_n_vs_e_sig", 10,0,10,100,0,3);
-    fPHOS_nClusVSenergy_BG = new TH2F("phos_n_vs_e_bg", "phos_n_vs_e_bg", 10,0,10,100,0,3);
 
-    fEMCal_dphiEta_SIG =  new TH1F("emc_dphieta_sig", "emc_dphieta_sig", 500,0,10);
-    fEMCal_dphiEta_BG =  new TH1F("emc_dphieta_bg", "emc_dphieta_bg", 500,0,10);
+    fEMCal_dphiEta_pion =  new TH1F("emc_dphieta_pion", "emc_dphieta_pion", 100,0,6);
+    fEMCal_dphiEta_gamma =  new TH1F("emc_dphieta_gamma", "emc_dphieta_gamma", 100,0,6);
   
     fOutList->Add(fGammaE);          
     fOutList->Add(fEMCalSecondaryE_SIG);          
     fOutList->Add(fEMCalSecondaryE_BG);          
-    fOutList->Add(fNeutralPDG);          
-    fOutList->Add(fEmcalHitMothers_SIG);          
-    fOutList->Add(fEmcalHitMothers_BG);          
 
-    fOutList->Add(fDistBadChannel_SIG);          
-    fOutList->Add(fDistBadChannel_BG);          
     fOutList->Add(fEMCnClus_SIG);          
     fOutList->Add(fEMCnClus_BG);          
-    fOutList->Add(fPHOSnClus_SIG);          
-    fOutList->Add(fPHOSnClus_BG);          
-    fOutList->Add(fEMCenergy_SIG);          
-    fOutList->Add(fEMCenergy_BG);          
-    fOutList->Add(fPHOSenergy_SIG);          
-    fOutList->Add(fPHOSenergy_BG);          
-    fOutList->Add(fEMC_nClusVSenergy_SIG);          
-    fOutList->Add(fEMC_nClusVSenergy_BG);          
-    fOutList->Add(fPHOS_nClusVSenergy_SIG);          
-    fOutList->Add(fPHOS_nClusVSenergy_BG);          
 
     fOutList->Add(fEMCnMatchedClus_SIG);          
     fOutList->Add(fEMCnMatchedClus_BG);          
+
     fOutList->Add(fEMC_nClusVSnMatched_SIG);          
     fOutList->Add(fEMC_nClusVSnMatched_BG);          
 
-    fOutList->Add(fEMCDphi_SIG);          
-    fOutList->Add(fEMCDphi_BG);          
-    fOutList->Add(fEMCDz_SIG);          
-    fOutList->Add(fEMCDz_BG);          
+    fOutList->Add(fEMCenergy_SIG);          
+    fOutList->Add(fEMCenergy_BG);          
 
-    fOutList->Add(fEMCal_dphiEta_SIG);          
-    fOutList->Add(fEMCal_dphiEta_BG);          
-
+    fOutList->Add(fEMC_nClusVSenergy_SIG);          
+    fOutList->Add(fEMC_nClusVSenergy_BG);          
+ 
+    fOutList->Add(fEMCal_dphiEta_pion);          
+    fOutList->Add(fEMCal_dphiEta_gamma);          
 
     PostData(1, fOutList);              // postdata will notify the analysis manager of changes 
                                         // and updates to the fOutList object. 
@@ -384,67 +303,39 @@ void AliAnalysisTaskMCInfo::Terminate(Option_t *)
 {
     // terminate
     // called at the END of the analysis (when all events are processed)
-    fEvtStorge.PrintNEvts();
+    fEvtStorge->PrintNEvts();
 }
 
 //_____________________________________________________________________________
-void AliAnalysisTaskMCInfo::EMCalAnalysis(Bool_t isSignal, Int_t nTracksTT, TArrayI *TTindices)
+void AliAnalysisTaskMCInfo::EMCalAnalysis(Bool_t isSignal, AliMCEvent* MCevt, TObjArray* tracks,
+                                          Int_t nTracksTT, TArrayI *TTindices)
 {
-    Int_t nEMCClus(0), nPHOSClus(0), nEMCClus_matched(0), partpdg(0);
-    Double_t ene(0.), dBadChannel(0.), EMCEne(0.), PHOSEne(0.), 
-             dTrackDx(-999.), dTrackDz(-999.), dPhiEtaMin(999.);
+    Int_t nEMCClus(0), nEMCClus_matched(0), partpdg(0);
+    Double_t ene(0.), dBadChannel(0.), EMCEne(0.), PHOSEne(0.), dPhiEtaMin(999.);
 
     Int_t nClusters = fESD->GetNumberOfCaloClusters();
     for (Int_t ii(0); ii<nClusters; ii++) 
     {
         AliESDCaloCluster *clust = fESD->GetCaloCluster(ii);
         ene = clust->E();
-        dBadChannel = clust->GetDistanceToBadChannel();
-        // get track information
-        dTrackDx = clust->GetTrackDx();
-        dTrackDz = clust->GetTrackDz();
-        if (isSignal) fDistBadChannel_SIG->Fill(dBadChannel);
-        else fDistBadChannel_BG->Fill(dBadChannel);
-
-        // number of clusters on EMC/PHOS
+        // number of clusters on EMC
         // deposited energy, ignore matched clusters
         if (clust->IsEMCAL()) {
             nEMCClus++;
-            if (clust->GetNTracksMatched()>0) nEMCClus_matched++;
-            if (clust->GetNTracksMatched()<=0) { 
-                EMCEne += ene;
-            }
-            IsClusterFromPDG(clust, partpdg);
-            if (isSignal) fEmcalHitMothers_SIG->Fill(abs(partpdg));
-            else fEmcalHitMothers_BG->Fill(abs(partpdg));
-
-            if (MatchTracks(clust, nTracksTT, TTindices, dPhiEtaMin)) {
+            // we match clusters ourselves
+            /* if (clust->GetNTracksMatched()>0) nEMCClus_matched++; */
+            /* if (clust->GetNTracksMatched()<=0) EMCEne += ene; */
+            if (MatchTracks(clust, tracks, nTracksTT, TTindices, MCevt, dPhiEtaMin)) {
                 partpdg = 211;
-                if (IsClusterFromPDG(clust, partpdg)) 
-                    fEMCal_dphiEta_SIG->Fill(dPhiEtaMin);
+                if (IsClusterFromPDG(clust, partpdg, MCevt)) 
+                    fEMCal_dphiEta_pion->Fill(dPhiEtaMin);
                 partpdg = 22;
-                if (IsClusterFromPDG(clust, partpdg) && !isSignal)
-                    fEMCal_dphiEta_BG->Fill(dPhiEtaMin);
-            }
-        }
-        if (clust->IsPHOS()) {
-            /* nPHOSClus++; */
-            if (clust->GetNTracksMatched()<=0) {
-                PHOSEne += ene;
-                nPHOSClus++;
+                if (IsClusterFromPDG(clust, partpdg, MCevt) && !isSignal)
+                    fEMCal_dphiEta_gamma->Fill(dPhiEtaMin);
             }
         }
     }
-
-    printf("N clusters: %i, N matched clusters: %i\n---------- Evt END ----------\n",
-            nEMCClus, nEMCClus_matched);
     // update histograms
-    if (isSignal) fEMCDphi_SIG->Fill(dTrackDx);
-    else fEMCDphi_BG->Fill(dTrackDx); 
-
-    if (isSignal) fEMCDz_SIG->Fill(dTrackDz);
-    else fEMCDz_BG->Fill(dTrackDz); 
-
     if (isSignal) fEMCnClus_SIG->Fill(nEMCClus);
     else fEMCnClus_BG->Fill(nEMCClus); 
 
