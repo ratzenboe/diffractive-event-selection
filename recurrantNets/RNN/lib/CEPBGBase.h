@@ -80,7 +80,8 @@ class CEPBGBase
         Bool_t                  IsPionEvt(TObjArray* tracks, Int_t nTracksTT, 
                                           TArrayI* TTindices, 
                                           AliPIDResponse* pidResponse, 
-                                          AliPIDCombined* pidCombined) const;
+                                          AliPIDCombined* pidCombined,
+                                          AliMCEvent* MCevt=0x0) const;
 
         // event characterization functions
         // check if event is fully reconstructed
