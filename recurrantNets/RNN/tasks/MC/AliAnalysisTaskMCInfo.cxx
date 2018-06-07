@@ -19,6 +19,7 @@
  * as an example, one histogram is filled
  */
 
+#include "TRandom.h"
 #include "TChain.h"
 #include "TMath.h"
 #include "TDatabasePDG.h"
@@ -146,6 +147,8 @@ void AliAnalysisTaskMCInfo::UserCreateOutputObjects()
     // this function is called ONCE at the start of the analysis (RUNTIME)
     // here the histograms and other objects are created
     Initialize();
+    // set random seed -> important for pid & event-selection -> want reproducable results
+    gRandom->SetSeed(7);
    
     // the histograms are added to a tlist which is in the end saved to an output file
     fOutList = new TList();             // this is a list which will contain all of your histograms
@@ -232,10 +235,11 @@ void AliAnalysisTaskMCInfo::UserExec(Option_t *)
     Int_t nTracks = fCEPUtil->AnalyzeTracks(fESD, fTracks, fTrackStatus); 
     Int_t nTracksTT, nTracksAccept=2;
     TArrayI *TTindices  = new TArrayI();
-    Bool_t isGoodEvt = lhc16filter(fESD,nTracksAccept,fTTmask,fTTpattern,nTracksTT,TTindices) & 
-                       IsPionEvt(fTracks, nTracksTT, TTindices, fPIDResponse, fPIDCombined);
+    Bool_t isGoodEvt = lhc16filter(fESD,nTracksAccept,fTTmask,fTTpattern,nTracksTT,TTindices); 
     if (!isGoodEvt) return ;
- 
+    if (!IsPionEvt(fTracks, nTracksTT, TTindices, fPIDResponse, fPIDCombined, fMCEvent)) return ;
+    // ///////////////////////////////////////////////////////////////////////////////
+    
     //////////////////////////////////////////////////////////////////////////////////
     // ---------------------- Print the event stack ----------------------------------
     /* PrintStack(fMCEvent, kFALSE); */
