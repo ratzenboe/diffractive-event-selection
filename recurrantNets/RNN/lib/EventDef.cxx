@@ -240,7 +240,6 @@ Int_t EventDef::TreeLooper(Int_t mother, TString& decaystring) const
         decaystring += "child { node {$"; 
         for (Int_t it : fParticles[mother].DaughterVec) {
             Int_t pdg_daugther = fParticles[GetParticleIndexFromNumber(it)].Pdg;
-            printf("Daughter it: %i, pdg: %i\n", it, pdg_daugther);
             if (fParticleCodes.find(pdg_daugther) != fParticleCodes.end()) {
                 decaystring += fParticleCodes.at(fParticles[GetParticleIndexFromNumber(it)].Pdg);
             } else { 
