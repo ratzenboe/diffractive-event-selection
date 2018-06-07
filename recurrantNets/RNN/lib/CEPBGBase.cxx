@@ -162,7 +162,12 @@ void CEPBGBase::Initialize()
     fPIDCombined->SetEnablePriors(kTRUE);
     fPIDCombined->SetDefaultTPCPriors();
     // use TPC and TOF for PID:
-    UInt_t Maskin = AliPIDResponse::kDetTPC | AliPIDResponse::kDetTOF;
+      // ... TPC and TOF
+    UInt_t Maskin =
+        AliPIDResponse::kDetITS |
+        AliPIDResponse::kDetTPC |
+        AliPIDResponse::kDetTOF;
+
     fPIDCombined->SetDetectorMask(Maskin);
 
     // event storage
