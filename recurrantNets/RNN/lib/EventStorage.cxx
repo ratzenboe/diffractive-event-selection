@@ -82,7 +82,6 @@ void EventStorage::PrintNEvts(TString filename, Int_t nb) const
     Int_t countChilds(0);
     for (Int_t ii(0); ii<nb; ii++) {
         decayString = fEvents[ii].GetDecayStringLong(fnEvents);
-        printf("%i/%i events of:\n%s\n----------------------------------------\n", fEvents[ii].GetOccurance(), fnEvents, decayString.Data());
         os << decayString.Data() << "\n";
     }
     os << endTableStr.Data() << "\n";
