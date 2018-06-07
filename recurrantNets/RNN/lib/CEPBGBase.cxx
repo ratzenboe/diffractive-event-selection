@@ -439,7 +439,8 @@ Bool_t CEPBGBase::IsPionEvt(TObjArray* tracks,
                             Int_t nTracksTT, 
                             TArrayI* TTindices, 
                             AliPIDResponse* pidResponse,
-                            AliPIDCombined* pidCombined) const
+                            AliPIDCombined* pidCombined,
+                            AliMCEvent* MCevt) const
 {
     Bool_t isPionEvt = kTRUE;
     TParticle* part = 0x0;
@@ -448,15 +449,15 @@ Bool_t CEPBGBase::IsPionEvt(TObjArray* tracks,
     {
         Int_t trkIndex = TTindices->At(ii);
         AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
-        
+        // bayes pid
         stat = pidCombined->ComputeProbabilities(tmptrk, pidResponse, probs);
-        isPionEvt = isPionEvt & (probs[AliPID::kPion]>=0.9);
+        isPionEvt = isPionEvt && (probs[AliPID::kPion]>=0.9);
 
         // print option to check validity of result
-        /* part = GetPartByLabel(tmptrk->GetLabel(), fMCEvent); */
-        /* if (!part) continue; */
-        /* printf("Particle-PDG: %i", part->GetPdgCode()); */
-        /* printf("  pion-proba: %-6.3f\n", probs[AliPID::kPion]); */
+        /* if (MCevt){ */
+        /*     part = GetPartByLabel(tmptrk->GetLabel(), MCevt); */
+        /*     if (!part) continue; */
+        /* } */
     }
     return isPionEvt;
 }
