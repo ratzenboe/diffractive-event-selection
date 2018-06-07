@@ -204,6 +204,7 @@ void AliAnalysisTaskMCInfo::UserCreateOutputObjects()
                                         // the output to file so it needs to know what's 
                                         // in the output
 }
+
 //_____________________________________________________________________________
 void AliAnalysisTaskMCInfo::UserExec(Option_t *)
 {

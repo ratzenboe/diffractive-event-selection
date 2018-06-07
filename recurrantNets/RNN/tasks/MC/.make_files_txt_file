@@ -1,6 +1,6 @@
 #!/bin/bash
 
-array=(/media/hdd/Pythia8GridFiles/258017_*/AliESDs.root)
+array=(/media/hdd/Pythia8GridFiles/*/AliESDs.root)
 
 for dir in "${array[@]}"; do
     echo "$dir" >> files.txt
