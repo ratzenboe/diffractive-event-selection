@@ -28,7 +28,7 @@ void runMCAna (
   const char *gridmode          = "full",     // Set the run mode (can be "full", "test", "offline", "submit" or "terminate"). Full & Test work for proof
   const bool isMC               = kTRUE,      // kTRUE = looking at MC truth or reconstructed, 0 = looking at real data
   const bool enableBGrejection  = kTRUE,      // apply BG rejection in physics selection
-  const Long64_t nentries       = 1e4,          // for local and proof mode, ignored in grid mode. Set to 1234567890 for all events.
+  const Long64_t nentries       = 1e3,          // for local and proof mode, ignored in grid mode. Set to 1234567890 for all events.
   const Long64_t firstentry     = 0,          // for local and proof mode, ignored in grid mode
   const char *proofdataset      = "/alice/sim/LHC10c_000120821_p1", // path to dataset on proof cluster, for proof analysis
   const char *proofcluster      = "alice-caf.cern.ch",              // which proof cluster to use in proof mode
@@ -91,6 +91,8 @@ void runMCAna (
 
   // --------------------------------------------------------------------------
 	// Create the alien handler and attach it to the manager
+  printf("\nDEBUG: before CreateAlienHandler_devel()\n");
+	/* gROOT->LoadMacro("CreateAlienHandler_devel.C"); */
 	gROOT->LoadMacro("CreateAlienHandler_MC.C");
 	AliAnalysisGrid *plugin = CreateAlienHandler_MC
   (
@@ -109,6 +111,7 @@ void runMCAna (
   esdH->SetNeedField(kTRUE);
 	mgr->SetInputEventHandler(esdH);
 
+  printf("\nDEBUG: after inputhandler creation\n");
   // --------------------------------------------------------------------------
 	// Physics selection task
 	// in case of PYTHIA disable PhysicsSelection
@@ -124,6 +127,7 @@ void runMCAna (
 	AliPhysicsSelectionTask *physicsSelectionTask = AddTaskPhysicsSelection(isMC,enableBGrejection);
 	//AliPhysicsSelectionTask *physicsSelectionTask = AddTaskPhysicsSelection();
 	if(!physicsSelectionTask) { Printf("no physSelTask"); return; }
+  printf("\nDEBUG: after AddTaskPhysicsSelection\n");
 
   // create a custom trigger mask for the physics selection
   if (isLHC16 && withDGTriggerSel) {
@@ -140,6 +144,7 @@ void runMCAna (
     AliAnalysisTaskPIDResponse *pidResponseTask = AddTaskPIDResponse(isMC);
     if(!pidResponseTask) { Printf("no pidResponseTask"); return; }
 
+  printf("\nDEBUG: after AddTaskPIDResponse\n");
     // --------------------------------------------------------------------------
     // EMCal correction task
     // The default argument is an empty string, so we don't have to set it here.
@@ -189,9 +194,7 @@ void runMCAna (
     TTmask,TTpattern
   );
 
-  TChain* chain = new TChain("gAlice");
-  chain->Add("galice.root");
-
+  printf("\nDEBUG: before AddMCTask()\n");
   // hit file is EMCAL.Hits.root  
   TString hitfile("EMCAL.Hits.root");
   gROOT->LoadMacro("AliAnalysisTaskMCInfo.cxx++g");
@@ -215,7 +218,7 @@ void runMCAna (
 	mgr->PrintStatus();
 	Printf("Starting Analysis....");
 	
-  mgr->StartAnalysis(runtype,chain,nentries,firstentry);
+  mgr->StartAnalysis(runtype,nentries,firstentry);
 	// mgr->StartAnalysis(runtype);
   
 }
