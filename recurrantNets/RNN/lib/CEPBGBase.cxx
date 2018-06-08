@@ -442,6 +442,50 @@ Bool_t CEPBGBase::HasRightParticles(
                             AliPIDResponse* pidResponse,
                             AliPIDCombined* pidCombined,
                             AliMCEvent* MCevt,
+                            Int_t pdg) const
+{
+    if (MCevt && pdg!=0) {
+        TParticle* part = 0x0;
+        Int_t n_pdg_minus(0);
+        Int_t n_pdg_plus(0);
+        Int_t n_pdg_else(0);
+        for (Int_t ii=0; ii<nTracksTT; ii++) 
+        {
+            Int_t trkIndex = TTindices->At(ii);
+            AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
+            part = GetPartByLabel(tmptrk->GetLabel(), MCevt);
+            if (!part) return kFALSE;
+            // check if the pdg is contained in the vector
+            if (part->GetPdgCode()==-(abs(pdg)))   n_pdg_minus++;
+            else if (part->GetPdgCode()==abs(pdg)) n_pdg_plus++;
+            else n_pdg_else++;
+        }
+        if (n_pdg_plus>0 && n_pdg_minus>0 && n_pdg_else==0) kTRUE;
+        else return kFALSE;
+    }
+    // if no MC object was passed we rely on bayes-probability
+    Bool_t isPionEvt = kTRUE;
+    TParticle* part = 0x0;
+    Double_t stat, probs[AliPID::kSPECIES];
+    for (Int_t ii=0; ii<nTracksTT; ii++) 
+    {
+        Int_t trkIndex = TTindices->At(ii);
+        AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
+        // bayes pid
+        stat = pidCombined->ComputeProbabilities(tmptrk, pidResponse, probs);
+        isPionEvt = isPionEvt && (probs[AliPID::kPion]>=0.9);
+    }
+    return isPionEvt;
+}
+
+//_____________________________________________________________________________
+Bool_t CEPBGBase::HasRightParticles(
+                            TObjArray* tracks, 
+                            Int_t nTracksTT, 
+                            TArrayI* TTindices, 
+                            AliPIDResponse* pidResponse,
+                            AliPIDCombined* pidCombined,
+                            AliMCEvent* MCevt,
                             std::vector<Int_t> event_pdgs) const
 {
     if (MCevt && !event_pdgs.empty()) {
