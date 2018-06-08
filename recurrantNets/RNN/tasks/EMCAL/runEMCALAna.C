@@ -23,7 +23,7 @@
 class AliAnalysisGrid;
 
 //______________________________________________________________________________
-void runMCAna (
+void runEMCALAna (
   const char* runtype           = "local",     // local, proof or grid
   const char *gridmode          = "full",     // Set the run mode (can be "full", "test", "offline", "submit" or "terminate"). Full & Test work for proof
   const bool isMC               = kTRUE,      // kTRUE = looking at MC truth or reconstructed, 0 = looking at real data
@@ -104,7 +104,7 @@ void runMCAna (
 
   // --------------------------------------------------------------------------
 	// Analysis manager
-	AliAnalysisManager* mgr = new AliAnalysisManager("MC-Manager");
+	AliAnalysisManager* mgr = new AliAnalysisManager("EMCAL-Manager");
 	mgr->SetGridHandler(plugin);
 
 	AliESDInputHandler* esdH = new AliESDInputHandler();
@@ -148,13 +148,13 @@ void runMCAna (
     // --------------------------------------------------------------------------
     // EMCal correction task
     // The default argument is an empty string, so we don't have to set it here.
-    /* if (withEMCalCorrection) { */
-    /*     gROOT->LoadMacro("$ALICE_PHYSICS/PWG/EMCAL/macros/AddTaskEmcalCorrectionTask.C"); */
-    /*     AliEmcalCorrectionTask * correctionTask = AddTaskEmcalCorrectionTask(); */
-    /*     if(!correctionTask) { Printf("no EmcalCorrectionTask"); return; } */
-    /*     correctionTask->SetUserConfigurationFilename("AliEmcalCorrectionConfiguration_CEP.yaml"); */
-    /*     correctionTask->Initialize(); */
-    /* } */
+    if (withEMCalCorrection) {
+        gROOT->LoadMacro("$ALICE_PHYSICS/PWG/EMCAL/macros/AddTaskEmcalCorrectionTask.C");
+        AliEmcalCorrectionTask * correctionTask = AddTaskEmcalCorrectionTask();
+        if(!correctionTask) { Printf("no EmcalCorrectionTask"); return; }
+        correctionTask->SetUserConfigurationFilename("AliEmcalCorrectionConfiguration_CEP.yaml");
+        correctionTask->Initialize();
+    }
  
   // --------------------------------------------------------------------------
   // add the analysis task
@@ -194,12 +194,12 @@ void runMCAna (
     TTmask,TTpattern
   );
 
-  printf("\nDEBUG: before AddMCTask()\n");
+  printf("\nDEBUG: before AddEMCALTask()\n");
   // hit file is EMCAL.Hits.root  
   TString hitfile("EMCAL.Hits.root");
-  gROOT->LoadMacro("AliAnalysisTaskMCInfo.cxx++g");
-  gROOT->LoadMacro("AddMCTask.C");
-  AliAnalysisTaskSE* task = AddMCTask (tn2u,taskconfig, TTmask,TTpattern,hitfile);
+  gROOT->LoadMacro("AliAnalysisTaskEMCAL.cxx++g");
+  gROOT->LoadMacro("AddEMCALTask.C");
+  AliAnalysisTaskSE* task = AddEMCALTask (tn2u,taskconfig, TTmask,TTpattern,hitfile);
   
   // activate physics selection
   if (withPhysSel) {

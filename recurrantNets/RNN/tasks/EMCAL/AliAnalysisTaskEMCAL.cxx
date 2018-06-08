@@ -238,7 +238,10 @@ void AliAnalysisTaskEMCAL::UserExec(Option_t *)
     TArrayI *TTindices  = new TArrayI();
     Bool_t isGoodEvt = lhc16filter(fESD,nTracksAccept,fTTmask,fTTpattern,nTracksTT,TTindices); 
     if (!isGoodEvt) return ;
-    if (!IsPionEvt(fTracks, nTracksTT, TTindices, fPIDResponse, fPIDCombined, fMCEvent)) return ;
+    std::vector<Int_t> good_evt_particles = {211, -211};
+    if (!HasRightParticles(fTracks, nTracksTT, TTindices, 
+                           fPIDResponse, fPIDCombined, 
+                           fMCEvent, good_evt_particles)) return ;
     // ///////////////////////////////////////////////////////////////////////////////
     
     //////////////////////////////////////////////////////////////////////////////////

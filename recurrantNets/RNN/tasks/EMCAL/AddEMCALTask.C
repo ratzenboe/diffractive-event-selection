@@ -1,14 +1,14 @@
 
 #if !defined (__CINT__) || defined (__CLING__)
 #include "AliAnalysisManager.h"
-#include "AliAnalysisTaskMCInfo.h"
+#include "AliAnalysisTaskEMCAL.h"
 #include <TString.h>
 #include <TList.h>
 #endif
 
 
 
-AliAnalysisTaskSE* AddMCTask(TString name = "name", Long_t state, UInt_t TTmask, UInt_t TTpattern,
+AliAnalysisTaskSE* AddEMCALTask(TString name = "name", Long_t state, UInt_t TTmask, UInt_t TTpattern,
         TString hitfile)
 {
     // get the manager via the static access member. since it's static, there is no need
@@ -32,7 +32,7 @@ AliAnalysisTaskSE* AddMCTask(TString name = "name", Long_t state, UInt_t TTmask,
     TString fileName = AliAnalysisManager::GetCommonFileName();
     fileName += ":MCTask";      // create a subfolder in the file
     // now we create an instance of the MC task
-    AliAnalysisTaskMCInfo* task = new AliAnalysisTaskMCInfo(
+    AliAnalysisTaskEMCAL* task = new AliAnalysisTaskEMCAL(
             name.Data(),state,TTmask,TTpattern,hitfile);   
     if(!task) return 0x0;
     task->SelectCollisionCandidates(AliVEvent::kAnyINT);
@@ -41,7 +41,7 @@ AliAnalysisTaskSE* AddMCTask(TString name = "name", Long_t state, UInt_t TTmask,
     // your task needs input: here we connect the manager to your task
     mgr->ConnectInput(task,0,mgr->GetCommonInputContainer());
     // same for the output
-    mgr->ConnectOutput(task,1,mgr->CreateContainer("MCOutputContainer", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
+    mgr->ConnectOutput(task,1,mgr->CreateContainer("EMCALOutputContainer", TList::Class(), AliAnalysisManager::kOutputContainer, fileName.Data()));
     // in the end, this macro returns a pointer to your task. this will be convenient later on
     // when you will run your analysis in an analysis train on grid
     return task;

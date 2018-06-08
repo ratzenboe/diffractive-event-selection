@@ -1,7 +1,0 @@
-#!/bin/bash
-
-array=(/media/hdd/Pythia8GridFiles/*/AliESDs.root)
-
-for dir in "${array[@]}"; do
-    echo "$dir" >> files.txt
-done

@@ -2,8 +2,8 @@
 /* See cxx source for full Copyright notice */
 /* $Id$ */
 
-#ifndef AliAnalysisTaskMCInfo_H
-#define AliAnalysisTaskMCInfo_H
+#ifndef AliAnalysisTaskEMCAL_H
+#define AliAnalysisTaskEMCAL_H
 
 #include "TBits.h"
 #include "TFile.h"
@@ -86,7 +86,7 @@ class AliAnalysisTaskEMCAL : public AliAnalysisTaskSE, public CEPBGBase
 
         void                    EMCalHits(Bool_t isSignal);
 
-        ClassDef(AliAnalysisTaskMCInfo, 1);
+        ClassDef(AliAnalysisTaskEMCAL, 1);
 };
 
 #endif
