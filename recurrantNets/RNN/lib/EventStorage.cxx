@@ -72,17 +72,44 @@ void EventStorage::PrintNEvts(TString filename, Int_t nb) const
     std::ostream os(&fb);
 
     TString beginTableStr = "\\begin{center}\\setlength{\\tabcolsep}{9mm}\\def";
-    beginTableStr += "\\arraystretch{1.25}\\centering\\begin{longtable}{l | c} "; 
-    beginTableStr += "Decay & Occurance[\\%] \\\\ \\hline \\hline";
+    beginTableStr += "\\arraystretch{1.25}\\centering\\begin{longtable}{l | c | c | c | c} "; 
+    beginTableStr += "Decay & Occurance[\\%] & Cumulative [\\%] & EMCal cumul. [\\%] & >2\\pi [\\%] \\\\ \\hline \\hline";
     TString endTableStr = "\\end{longtable}\\end{center}";
  
     TString decayString;
+    TString numberString;
+    TString cumulativeStr;
+    TString emcal_cumul_str;
+    TString gt_two_pion_cumul_str;
+    Int_t total_evts = 0;
+    Int_t emcal_cumul_int = 0;
+    Int_t gt_two_pion_int = 0;
+
     nb = (abs(nb)>=fEvents.size() || nb==-1) ? fEvents.size() : abs(nb);
     os << beginTableStr.Data() << "\n";
-    Int_t countChilds(0);
     for (Int_t ii(0); ii<nb; ii++) {
-        decayString = fEvents[ii].GetDecayStringLong(fnEvents);
-        os << decayString.Data() << "\n";
+        decayString = fEvents[ii].GetDecayStringLong();
+        
+        numberString.Form("%.2f", Double_t(fEvents[ii].GetOccurance())/Double_t(fnEvents)*100.);
+        total_evts += fEvents[ii].GetOccurance();
+        cumulativeStr.Form("%.2f", Double_t(total_evts)/Double_t(fnEvents)*100.);
+        // bg classification
+        if (fEvents[ii].IsEMCALCase()) { 
+            os << "\\rowcolor{LightRed}"; 
+            emcal_cumul_int += fEvents[ii].GetOccurance(); 
+        }
+        else if (fEvents[ii].IsThreePlusCase()) {
+            os << "\\rowcolor{LightCyan}";
+            gt_two_pion_int += fEvents[ii].GetOccurance(); 
+        }
+        emcal_cumul_str.Form("%.2f", Double_t(emcal_cumul_int)/Double_t(fnEvents)*100.);
+        gt_two_pion_cumul_str.Form("%.2f", Double_t(gt_two_pion_int)/Double_t(fnEvents)*100.);
+        // outstream
+        os << decayString.Data(); 
+        os << " & " << numberString.Data() << " & " << cumulativeStr.Data();
+        os << " & " << emcal_cumul_str.Data() << " & " << gt_two_pion_cumul_str.Data(); 
+        os << "\\\\ \\hline";
+        os << "\n";
     }
     os << endTableStr.Data() << "\n";
 
