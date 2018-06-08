@@ -77,11 +77,13 @@ class CEPBGBase
         // part of the lhc16filter
         Bool_t                  IsSTGFired(TBits* fFOmap,Int_t dphiMin=0,Int_t dphiMax=10) const;
         // Selection of pions
-        Bool_t                  IsPionEvt(TObjArray* tracks, Int_t nTracksTT, 
+        Bool_t                  HasRightParticles(
+                                          TObjArray* tracks, Int_t nTracksTT, 
                                           TArrayI* TTindices, 
                                           AliPIDResponse* pidResponse, 
                                           AliPIDCombined* pidCombined,
-                                          AliMCEvent* MCevt=0x0) const;
+                                          AliMCEvent* MCevt=0x0,
+                                          std::vector<Int_t> event_pdgs={}) const;
 
         // event characterization functions
         // check if event is fully reconstructed
