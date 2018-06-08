@@ -85,6 +85,14 @@ class CEPBGBase
                                           AliMCEvent* MCevt=0x0,
                                           std::vector<Int_t> event_pdgs={}) const;
 
+        Bool_t                  HasRightParticles(
+                                          TObjArray* tracks, Int_t nTracksTT, 
+                                          TArrayI* TTindices, 
+                                          AliPIDResponse* pidResponse, 
+                                          AliPIDCombined* pidCombined,
+                                          AliMCEvent* MCevt=0x0,
+                                          Int_t pdg=0) const;
+
         // event characterization functions
         // check if event is fully reconstructed
         Bool_t                  EvtFullRecon(TObjArray* tracks, Int_t nTracksTT, 
