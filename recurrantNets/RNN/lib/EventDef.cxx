@@ -190,11 +190,9 @@ TString EventDef::GetDecayStringShort() const
 }
 
 //______________________________________________________________________________
-TString EventDef::GetDecayStringLong(Int_t nEvts) const
+TString EventDef::GetDecayStringLong() const
 {
     TString decayString("");
-    TString numberString;
-    numberString.Form("%.2f", Double_t(fDecayOccurance)/Double_t(nEvts)*100.);
 
     Int_t particle_pdg;
     TString number;
@@ -202,8 +200,8 @@ TString EventDef::GetDecayStringLong(Int_t nEvts) const
     decayString += "\\centering";
     TreeLooper(1, decayString); 
     decayString += ";";
-    decayString += "\\addvmargin{1mm}\\end{tikzpicture}  & " + numberString;
-    decayString += "\\\\ \\hline";
+    decayString += "\\addvmargin{1mm}\\end{tikzpicture}"; //  & " + numberString;
+    /* decayString += "\\\\ \\hline"; */
     return decayString;
 }
 
@@ -295,6 +293,36 @@ Int_t EventDef::OrderDaugthers(Int_t mother)
         OrderDaugthers(it);
     }
     return -1;
+}
+
+//______________________________________________________________________________
+Bool_t EventDef::IsEMCALCase() const
+{
+    Int_t nPions(0), nGammas(0), nElse(0);
+    for (Particle part : fParticles)
+    {
+        if (!part.isFinal) continue;
+        // check finals
+        if (part.Pdg==22) nGammas++;
+        else if (abs(part.Pdg)==211) nPions++;
+        else nElse++;
+    }
+    if (nElse==0 && nGammas>0 && nPions==2) return kTRUE;
+    else return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t EventDef::IsThreePlusCase() const
+{
+    Int_t nPions(0);
+    for (Particle part : fParticles)
+    {
+        if (!part.isFinal) continue;
+        // check finals
+        else if (abs(part.Pdg)==211) nPions++;
+    }
+    if (nPions>2) return kTRUE;
+    else return kFALSE;
 }
 
 //______________________________________________________________________________
