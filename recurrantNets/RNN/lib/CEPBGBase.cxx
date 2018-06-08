@@ -451,6 +451,7 @@ Bool_t CEPBGBase::HasRightParticles(
             Int_t trkIndex = TTindices->At(ii);
             AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
             part = GetPartByLabel(tmptrk->GetLabel(), MCevt);
+            if (!part) return kFALSE;
             // check if the pdg is contained in the vector
             std::vector<Int_t>::iterator it;
             it = std::find(event_pdgs.begin(), event_pdgs.end(), part->GetPdgCode());
