@@ -229,6 +229,7 @@ std::vector<Double_t> CEPBGBase::GetMassPermute(TObjArray* tracks, Int_t nTracks
                                                 TArrayI* TTindices, AliMCEvent* MCevt) const
 {
     TParticle *part_1(0x0), *part_2(0x0);
+    Int_t pdg_1, pdg_2;
     Double_t charge_1, charge_2;
     TLorentzVector v_lor_1, v_lor_2;
     // output vector
@@ -244,6 +245,7 @@ std::vector<Double_t> CEPBGBase::GetMassPermute(TObjArray* tracks, Int_t nTracks
         Int_t MCind = tmptrk->GetLabel();
         part_1 = GetPartByLabel(MCind, MCevt);
         if (!part_1) continue;
+        pdg_1 = part_1->GetPdgCode();
         // set lorentz vector 1
         part_1->Momentum(v_lor_1);
         charge_1 = TDatabasePDG::Instance()->GetParticle(part_1->GetPdgCode())->Charge();
@@ -258,6 +260,8 @@ std::vector<Double_t> CEPBGBase::GetMassPermute(TObjArray* tracks, Int_t nTracks
             if (!part_2) continue;
             charge_2 = TDatabasePDG::Instance()->GetParticle(part_2->GetPdgCode())->Charge();
             if (charge_2 == charge_1) continue;
+            pdg_2 = part_2->GetPdgCode();
+            if (abs(pdg_1) != abs(pdg_2)) continue; 
             // set lorentz vector 2
             part_2->Momentum(v_lor_2);
             mass_vec.push_back((v_lor_1+v_lor_2).M());
@@ -460,8 +464,13 @@ Bool_t CEPBGBase::HasRightParticles(
             else if (part->GetPdgCode()==abs(pdg)) n_pdg_plus++;
             else n_pdg_else++;
         }
-        if (n_pdg_plus>0 && n_pdg_minus>0 && n_pdg_else==0) kTRUE;
-        else return kFALSE;
+
+        if (nTracksTT>2){
+            if (n_pdg_plus>0 && n_pdg_minus>0 && n_pdg_minus+n_pdg_plus>2) kTRUE;
+            else return kFALSE;
+        } else if (nTracksTT==2) { 
+            if (n_pdg_plus==1 && n_pdg_minus==1 && n_pdg_else==0) return kTRUE;
+        } else return kFALSE;
     }
     // if no MC object was passed we rely on bayes-probability
     Bool_t isPionEvt = kTRUE;
