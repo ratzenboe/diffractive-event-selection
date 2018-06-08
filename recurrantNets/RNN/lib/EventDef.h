@@ -57,9 +57,13 @@ class EventDef
     Int_t                           GetTrackOccurance(UInt_t i) const;
 
     TString                         GetDecayStringShort() const;
-    TString                         GetDecayStringLong(Int_t nEvts=1) const;
+    TString                         GetDecayStringLong() const;
 
     void                            PrintEvent(TString filename="decaymodes.tex") const;
+
+    // check the final states
+    Bool_t                          IsEMCALCase() const;
+    Bool_t                          IsThreePlusCase() const;
     
     // Comparison operator (check if two events are the same)
     Bool_t                          operator == (const EventDef& other) const;
@@ -89,6 +93,8 @@ class EventDef
 
     // check if the particle is directely from the X particle
     Bool_t                          IsFromX(Int_t number) const;
+
+
 
     ClassDef(EventDef, 1)
 };
