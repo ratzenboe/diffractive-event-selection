@@ -462,7 +462,7 @@ Bool_t CEPBGBase::HasRightParticles(
         // not all particles in vector are found in the event
         else return kFALSE;
     }
-    
+    // if no MC object was passed we rely on bayes-probability
     Bool_t isPionEvt = kTRUE;
     TParticle* part = 0x0;
     Double_t stat, probs[AliPID::kSPECIES];
