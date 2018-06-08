@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# array=(/media/hdd/Pythia8GridFiles/258017_*/AliESDs.root)
+# array=(~/remote_data1/pbuehler/alice/Pythia8CEP_new/{257986,258008,258053,258003,257979,258049,258014,257989,258059,257963,258019,257986}_*/AliESDs.root)
+# array=(~/remote_data1/pbuehler/alice/Pythia8CEP/*/AliESDs.root)
+# the files in the EMCalHit/MBR/ folder do overlap with the Pythia8CEP_new folder-> do not use them!!
+# array=(~/remote_data1/pbuehler/alice/Pythia8CEP_EMCalHits/MBR/{257963, }/*/AliESDs.root)
+
+for dir in "${array[@]}"; do
+    echo "$dir" >> files.txt
+done

@@ -1,5 +1,5 @@
 //______________________________________________________________________________
-AliAnalysisGrid* CreateAlienHandler_BG3plus(
+AliAnalysisGrid* CreateAlienHandler_MC(
   const char *taskname,
   const char *gridmode,
   const char *proofcluster,

@@ -23,12 +23,12 @@
 class AliAnalysisGrid;
 
 //______________________________________________________________________________
-void runBG3plusAna (
+void runBGAna (
   const char* runtype           = "local",     // local, proof or grid
   const char *gridmode          = "full",     // Set the run mode (can be "full", "test", "offline", "submit" or "terminate"). Full & Test work for proof
   const bool isMC               = kTRUE,      // kTRUE = looking at MC truth or reconstructed, 0 = looking at real data
   const bool enableBGrejection  = kTRUE,      // apply BG rejection in physics selection
-  const Long64_t nentries       = 1e4,          // for local and proof mode, ignored in grid mode. Set to 1234567890 for all events.
+  const Long64_t nentries       = 1e9,          // for local and proof mode, ignored in grid mode. Set to 1234567890 for all events.
   const Long64_t firstentry     = 0,          // for local and proof mode, ignored in grid mode
   const char *proofdataset      = "/alice/sim/LHC10c_000120821_p1", // path to dataset on proof cluster, for proof analysis
   const char *proofcluster      = "alice-caf.cern.ch",              // which proof cluster to use in proof mode
@@ -91,8 +91,8 @@ void runBG3plusAna (
 
   // --------------------------------------------------------------------------
 	// Create the alien handler and attach it to the manager
-	gROOT->LoadMacro("CreateAlienHandler_BG3plus.C");
-	AliAnalysisGrid *plugin = CreateAlienHandler_BG3plus
+	gROOT->LoadMacro("CreateAlienHandler_MC.C");
+	AliAnalysisGrid *plugin = CreateAlienHandler_MC
   (
     tn2u.Data(), gridmode, proofcluster, proofdataset,
     gp2u.Data(), griddatapattern, option, isMC
@@ -102,7 +102,7 @@ void runBG3plusAna (
 
   // --------------------------------------------------------------------------
 	// Analysis manager
-	AliAnalysisManager* mgr = new AliAnalysisManager("MC-Manager");
+	AliAnalysisManager* mgr = new AliAnalysisManager("BG-Manager");
 	mgr->SetGridHandler(plugin);
 
 	AliESDInputHandler* esdH = new AliESDInputHandler();
@@ -143,13 +143,13 @@ void runBG3plusAna (
     // --------------------------------------------------------------------------
     // EMCal correction task
     // The default argument is an empty string, so we don't have to set it here.
-    /* if (withEMCalCorrection) { */
-    /*     gROOT->LoadMacro("$ALICE_PHYSICS/PWG/EMCAL/macros/AddTaskEmcalCorrectionTask.C"); */
-    /*     AliEmcalCorrectionTask * correctionTask = AddTaskEmcalCorrectionTask(); */
-    /*     if(!correctionTask) { Printf("no EmcalCorrectionTask"); return; } */
-    /*     correctionTask->SetUserConfigurationFilename("AliEmcalCorrectionConfiguration_CEP.yaml"); */
-    /*     correctionTask->Initialize(); */
-    /* } */
+    if (withEMCalCorrection) {
+        gROOT->LoadMacro("$ALICE_PHYSICS/PWG/EMCAL/macros/AddTaskEmcalCorrectionTask.C");
+        AliEmcalCorrectionTask * correctionTask = AddTaskEmcalCorrectionTask();
+        if(!correctionTask) { Printf("no EmcalCorrectionTask"); return; }
+        correctionTask->SetUserConfigurationFilename("AliEmcalCorrectionConfiguration_CEP.yaml");
+        correctionTask->Initialize();
+    }
  
   // --------------------------------------------------------------------------
   // add the analysis task
@@ -189,14 +189,11 @@ void runBG3plusAna (
     TTmask,TTpattern
   );
 
-  TChain* chain = new TChain("gAlice");
-  chain->Add("galice.root");
-
   // hit file is EMCAL.Hits.root  
   TString hitfile("EMCAL.Hits.root");
-  gROOT->LoadMacro("AliAnalysisTaskBG3plus.cxx++g");
-  gROOT->LoadMacro("AddBG3plusTask.C");
-  AliAnalysisTaskSE* task = AddBG3plusTask (tn2u,taskconfig, TTmask,TTpattern,hitfile);
+  gROOT->LoadMacro("AliAnalysisTaskBG.cxx++g");
+  gROOT->LoadMacro("AddBGTask.C");
+  AliAnalysisTaskSE* task = AddBGTask (tn2u,taskconfig, TTmask,TTpattern,hitfile);
   
   // activate physics selection
   if (withPhysSel) {
@@ -215,7 +212,7 @@ void runBG3plusAna (
 	mgr->PrintStatus();
 	Printf("Starting Analysis....");
 	
-  mgr->StartAnalysis(runtype,chain,nentries,firstentry);
+  mgr->StartAnalysis(runtype,nentries,firstentry);
 	// mgr->StartAnalysis(runtype);
   
 }

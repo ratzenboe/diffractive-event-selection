@@ -71,9 +71,9 @@ void EventStorage::PrintNEvts(TString filename, Int_t nb) const
     fb.open(filename.Data(), std::ios::out);
     std::ostream os(&fb);
 
-    TString beginTableStr = "\\begin{center}\\setlength{\\tabcolsep}{9mm}\\def";
+    TString beginTableStr = "\\begin{center}\\setlength{\\tabcolsep}{3mm}\\def";
     beginTableStr += "\\arraystretch{1.25}\\centering\\begin{longtable}{l | c | c | c | c} "; 
-    beginTableStr += "Decay & Occurance[\\%] & Cumulative [\\%] & EMCal cumul. [\\%] & >2\\pi [\\%] \\\\ \\hline \\hline";
+    beginTableStr += "Decay & Occurance[\\%] & Cumulative [\\%] & EMCal cumul. [\\%] & $>2\\pi$ [\\%] \\\\ \\hline \\hline";
     TString endTableStr = "\\end{longtable}\\end{center}";
  
     TString decayString;
@@ -110,10 +110,11 @@ void EventStorage::PrintNEvts(TString filename, Int_t nb) const
         os << " & " << emcal_cumul_str.Data() << " & " << gt_two_pion_cumul_str.Data(); 
         os << "\\\\ \\hline";
         os << "\n";
+        // we want to limit ourselves to describing 95% of the events to not deal with huge files
+        if (Double_t(total_evts)/Double_t(fnEvents)*100. > 95.) break;
     }
     os << endTableStr.Data() << "\n";
 
     fb.close();
 }
 
-//______________________________________________________________________________

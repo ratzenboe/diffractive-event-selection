@@ -38,18 +38,18 @@
 
 #include "AliCEPBase.h"
 /* #include "AliCEPUtils.h" */
-#include "AliAnalysisTaskMCInfo.h"
+#include "AliAnalysisTaskEMCAL.h"
 
 #include <string>         // std::string
 #include <cstddef>         // std::size_t
 
-class AliAnalysisTaskMCInfo;    // your analysis class
+class AliAnalysisTaskEMCAL;    // your analysis class
 
 using namespace std;            // std namespace: so you can do things like 'cout'
 
-ClassImp(AliAnalysisTaskMCInfo) // classimp: necessary for root
+ClassImp(AliAnalysisTaskEMCAL) // classimp: necessary for root
 
-AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo() 
+AliAnalysisTaskEMCAL::AliAnalysisTaskEMCAL() 
   : AliAnalysisTaskSE()
   , CEPBGBase(AliCEPBase::kBitConfigurationSet,
               AliCEPBase::kTTBaseLine,
@@ -77,7 +77,7 @@ AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo()
 }
 
 //_____________________________________________________________________________
-AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo(const char* name,
+AliAnalysisTaskEMCAL::AliAnalysisTaskEMCAL(const char* name,
   Long_t state,
   UInt_t TTmask, 
   UInt_t TTpattern,
@@ -116,7 +116,7 @@ AliAnalysisTaskMCInfo::AliAnalysisTaskMCInfo(const char* name,
 }
 
 //_____________________________________________________________________________
-AliAnalysisTaskMCInfo::~AliAnalysisTaskMCInfo()
+AliAnalysisTaskEMCAL::~AliAnalysisTaskEMCAL()
 {
     // destructor
     if(fOutList) {
@@ -140,7 +140,7 @@ AliAnalysisTaskMCInfo::~AliAnalysisTaskMCInfo()
 }
 
 //_____________________________________________________________________________
-void AliAnalysisTaskMCInfo::UserCreateOutputObjects()
+void AliAnalysisTaskEMCAL::UserCreateOutputObjects()
 {
     // create output objects
     //
@@ -206,7 +206,7 @@ void AliAnalysisTaskMCInfo::UserCreateOutputObjects()
 }
 
 //_____________________________________________________________________________
-void AliAnalysisTaskMCInfo::UserExec(Option_t *)
+void AliAnalysisTaskEMCAL::UserExec(Option_t *)
 {
     // user exec
     // this function is called once for each event
@@ -249,16 +249,14 @@ void AliAnalysisTaskMCInfo::UserExec(Option_t *)
     /* printf("----------------------------- evt end ---------------------------------\n\n"); */
     //////////////////////////////////////////////////////////////////////////////////
     
+    Bool_t isSignal = EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent);  
     //////////////////////////////////////////////////////////////////////////////////
     // ----------------------- EMCAL Hits --------------------------------------------
     // the directory may have changed we therefore update the neccessary global vars
-    if (UpdateGlobalVars(CurrentFileName(), Entry())) PrintEMCALHits();
+    if (UpdateGlobalVars(CurrentFileName(), Entry())) EMCalHits(isSignal);
     //////////////////////////////////////////////////////////////////////////////////
 
-    NewEvent(fMCEvent);
-
-    EMCalAnalysis(EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent), 
-                  fMCEvent, fTracks, nTracksTT, TTindices);
+    EMCalAnalysis(isSignal, fMCEvent, fTracks, nTracksTT, TTindices);
 
     /* printf("\n\n\n\n----------------------------------------------------\n\n"); */
     PostData(1, fOutList);          // stream the results the analysis of this event to
@@ -266,7 +264,7 @@ void AliAnalysisTaskMCInfo::UserExec(Option_t *)
                                     // it to a file
 }
 //_____________________________________________________________________________
-void AliAnalysisTaskMCInfo::Terminate(Option_t *)
+void AliAnalysisTaskEMCAL::Terminate(Option_t *)
 {
     // terminate
     // called at the END of the analysis (when all events are processed)
@@ -274,7 +272,7 @@ void AliAnalysisTaskMCInfo::Terminate(Option_t *)
 }
 
 //_____________________________________________________________________________
-void AliAnalysisTaskMCInfo::EMCalAnalysis(Bool_t isSignal, AliMCEvent* MCevt, TObjArray* tracks,
+void AliAnalysisTaskEMCAL::EMCalAnalysis(Bool_t isSignal, AliMCEvent* MCevt, TObjArray* tracks,
                                           Int_t nTracksTT, TArrayI *TTindices)
 {
     Int_t nEMCClus(0), nEMCClus_matched(0), partpdg(0);
@@ -331,7 +329,30 @@ void AliAnalysisTaskMCInfo::EMCalAnalysis(Bool_t isSignal, AliMCEvent* MCevt, TO
             if (pdg==22) fGammaE->Fill(part->Energy()); 
         }
     }
+    return ; 
+}
 
+void AliAnalysisTaskEMCAL::EMCalHits(Bool_t isSignal)
+{
+    // a single particle may produce many hits in the emcal -> record particles 
+    // and if we see a duplicate we ignore it
+    std::vector<Int_t> parent_v;
+    for (Int_t iHit(0); iHit<fHitBranch->GetEntries(); iHit++){
+        fHitBranch->GetEntry(iHit);    
+        TIter next(fHitsArray);
+        AliEMCALHit* hit;
+        while( (hit=dynamic_cast<AliEMCALHit*>(next())) )
+        {
+            // if the parent particle has already been counted we continue
+            if(std::find(parent_v.begin(), parent_v.end(), hit->GetIparent()) 
+                    != parent_v.end()) continue;
 
+            parent_v.push_back(hit->GetIparent());
+
+            if (isSignal) fEMCalSecondaryE_SIG->Fill(hit->GetIenergy());
+            else fEMCalSecondaryE_BG->Fill(hit->GetIenergy());
+        }
+    }
+    fHitsArray->Clear();
 }
 

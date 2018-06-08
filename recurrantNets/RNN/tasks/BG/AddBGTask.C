@@ -1,14 +1,14 @@
 
 #if !defined (__CINT__) || defined (__CLING__)
 #include "AliAnalysisManager.h"
-#include "AliAnalysisTaskBG3plus.h"
+#include "AliAnalysisTaskBG.h"
 #include <TString.h>
 #include <TList.h>
 #endif
 
 
 
-AliAnalysisTaskSE* AddBG3plusTask(
+AliAnalysisTaskSE* AddBGTask(
         TString name = "name", 
         Long_t state, 
         UInt_t TTmask, 
@@ -36,7 +36,7 @@ AliAnalysisTaskSE* AddBG3plusTask(
     TString fileName = AliAnalysisManager::GetCommonFileName();
     fileName += ":BGTask";      // create a subfolder in the file
     // now we create an instance of the MC task
-    AliAnalysisTaskBG3plus* task = new AliAnalysisTaskBG3plus(
+    AliAnalysisTaskBG* task = new AliAnalysisTaskBG(
             name.Data(),state,TTmask,TTpattern,hitfile);   
     if(!task) return 0x0;
     task->SelectCollisionCandidates(AliVEvent::kAnyINT);

@@ -31,16 +31,16 @@
 
 #include "AliAnalysisTaskSE.h"
 
-class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE, public CEPBGBase
+class AliAnalysisTaskEMCAL : public AliAnalysisTaskSE, public CEPBGBase
 {
     public:
-                                AliAnalysisTaskMCInfo();
-                                AliAnalysisTaskMCInfo(const char *name,
+                                AliAnalysisTaskEMCAL();
+                                AliAnalysisTaskEMCAL(const char *name,
                                                       Long_t state,
                                                       UInt_t TTmask,
                                                       UInt_t TTpattern,
                                                       TString hitFileName);
-        virtual                 ~AliAnalysisTaskMCInfo();
+        virtual                 ~AliAnalysisTaskEMCAL();
 
         // these functions also exist in AliAnalysisTaskSE (SE=single event)
         // as we want to change the functions a litte, but dont want to change the 
@@ -77,13 +77,14 @@ class AliAnalysisTaskMCInfo : public AliAnalysisTaskSE, public CEPBGBase
         TH1F*                   fEMCal_dphiEta_gamma; //! phi-eta distance of cluster hit to track
         
         // not implemented but neccessary
-        AliAnalysisTaskMCInfo(const AliAnalysisTaskMCInfo&); 
-        AliAnalysisTaskMCInfo& operator=(const AliAnalysisTaskMCInfo&); 
+        AliAnalysisTaskEMCAL(const AliAnalysisTaskEMCAL&); 
+        AliAnalysisTaskEMCAL& operator=(const AliAnalysisTaskEMCAL&); 
 
         // filling the histograms
         void                    EMCalAnalysis(Bool_t isSignal, AliMCEvent* MCevt, 
                                         TObjArray* tracks, Int_t nTracksTT, TArrayI* TTindices);
 
+        void                    EMCalHits(Bool_t isSignal);
 
         ClassDef(AliAnalysisTaskMCInfo, 1);
 };
