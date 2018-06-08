@@ -435,13 +435,34 @@ Bool_t CEPBGBase::UpdateGlobalVars(const char* currentFileName, Int_t entry)
 }
 
 //_____________________________________________________________________________
-Bool_t CEPBGBase::IsPionEvt(TObjArray* tracks, 
+Bool_t CEPBGBase::HasRightParticles(
+                            TObjArray* tracks, 
                             Int_t nTracksTT, 
                             TArrayI* TTindices, 
                             AliPIDResponse* pidResponse,
                             AliPIDCombined* pidCombined,
-                            AliMCEvent* MCevt) const
+                            AliMCEvent* MCevt,
+                            std::vector<Int_t> event_pdgs) const
 {
+    if (MCevt && !event_pdgs.empty()) {
+        TParticle* part = 0x0;
+        for (Int_t ii=0; ii<nTracksTT; ii++) 
+        {
+            Int_t trkIndex = TTindices->At(ii);
+            AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
+            part = GetPartByLabel(tmptrk->GetLabel(), MCevt);
+            // check if the pdg is contained in the vector
+            std::vector<Int_t>::iterator it;
+            it = std::find(event_pdgs.begin(), event_pdgs.end(), part->GetPdgCode());
+            if (it == event_pdgs.end()) return kFALSE;      // not contained in the vector
+            else event_pdgs.erase(it);                      // contained so we erase the element
+        }
+        // all particles are found 
+        if (event_pdgs.empty()) return kTRUE;
+        // not all particles in vector are found in the event
+        else return kFALSE;
+    }
+    
     Bool_t isPionEvt = kTRUE;
     TParticle* part = 0x0;
     Double_t stat, probs[AliPID::kSPECIES];
@@ -452,12 +473,6 @@ Bool_t CEPBGBase::IsPionEvt(TObjArray* tracks,
         // bayes pid
         stat = pidCombined->ComputeProbabilities(tmptrk, pidResponse, probs);
         isPionEvt = isPionEvt && (probs[AliPID::kPion]>=0.9);
-
-        // print option to check validity of result
-        /* if (MCevt){ */
-        /*     part = GetPartByLabel(tmptrk->GetLabel(), MCevt); */
-        /*     if (!part) continue; */
-        /* } */
     }
     return isPionEvt;
 }
