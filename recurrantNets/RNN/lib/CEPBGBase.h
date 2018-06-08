@@ -83,7 +83,7 @@ class CEPBGBase
                                           AliPIDResponse* pidResponse, 
                                           AliPIDCombined* pidCombined,
                                           AliMCEvent* MCevt=0x0,
-                                          std::vector<Int_t> event_pdgs{}) const;
+                                          std::vector<Int_t> event_pdgs={}) const;
 
         // event characterization functions
         // check if event is fully reconstructed
