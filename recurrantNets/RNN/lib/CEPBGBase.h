@@ -135,6 +135,8 @@ class CEPBGBase
         // print emcal hits
         void                    PrintEMCALHits() const;
         //////////////////////////////////////////////////////////////////////////////////
+        // save string to txt file
+        void                    WriteToFile(TString outstring, TString outfile="outfile.txt");
 
         ClassDef(CEPBGBase, 1);
 };

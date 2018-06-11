@@ -42,6 +42,8 @@
 /* #include "AliCEPUtils.h" */
 #include "CEPBGBase.h"
 
+#include <iostream>
+#include <fstream>      
 
 #include <string>       // std::string
 #include <cstddef>      // std::size_t
@@ -466,10 +468,11 @@ Bool_t CEPBGBase::HasRightParticles(
         }
 
         if (nTracksTT>2){
-            if (n_pdg_plus>0 && n_pdg_minus>0 && n_pdg_minus+n_pdg_plus>2) kTRUE;
+            if (n_pdg_plus>0 && n_pdg_minus>0 && n_pdg_minus+n_pdg_plus>2) return kTRUE;
             else return kFALSE;
         } else if (nTracksTT==2) { 
             if (n_pdg_plus==1 && n_pdg_minus==1 && n_pdg_else==0) return kTRUE;
+            else return kFALSE;
         } else return kFALSE;
     }
     // if no MC object was passed we rely on bayes-probability
@@ -725,5 +728,18 @@ void CEPBGBase::PrintEMCALHits() const
         }
     }
     fHitsArray->Clear();
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// save string to txt file
+void CEPBGBase::WriteToFile(TString outstring, TString outfile)
+{
+    std::filebuf fb;
+    fb.open(outfile.Data(), std::ios::out);
+    std::ostream os(&fb);
+
+    os << outstring.Data() << "\n";
+
+    fb.close();
 }
 
