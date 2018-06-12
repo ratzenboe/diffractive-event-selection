@@ -412,8 +412,8 @@ AliAnalysisGrid* CreateAlienHandler_MC(
 	plugin->SetExecutable("CEPAna_PYTHIA.sh");
 
 	// set number of test files to use in "test" mode
-	// plugin->SetNtestFiles(0);         // to select all files
-	plugin->SetNtestFiles(2653);
+	plugin->SetNtestFiles(0);         // to select all files
+	/* plugin->SetNtestFiles(2653); */
 
 	// Optionally resubmit threshold.
 	plugin->SetMasterResubmitThreshold(99);
