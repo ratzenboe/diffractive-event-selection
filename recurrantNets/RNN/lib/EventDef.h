@@ -55,12 +55,14 @@ class EventDef
     Int_t                           GetTrackPdg(UInt_t i) const;
     Int_t                           GetTrackMotherPdg(UInt_t i) const;
     Int_t                           GetTrackIsFinal(UInt_t i) const;
-    Int_t                           GetTrackOccurance(UInt_t i) const;
 
     TString                         GetDecayStringShort() const;
     TString                         GetDecayStringLong() const;
 
+    // print functions
     void                            PrintEvent(TString filename="decaymodes.tex") const;
+    // print particle stack for checks
+    void                            PrintStack() const;
 
     // check the final states
     Bool_t                          IsEMCALCase() const;
@@ -82,6 +84,8 @@ class EventDef
     void                            SetParticleCodes();
     // Get certain track
     Int_t                           GetParticleIndexFromNumber(Int_t number) const;
+    Int_t                           GetParticleIndexFromNumber(Int_t number, 
+                                         std::vector<Particle> particle_vec) const;
     // recursive function looping over the decay tree formulating the 
     Int_t                           TreeLooper(Int_t mother, TString& decaystring) const;
 
@@ -97,6 +101,22 @@ class EventDef
 
     // add mother pdg info to each particle (helpful meta info)
     void                            FillMotherPdg();
+
+    // count together the pdg-codes of all the daughters a particle has
+    // this in turn affects the ordering of the daugthers to avoid double counting
+    Bool_t                          CountDaughterPdgCodes(Int_t daughterNumber, 
+                                                          Int_t& counter) const;
+    
+    // for comparison operator
+    std::vector<Particle>           GetParticleVec() const { return fParticles; }
+    // get x particle
+    EventDef::Particle              GetXParticle() const;
+    // compare two particles trees
+    Bool_t                          AreIdentical(EventDef::Particle part1, 
+                                                 EventDef::Particle part2, 
+                                                 std::vector<Particle> all_particles_1, 
+                                                 std::vector<Particle> all_particles_2,
+                                                 Bool_t& isSame) const;
 
 
     ClassDef(EventDef, 1)
