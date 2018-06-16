@@ -87,6 +87,7 @@ void EventDef::AddTrack(Int_t number, Int_t pdg, Int_t mother_number,
     Particle new_part;
     new_part.Number = number;
     new_part.MotherNumber = mother_number;
+    new_part.MotherPdg = -1;
     new_part.Pdg = pdg;
     new_part.isFinal = isFinal;
     new_part.DaughterVec.clear();
@@ -120,7 +121,6 @@ void EventDef::FillMotherPdg()
 //______________________________________________________________________________
 void EventDef::FinalizeEvent()
 {
-    FillMotherPdg();
     std::vector<Int_t> eraseVec, daughtersOfX;
     Int_t Xnumber(-1);
     eraseVec.clear();
@@ -146,7 +146,21 @@ void EventDef::FinalizeEvent()
     SortParticles();
     OrderDaugthers();
 
+    FillMotherPdg();
     fIsFinalized = kTRUE;
+}
+
+void EventDef::PrintStack() const
+{
+    for (Particle part : fParticles)
+    {
+        printf("Nr: %i, Pdg: %i, MotherPdg: %i, final: %s", 
+                part.Number, part.Pdg, part.MotherPdg, (part.isFinal) ? "true" : "false");
+        printf(", daugthers: ");
+        for (Int_t daugther_nb : part.DaughterVec) printf("%i ", daugther_nb);
+        printf("\n");
+    }
+    return ; 
 }
 
 //______________________________________________________________________________
@@ -170,17 +184,6 @@ Bool_t EventDef::IsFromX(Int_t number) const
     return kFALSE;
 }
 
-//______________________________________________________________________________
-Bool_t EventDef::operator==(const EventDef& other) const
-{
-    if (this->GetnUniqueParticles() != other.GetnUniqueParticles()) return kFALSE;
-    for (Int_t ii(0); ii<this->GetnUniqueParticles(); ii++){
-        if (fParticles[ii].Pdg != other.GetTrackPdg(ii) ||
-            this->GetTrackMotherPdg(ii) != other.GetTrackMotherPdg(ii) ||
-            fParticles[ii].isFinal != other.GetTrackIsFinal(ii)) return kFALSE;  
-    }
-    return kTRUE;
-}
 
 //______________________________________________________________________________
 void EventDef::PrintEvent(TString filename) const
@@ -243,6 +246,16 @@ Int_t EventDef::GetParticleIndexFromNumber(Int_t number) const
 }
 
 //______________________________________________________________________________
+Int_t EventDef::GetParticleIndexFromNumber(Int_t number, std::vector<Particle> particle_vec) const
+{
+    for(UInt_t ii(0); ii<particle_vec.size(); ii++) {
+        if (particle_vec[ii].Number == number) return ii; 
+    }
+    // if that number does not correspond to a particle we return -1
+    return -1;
+}
+
+//______________________________________________________________________________
 Int_t EventDef::TreeLooper(Int_t mother, TString& decaystring) const
 {
     mother = GetParticleIndexFromNumber(mother);
@@ -289,6 +302,61 @@ Int_t EventDef::TreeLooper(Int_t mother, TString& decaystring) const
 }
 
 //______________________________________________________________________________
+Bool_t EventDef::operator==(const EventDef& other) const
+{
+    std::vector<Particle> all_particles_1 = fParticles;
+    std::vector<Particle> all_particles_2 = other.GetParticleVec();
+    /* if (this->GetnUniqueParticles() != other.GetnUniqueParticles()) return kFALSE;
+    for (Int_t ii(0); ii<this->GetnUniqueParticles(); ii++){
+        if (abs(fParticles[ii].Pdg)       != abs(other.GetTrackPdg(ii))       ||
+            abs(fParticles[ii].MotherPdg) != abs(other.GetTrackMotherPdg(ii)) ||
+            fParticles[ii].isFinal        != other.GetTrackIsFinal(ii)) return kFALSE;  
+    }
+    */
+    Bool_t isSame = kTRUE;
+    isSame = AreIdentical(this->GetXParticle(), other.GetXParticle(), 
+                 all_particles_1, all_particles_2, isSame);
+    return isSame;
+}
+
+//______________________________________________________________________________
+EventDef::Particle EventDef::GetXParticle() const
+{
+    for (Particle part : fParticles) if (part.Pdg == fRootPDG) return part;
+    printf("<W> root particle not found in fParticles vector, returning first particle in vec\n");
+    return fParticles[0]; 
+}
+
+//______________________________________________________________________________
+Bool_t EventDef::AreIdentical(EventDef::Particle part1, EventDef::Particle part2, std::vector<Particle> all_particles_1, std::vector<Particle> all_particles_2, Bool_t& isSame) const
+{
+    if (abs(part1.Pdg)!=abs(part2.Pdg)) { isSame = isSame & kFALSE; return kFALSE; }
+    /*1. both empty */
+    if (part1.isFinal  && part2.isFinal) { isSame = isSame & kTRUE; return kTRUE; }
+ 
+    /* 2. both non-empty -> compare them */
+    if (!part1.isFinal  && !part2.isFinal)
+    {
+        if (part1.DaughterVec.size()!=part2.DaughterVec.size()){ 
+            isSame = isSame & kFALSE; return kFALSE; 
+        }
+        for (UInt_t dIdx(0); dIdx<part1.DaughterVec.size(); dIdx++)
+        { 
+            Particle daughter1 = all_particles_1[
+                GetParticleIndexFromNumber(part1.DaughterVec[dIdx], all_particles_1)];
+            Particle daughter2 = all_particles_2[
+                GetParticleIndexFromNumber(part2.DaughterVec[dIdx], all_particles_2)];
+            isSame = isSame & AreIdentical(daughter1,daughter2,
+                                           all_particles_1,all_particles_2,
+                                           isSame);
+        }
+        return isSame;
+    }
+    /* 3. one empty, one not -> false */
+    return kFALSE;
+}
+
+//______________________________________________________________________________
 Bool_t EventDef::AllDaughtersFinal(Int_t mother_number) const
 {
     Bool_t allFinal = kTRUE;
@@ -311,7 +379,15 @@ Int_t EventDef::OrderDaugthers(Int_t mother)
             {
                 Int_t a_DaugtherPdg = fParticles[GetParticleIndexFromNumber(a)].Pdg;
                 Int_t b_DaugtherPdg = fParticles[GetParticleIndexFromNumber(b)].Pdg;
-                if (abs(a_DaugtherPdg)==abs(b_DaugtherPdg)) return a_DaugtherPdg>b_DaugtherPdg;
+                if (abs(a_DaugtherPdg)==abs(b_DaugtherPdg)) {
+                    Int_t counter_a(0), counter_b(0);
+                    CountDaughterPdgCodes(a, counter_a);
+                    CountDaughterPdgCodes(b, counter_b);
+                    printf("Counter a=%i: %i, counter b=%i: %i\n", a, counter_a, b, counter_b);
+                    // if the particles are the same we want first the positive then the neg. one
+                    if (counter_a == counter_b) return (a_DaugtherPdg > b_DaugtherPdg);
+                    else return (counter_a<counter_b);
+                }
                 else return abs(a_DaugtherPdg)<abs(b_DaugtherPdg);
             });
     // C++11 loop style
@@ -320,6 +396,18 @@ Int_t EventDef::OrderDaugthers(Int_t mother)
         OrderDaugthers(it);
     }
     return -1;
+}
+
+Bool_t EventDef::CountDaughterPdgCodes(Int_t daughterNumber, Int_t &counter) const
+{
+    daughterNumber = GetParticleIndexFromNumber(daughterNumber);
+    counter += abs(fParticles[daughterNumber].Pdg);
+    if (fParticles[daughterNumber].isFinal) return kTRUE;
+    for (Int_t it : fParticles[daughterNumber].DaughterVec)
+    {
+        CountDaughterPdgCodes(it, counter);
+    }
+    return kTRUE; 
 }
 
 //______________________________________________________________________________
