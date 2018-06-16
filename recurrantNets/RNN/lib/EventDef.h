@@ -19,6 +19,7 @@ class EventDef
         Int_t Number; 
         Int_t Pdg; 
         Int_t MotherNumber; 
+        Int_t MotherPdg; 
         std::vector<Int_t> DaughterVec;
         Bool_t isFinal; 
         // equality comparison
@@ -94,6 +95,8 @@ class EventDef
     // check if the particle is directely from the X particle
     Bool_t                          IsFromX(Int_t number) const;
 
+    // add mother pdg info to each particle (helpful meta info)
+    void                            FillMotherPdg();
 
 
     ClassDef(EventDef, 1)
