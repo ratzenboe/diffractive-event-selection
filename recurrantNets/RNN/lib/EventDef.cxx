@@ -68,7 +68,11 @@ void EventDef::SortParticles()
     std::sort(fParticles.begin(), fParticles.end(), 
               // sorts particles by an ascending pdg value (important for compaison)
               [](const Particle& a, const Particle& b) { 
-                    return (abs(a.Pdg) == abs(b.Pdg)) ? (a.Pdg<b.Pdg) : (abs(a.Pdg)<abs(b.Pdg)); 
+                    if (abs(a.Pdg) == abs(b.Pdg)) {
+                        if (a.Pdg == b.Pdg) return (a.MotherPdg<b.MotherPdg);
+                        else return (a.Pdg<b.Pdg);
+                    }
+                    else return (abs(a.Pdg)<abs(b.Pdg));
               } );
 }
 
@@ -92,8 +96,31 @@ void EventDef::AddTrack(Int_t number, Int_t pdg, Int_t mother_number,
 }
 
 //______________________________________________________________________________
+void EventDef::FillMotherPdg()
+{
+    if (fIsFinalized) { printf("<W> event is already finalized! Track is not added!"); return ; }
+    // add track to next element
+    for (UInt_t ii(0); ii<fParticles.size(); ii++)
+    {
+        // get mother particle 
+        Int_t mother_number = fParticles[ii].MotherNumber;
+        Int_t mother_idx_in_part_vec = GetParticleIndexFromNumber(mother_number);
+
+        // if the mother-idx is not in the list, the particle is the incident X particle
+        if (mother_idx_in_part_vec==-1) {
+            // the incident X particle get a mother pdg value of -1
+            fParticles[ii].MotherPdg = -1; 
+        } else {
+            fParticles[ii].MotherPdg = fParticles[mother_idx_in_part_vec].Pdg;
+        }
+    }
+    return ;
+}
+
+//______________________________________________________________________________
 void EventDef::FinalizeEvent()
 {
+    FillMotherPdg();
     std::vector<Int_t> eraseVec, daughtersOfX;
     Int_t Xnumber(-1);
     eraseVec.clear();
