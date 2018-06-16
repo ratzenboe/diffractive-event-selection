@@ -52,7 +52,7 @@ Int_t EventDef::GetTrackPdg(UInt_t i) const
 Int_t EventDef::GetTrackMotherPdg(UInt_t i) const
 {
     if (i>=fParticles.size()) return -999;
-    return GetTrackPdg(fParticles[i].MotherNumber);
+    return fParticles[i].MotherPdg;
 }
 
 //______________________________________________________________________________
