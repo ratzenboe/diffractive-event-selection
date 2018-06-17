@@ -67,6 +67,7 @@ class EventDef
     // check the final states
     Bool_t                          IsEMCALCase() const;
     Bool_t                          IsThreePlusCase() const;
+    Bool_t                          HasGamma() const;
     
     // Comparison operator (check if two events are the same)
     Bool_t                          operator == (const EventDef& other) const;
@@ -111,7 +112,7 @@ class EventDef
     std::vector<Particle>           GetParticleVec() const { return fParticles; }
     // get x particle
     EventDef::Particle              GetXParticle() const;
-    // compare two particles trees
+    // compare two particles trees (is used in the compare operator)
     Bool_t                          AreIdentical(EventDef::Particle part1, 
                                                  EventDef::Particle part2, 
                                                  std::vector<Particle> all_particles_1, 
