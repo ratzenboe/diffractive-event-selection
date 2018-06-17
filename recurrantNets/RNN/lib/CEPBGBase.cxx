@@ -200,6 +200,63 @@ void CEPBGBase::NewEvent(AliMCEvent* MCevt)
 }
 
 //_____________________________________________________________________________
+Bool_t CEPBGBase::OnlyGammas(AliMCEvent* MCevt)
+{
+    EventDef ed;
+    TParticle* part = 0x0;
+    AliStack* stack = MCevt->Stack();
+    Int_t nPrimaries = stack->GetNprimary();
+
+    for (Int_t ii=4; ii<nPrimaries; ii++) {
+        part = stack->Particle(ii);
+        ed.AddTrack(ii, part->GetPdgCode(), part->GetMother(0), 
+                    part->GetDaughter(0), part->GetDaughter(1), 
+                    (part->GetStatusCode()==0) ? kFALSE : kTRUE);
+    }
+    // event storage specific actions
+    ed.FinalizeEvent();
+    return ed.IsEMCALCase();
+}
+
+//_____________________________________________________________________________
+Bool_t CEPBGBase::HasGammas(AliMCEvent* MCevt)
+{
+    EventDef ed;
+    TParticle* part = 0x0;
+    AliStack* stack = MCevt->Stack();
+    Int_t nPrimaries = stack->GetNprimary();
+
+    for (Int_t ii=4; ii<nPrimaries; ii++) {
+        part = stack->Particle(ii);
+        ed.AddTrack(ii, part->GetPdgCode(), part->GetMother(0), 
+                    part->GetDaughter(0), part->GetDaughter(1), 
+                    (part->GetStatusCode()==0) ? kFALSE : kTRUE);
+    }
+    // event storage specific actions
+    ed.FinalizeEvent();
+    return ed.HasGamma();
+}
+
+//_____________________________________________________________________________
+Bool_t CEPBGBase::ThreePlusCase(AliMCEvent* MCevt)
+{
+    EventDef ed;
+    TParticle* part = 0x0;
+    AliStack* stack = MCevt->Stack();
+    Int_t nPrimaries = stack->GetNprimary();
+
+    for (Int_t ii=4; ii<nPrimaries; ii++) {
+        part = stack->Particle(ii);
+        ed.AddTrack(ii, part->GetPdgCode(), part->GetMother(0), 
+                    part->GetDaughter(0), part->GetDaughter(1), 
+                    (part->GetStatusCode()==0) ? kFALSE : kTRUE);
+    }
+    // event storage specific actions
+    ed.FinalizeEvent();
+    return ed.IsThreePlusCase();
+}
+
+//_____________________________________________________________________________
 Double_t CEPBGBase::GetMass(TObjArray* tracks, Int_t nTracksTT, 
                             TArrayI* TTindices, AliMCEvent* MCevt) const
 {

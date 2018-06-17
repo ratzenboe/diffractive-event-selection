@@ -123,6 +123,9 @@ class CEPBGBase
 
         // fill EventStorage with new event
         void                    NewEvent(AliMCEvent* MCevt);
+        Bool_t                  OnlyGammas(AliMCEvent* MCevt);
+        Bool_t                  HasGammas(AliMCEvent* MCevt);
+        Bool_t                  ThreePlusCase(AliMCEvent* MCevt);
  
 
         //////////////////////////////////////////////////////////////////////////////////
