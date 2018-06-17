@@ -525,13 +525,16 @@ Bool_t CEPBGBase::HasRightParticles(
         }
 
         if (nTracksTT>2){
-            if (n_pdg_plus>0 && n_pdg_minus>0 && n_pdg_minus+n_pdg_plus>2) return kTRUE;
+            if (n_pdg_plus>=1 && n_pdg_minus>=1) return kTRUE;
             else return kFALSE;
         } else if (nTracksTT==2) { 
             if (n_pdg_plus==1 && n_pdg_minus==1 && n_pdg_else==0) return kTRUE;
             else return kFALSE;
         } else return kFALSE;
     }
+    // for now we want to rely on mc-info so no bayes proba
+    return kFALSE;
+
     // if no MC object was passed we rely on bayes-probability
     Bool_t isPionEvt = kTRUE;
     TParticle* part = 0x0;
