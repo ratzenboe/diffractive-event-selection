@@ -50,12 +50,35 @@ class AliAnalysisTaskBG : public AliAnalysisTaskSE, public CEPBGBase
         virtual void            Terminate(Option_t* option);
 
     private:
+        // number of evts infos
+        Int_t                   fAllEvts;           // all evts
+        Int_t                   fnEvtsPassedFilter; // events that passed the filter
+        Int_t                   fnEvtsTotal;        // events that have a mc event
+        TString                 fFilesList;         // list of files
         // Output objects 
-        TList*                  fOutList;               //! output list
+        TList*                  fOutList;           //! output list
         TH1F*                   fInvMass_FD;        //! invariant mass of feed down evts
+        // feed down describing histograms
+        TH1F*                   fInvMass_FD_emcal;  //! FD that only consists of extra gammas
+        TH1F*                   fInvMass_FD_3plus;  //! FD that could be detectable by 3+ methods
+        TH1F*                   fInvMass_FD_other;  //! FD not describable by any of the above 
+        // special case is not summed up like the others but used only to show that this would
+        // be a very precise bg approximation if the gammas could be detected more efficiently
+        TH1F*                   fInvMass_FD_hasGammas;  //! FD that is accompanied by gammas
+
+        // background approximations
         TH1F*                   fInvMass_3trks;     //! invariant mass of 3 tracks bg
+        TH1F*                   fInvMass_4trks;     //! invariant mass of 4 tracks bg
+        TH1F*                   fInvMass_5trks;     //! invariant mass of 5 tracks bg
+        TH1F*                   fInvMass_6trks;     //! invariant mass of 6 tracks bg
         TH1F*                   fInvMass_3plusTrks; //! invariant mass of 3+ tracks (here: 3-10)
-        TH1F*                   fInvMass_GammaDet;  //! invariant mass of gamma in emcal
+        TH1F*                   fInvMass_GammaDet_sig;  //! invariant mass of gamma in emcal sig
+        TH1F*                   fInvMass_GammaDet_bg;   //! invariant mass of gamma in emcal sig
+        // Likesign distribution
+        TH1F*                   fInvMass_LS_plus;   //! invariant mass of LS+
+        TH1F*                   fInvMass_LS_minus;  //! invariant mass of LS-
+        // number of tracks passing through the lhc16filter
+        TH1I*                   fNb_trks_passed;    //! nb tracks passing lhc16filter
 
        
         // not implemented but neccessary
