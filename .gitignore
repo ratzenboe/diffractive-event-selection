@@ -146,6 +146,9 @@ OADB/
 # pcm files
 *.pcm
 
+# in general we want to ignore .pdf files
+*.pdf
+
 # Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
