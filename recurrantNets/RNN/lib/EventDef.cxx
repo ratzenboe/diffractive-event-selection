@@ -383,7 +383,6 @@ Int_t EventDef::OrderDaugthers(Int_t mother)
                     Int_t counter_a(0), counter_b(0);
                     CountDaughterPdgCodes(a, counter_a);
                     CountDaughterPdgCodes(b, counter_b);
-                    printf("Counter a=%i: %i, counter b=%i: %i\n", a, counter_a, b, counter_b);
                     // if the particles are the same we want first the positive then the neg. one
                     if (counter_a == counter_b) return (a_DaugtherPdg > b_DaugtherPdg);
                     else return (counter_a<counter_b);
@@ -418,9 +417,10 @@ Bool_t EventDef::IsEMCALCase() const
     {
         if (!part.isFinal) continue;
         // check finals
+        Double_t charge = TDatabasePDG::Instance()->GetParticle(part.Pdg)->Charge();
         if (part.Pdg==22) nGammas++;
         else if (abs(part.Pdg)==211) nPions++;
-        else nElse++;
+        else if (charge!=0.) nElse++;
     }
     if (nElse==0 && nGammas>0 && nPions==2) return kTRUE;
     else return kFALSE;
@@ -429,15 +429,30 @@ Bool_t EventDef::IsEMCALCase() const
 //______________________________________________________________________________
 Bool_t EventDef::IsThreePlusCase() const
 {
-    Int_t nPions(0);
+    Int_t nPions(0), nChargedElse(0);
     for (Particle part : fParticles)
     {
         if (!part.isFinal) continue;
         // check finals
-        else if (abs(part.Pdg)==211) nPions++;
+        Double_t charge = TDatabasePDG::Instance()->GetParticle(part.Pdg)->Charge();
+        if (abs(part.Pdg)==211) nPions++;
+        else if (charge!=0.) nChargedElse++;
     }
     if (nPions>2) return kTRUE;
+    else if (nPions>=2 && nChargedElse>0) return kTRUE;
     else return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t EventDef::HasGamma() const
+{
+    for (Particle part : fParticles)
+    {
+        if (!part.isFinal) continue;
+        // check finals
+        if (part.Pdg==22) return kTRUE;
+    }
+    return kFALSE;
 }
 
 //______________________________________________________________________________
