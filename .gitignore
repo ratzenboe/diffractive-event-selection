@@ -143,6 +143,8 @@ OADB/
 # log files
 *.log
 
+# pcm files
+*.pcm
 
 # Core latex/pdflatex auxiliary files:
 *.aux
