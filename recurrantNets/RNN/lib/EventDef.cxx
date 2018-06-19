@@ -397,6 +397,7 @@ Int_t EventDef::OrderDaugthers(Int_t mother)
     return -1;
 }
 
+//______________________________________________________________________________
 Bool_t EventDef::CountDaughterPdgCodes(Int_t daughterNumber, Int_t &counter) const
 {
     daughterNumber = GetParticleIndexFromNumber(daughterNumber);
