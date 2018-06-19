@@ -287,6 +287,8 @@ Double_t CEPBGBase::GetMass(TObjArray* tracks, Int_t nTracksTT,
 std::vector<Double_t> CEPBGBase::GetMassPermute(TObjArray* tracks, Int_t nTracksTT, 
                                                 TArrayI* TTindices, AliMCEvent* MCevt) const
 {
+    // hardcoded for now, as we are currently only looking for 2 pions
+    Int_t pdg_goal = 211;
     TParticle *part_1(0x0), *part_2(0x0);
     Int_t pdg_1, pdg_2;
     Double_t charge_1, charge_2;
@@ -305,6 +307,7 @@ std::vector<Double_t> CEPBGBase::GetMassPermute(TObjArray* tracks, Int_t nTracks
         part_1 = GetPartByLabel(MCind, MCevt);
         if (!part_1) continue;
         pdg_1 = part_1->GetPdgCode();
+        if (abs(pdg_1) != pdg_goal) continue;
         // set lorentz vector 1
         part_1->Momentum(v_lor_1);
         charge_1 = TDatabasePDG::Instance()->GetParticle(part_1->GetPdgCode())->Charge();
@@ -326,7 +329,6 @@ std::vector<Double_t> CEPBGBase::GetMassPermute(TObjArray* tracks, Int_t nTracks
             mass_vec.push_back((v_lor_1+v_lor_2).M());
         }
     }
-
     return mass_vec;
 }
 
