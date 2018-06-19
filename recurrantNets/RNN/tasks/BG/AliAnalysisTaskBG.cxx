@@ -361,7 +361,7 @@ void AliAnalysisTaskBG::Terminate(Option_t *)
     // called at the END of the analysis (when all events are processed)
     /* fEvtStorge.PrintNEvts(); */
     // print number of passed evts
-    WriteToFile(fFilesList, "fileslist.txt"); 
+    /* WriteToFile(fFilesList, "fileslist.txt"); */ 
     printf("%i/%i events are usable\n", fnEvtsTotal, fAllEvts);
     printf("%i/%i passed lhc16filter\n", fnEvtsPassedFilter, fnEvtsTotal);
 }
