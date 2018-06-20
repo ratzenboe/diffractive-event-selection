@@ -246,8 +246,14 @@ void PlotAddHists(TH1F* hist1, TString output_file, TH1F* h_2=0x0, TH1F* h_3=0x0
         h_4->Draw("same");
     }
 
+    canv->Update();
+
     TLatex tex;
-    tex.DrawLatex(1.11086, 622.392, "#splitline{#splitline{ALICE simulation, this work}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}");
+    Double_t x_max, y_max;
+    x_max = canv->GetFrame()->GetX2();
+    y_max = canv->GetFrame()->GetY2();
+    printf("x_max: %.2f, y_max: %.2f\n", x_max, y_max);
+    tex.DrawLatex(0.43*x_max, 0.77799*y_max, "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}");
 
     TLegend* leg = new TLegend(0.548495, 0.385732, 0.881271, 0.614268);
     leg->AddEntry(hist1, (Title(hist1)).Data(), "pe");
