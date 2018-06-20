@@ -205,12 +205,12 @@ void PlotAddHists(TH1F* hist1, TString output_file, TH1F* h_2=0x0, TH1F* h_3=0x0
     /* gStyle is somehow set to default for the next adjustments */
     hist1->GetXaxis()->SetTitleOffset(1.1);
     hist1->GetYaxis()->SetTitleOffset(1.15);
-    hist1->GetYaxis()->SetTitleSize(0.06);
-    hist1->GetXaxis()->SetTitleSize(0.06);
+    hist1->GetYaxis()->SetTitleSize(0.055);
+    hist1->GetXaxis()->SetTitleSize(0.055);
     hist1->GetXaxis()->SetTitleFont(42);
     hist1->GetYaxis()->SetTitleFont(42);
-    hist1->GetXaxis()->SetLabelSize(0.055);
-    hist1->GetYaxis()->SetLabelSize(0.055);
+    hist1->GetXaxis()->SetLabelSize(0.05);
+    hist1->GetYaxis()->SetLabelSize(0.05);
     hist1->GetXaxis()->SetLabelFont(42);
     hist1->GetYaxis()->SetLabelFont(42);
 
