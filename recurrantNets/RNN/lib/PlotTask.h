@@ -27,6 +27,8 @@ class PlotTask
                                 TString hname4="", TString hname5="") const;
     void                PlotRatio(TString hname1, TString hname2, TString hname3="", 
                                   TString hname4="", TString hname5="") const;
+    void                AddPlots(TSTring finalName, TString hname1, TString hname2,
+                                 TString hname3="", TString hname4="");
  
   private:
     // if the y axis should be logarithmic

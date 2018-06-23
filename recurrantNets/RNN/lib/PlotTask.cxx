@@ -20,6 +20,7 @@
 #include <TStyle.h>
 #include <TFrame.h>
 #include <TGaxis.h>
+#include <TMath.h>
 
 #include "PlotTask.h"
 
@@ -125,6 +126,29 @@ TString PlotTask::Title(TH1F* hist) const
     return out_str;
 }
 
+void PlotTask::AddPlots(TSTring finalName, TString hname1, TString hname2,
+                        TString hname3, TString hname4)
+{
+    TH1F* h_1 = (TH1F*)((TH1F*)fHistList->FindObject(hname1))->Clone(finalName);
+    h_1->SetTitle(finalName);
+    TH1F* h_2 = 
+        (TH1F*)((TH1F*)fHistList->FindObject(hname2))->Clone((hname2+"_cln").Data());
+
+    TH1F *h_3(0x0), *h_4(0x0);
+    if (hname3!="") h_3 = 
+        (TH1F*)((TH1F*)fHistList->FindObject(hname3))->Clone((hname3+"_cln").Data());
+    if (hname4!="") h_4 = 
+        (TH1F*)((TH1F*)fHistList->FindObject(hname4))->Clone((hname4+"_cln").Data());
+
+    h_1->Add(h_2);
+    if(h_3) h_1->Add(h_3);
+    if(h_4) h_1->Add(h_4);
+
+    fHistList->Add(h_1);
+}
+
+ 
+
 //_______________________________________________________________________________________
 TH1F* PlotTask::ScaleHist(TH1F* h_toScale, TH1F* h_main) const
 {
@@ -191,7 +215,7 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
     if (fLogPlot) axis = new TGaxis(xmin, std::pow(10., ymin), xmin, std::pow(10.,ymax), std::pow(10., ymin), std::pow(10.,ymax), 505,"G");
     else axis = new TGaxis(xmin, ymin, xmin, ymax, ymin, ymax, 510,"");
     // ChangeLable only works since root-v6.07
-    axis->ChangeLabel(1,-1,-1,-1,-1,-1," ");
+    if ((Int_t)TMath::Floor(gROOT->GetVersionInt()/TMath::Power(10.,TMath::Floor(TMath::Log10(gROOT->GetVersionInt()))))==6) axis->ChangeLabel(1,-1,-1,-1,-1,-1," ");
     axis->SetLabelFont(43); // Absolute font size in pixel (precision 3)
     axis->SetLabelSize(fLableSize);
     axis->Draw();
@@ -582,6 +606,7 @@ void PlotTask::PlotRatio(TString hname1, TString hname2, TString hname3,
     if (hname3!="") outstr += "_" + hname3;
     if (hname4!="") outstr += "_" + hname4;
     if (hname5!="") outstr += "_" + hname5;
+    if (fLogPlot) outstr += "_log";
     c->SaveAs((outstr+"_ratio.pdf").Data());
     if (fSetBatch) delete c;
     c = 0x0;
@@ -625,6 +650,7 @@ void PlotTask::PlotAdd(TString hname1, TString hname2,
     if (hname3!="") outstr += "_" + hname3;
     if (hname4!="") outstr += "_" + hname4;
     if (hname5!="") outstr += "_" + hname5;
+    if (fLogPlot) outstr += "_log";
     c->SaveAs((outstr+"_add.pdf").Data());
     if (fSetBatch) delete c;
     c = 0x0;
