@@ -13,6 +13,13 @@
 #include <TSystemFile.h>
 #include <TString.h>
 #include <TFile.h>
+#include <TCanvas.h>
+#include <TPad.h>
+#include <TLatex.h>
+#include <TLegend.h>
+#include <TStyle.h>
+#include <TFrame.h>
+#include <TGaxis.h>
 
 #include "PlotTask.h"
 
@@ -140,8 +147,7 @@ TH1F* PlotTask::ScaleHist(TH1F* h_toScale, Double_t finalAUC) const
 }
 
 //_______________________________________________________________________________________
-TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, 
-                      TH1F* h3=0x0, TH1F* h4=0x0, TH1F* h5=0x0) const
+TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) const
 {
    // Define the Canvas
     TCanvas *c = new TCanvas("c", "canvas", 1450, 1000);
@@ -337,8 +343,7 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2,
 }
 
 //_______________________________________________________________________________________
-TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2=0x0, 
-                                TH1F* h_3=0x0, TH1F* h_4=0x0) const
+TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4) const
 {
     // go into batch mode where canvases are not drawn:
 
