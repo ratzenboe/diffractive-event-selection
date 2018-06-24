@@ -360,11 +360,11 @@ void AliAnalysisTaskEMCAL::EMCalAnalysis(Bool_t isSignal, AliMCEvent* MCevt,
     if (isSignal) fnCluster_SIG->Fill(nCluster);
     else fnCluster_BG->Fill(nCluster); 
     // number of matched clusters
-    if (isSignal) fnMatchedCluster_SIG->Fill(nEMCClus_matched);
-    else fnMatchedCluster_BG->Fill(nEMCClus_matched); 
+    if (isSignal) fnMatchedCluster_SIG->Fill(nClusMatched);
+    else fnMatchedCluster_BG->Fill(nClusMatched); 
     // 2D number of clusters vs number of matched clusters
-    if (isSignal) fnClus_VS_nMatched_SIG->Fill(nCluster, nEMCClus_matched);
-    else fnClus_VS_nMatched_BG->Fill(nCluster, nEMCClus_matched);
+    if (isSignal) fnClus_VS_nMatched_SIG->Fill(nCluster, nClusMatched);
+    else fnClus_VS_nMatched_BG->Fill(nCluster, nClusMatched);
     // deposited energy
     if (isSignal) fEnergy_SIG->Fill(energy);
     else fEnergy_BG->Fill(energy); 
