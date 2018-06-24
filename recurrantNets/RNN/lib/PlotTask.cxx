@@ -117,7 +117,7 @@ TString PlotTask::Title(TH1F* hist) const
     else if (title_str=="fInvMass_6trks") out_str = "6 track BG";
     else if (title_str=="fInvMass_3plusTrks") out_str = "3-10 track BG";
     else if (title_str=="fInvMass_GammaDet_sig") out_str = "#gamma hit BG (sig)";
-    else if (title_str=="fInvMass_GammaDet_bg")  out_str = "#gamma hit BG (FD)";
+    else if (title_str=="fInvMass_GammaDet_bg")  out_str = "#gamma hit BG";
     else if (title_str=="fInvMass_LS_plus")  out_str = "Like sign (+)";
     else if (title_str=="fInvMass_LS_minus") out_str = "Like sign (-)";
     else if (title_str=="fNb_trks_passed") out_str = "N_{tracks}";
@@ -126,7 +126,7 @@ TString PlotTask::Title(TH1F* hist) const
     return out_str;
 }
 
-void PlotTask::AddPlots(TSTring finalName, TString hname1, TString hname2,
+void PlotTask::AddPlots(TString finalName, TString hname1, TString hname2,
                         TString hname3, TString hname4)
 {
     TH1F* h_1 = (TH1F*)((TH1F*)fHistList->FindObject(hname1))->Clone(finalName);
@@ -144,10 +144,10 @@ void PlotTask::AddPlots(TSTring finalName, TString hname1, TString hname2,
     if(h_3) h_1->Add(h_3);
     if(h_4) h_1->Add(h_4);
 
+    h_1->Sumw2();
+
     fHistList->Add(h_1);
 }
-
- 
 
 //_______________________________________________________________________________________
 TH1F* PlotTask::ScaleHist(TH1F* h_toScale, TH1F* h_main) const
@@ -215,7 +215,7 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
     if (fLogPlot) axis = new TGaxis(xmin, std::pow(10., ymin), xmin, std::pow(10.,ymax), std::pow(10., ymin), std::pow(10.,ymax), 505,"G");
     else axis = new TGaxis(xmin, ymin, xmin, ymax, ymin, ymax, 510,"");
     // ChangeLable only works since root-v6.07
-    if ((Int_t)TMath::Floor(gROOT->GetVersionInt()/TMath::Power(10.,TMath::Floor(TMath::Log10(gROOT->GetVersionInt()))))==6) axis->ChangeLabel(1,-1,-1,-1,-1,-1," ");
+    /* if ((Int_t)TMath::Floor(gROOT->GetVersionInt()/TMath::Power(10.,TMath::Floor(TMath::Log10(gROOT->GetVersionInt()))))==6) axis->ChangeLabel(1,-1,-1,-1,-1,-1," "); */
     axis->SetLabelFont(43); // Absolute font size in pixel (precision 3)
     axis->SetLabelSize(fLableSize);
     axis->Draw();
@@ -367,7 +367,7 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
 }
 
 //_______________________________________________________________________________________
-TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4) const
+TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4, TH1F* h_5) const
 {
     // go into batch mode where canvases are not drawn:
 
@@ -378,17 +378,20 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4) co
     if (h_2) integral_2 = h_2->Integral(1,h_2->GetSize()-2); 
     if (h_3) integral_3 = h_3->Integral(1,h_3->GetSize()-2); 
     if (h_4) integral_4 = h_4->Integral(1,h_4->GetSize()-2); 
+    if (h_5) integral_5 = h_5->Integral(1,h_5->GetSize()-2); 
 
-    TString n_1, n_2, n_3, n_4;
+    TString n_1, n_2, n_3, n_4, n_5;
     n_1.Form("%i", Int_t(integral));
     n_2.Form("%3.2f", 100.*Double_t(integral_2)/Double_t(integral));
     n_3.Form("%3.2f", 100.*Double_t(integral_3)/Double_t(integral));
     n_4.Form("%3.2f", 100.*Double_t(integral_4)/Double_t(integral));
+    n_5.Form("%3.2f", 100.*Double_t(integral_5)/Double_t(integral));
 
     hist1->Sumw2();
     if (h_2) h_2->Sumw2();
     if (h_3) h_3->Sumw2();
     if (h_4) h_4->Sumw2();
+    if (h_5) h_5->Sumw2();
 
     // histogram specific actions
     hist1->SetLineColor(kBlack);
@@ -444,7 +447,14 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4) co
         h_4->SetMarkerColor(kBlue);
         h_4->Draw("same");
     }
-
+    if (h_5) {
+        h_5->SetLineColor(kYellow);
+        h_5->SetLineWidth(2);
+        h_5->SetMarkerStyle(27);
+        h_5->SetMarkerSize(1.4);
+        h_5->SetMarkerColor(kYellow);
+        h_5->Draw("same");
+    }
     canv->Update();
 
     TLatex tex;
@@ -469,6 +479,7 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4) co
     if (h_2) leg->AddEntry(h_2, (Title(h_2) + "(" + n_2 + "%)").Data(), "pe");
     if (h_3) leg->AddEntry(h_3, (Title(h_3) + "(" + n_3 + "%)").Data(), "pe");
     if (h_4) leg->AddEntry(h_4, (Title(h_4) + "(" + n_4 + "%)").Data(), "pe");
+    if (h_5) leg->AddEntry(h_5, (Title(h_5) + "(" + n_5 + "%)").Data(), "pe");
     leg->SetTextFont(43);
     leg->SetTextSize(fLegendTextSize);
     leg->SetFillStyle(0);
@@ -643,7 +654,7 @@ void PlotTask::PlotAdd(TString hname1, TString hname2,
 
     TCanvas *c = 0x0;
     if (h_1 && !h_2 && !h_3 && !h_4) c = PlotHist(h_1);
-    if (h_2 || h_3 || h_4) c = PlotAddHists(h_1, h_2, h_3, h_4);
+    if (h_2 || h_3 || h_4) c = PlotAddHists(h_1, h_2, h_3, h_4, h_5);
 
     TString outstr = fOutFileBaseName + "_" + hname1;
     if (hname2!="") outstr += "_" + hname2;
