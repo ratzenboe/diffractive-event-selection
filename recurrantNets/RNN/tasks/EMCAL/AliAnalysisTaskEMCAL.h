@@ -50,31 +50,39 @@ class AliAnalysisTaskEMCAL : public AliAnalysisTaskSE, public CEPBGBase
         virtual void            Terminate(Option_t* option);
 
     private:
-        // Output objects 
+        // number of evts infos
+        Int_t                   fAllEvts;           // all evts
+        Int_t                   fnEvtsPassedFilter; // events that passed the filter
+        Int_t                   fnEvtsTotal;        // events that have a mc event
+        Int_t                   fnFinishedAnalysis;        // events that have a mc event
+// Output objects 
         TList*                  fOutList;               //! output list
         TH1F*                   fGammaE;                //! energies of primarily produced gammas 
-        TH1F*                   fEMCalSecondaryE_SIG;   //! energy of parts reaching the emcal SIG
-        TH1F*                   fEMCalSecondaryE_BG;    //! energy of parts reaching the emcal BG
+        TH1F*                   fSecondaryE_SIG;        //! energy of parts reaching the emcal SIG
+        TH1F*                   fSecondaryE_BG;         //! energy of parts reaching the emcal BG
         /* TH1F*                   fGammaE_secondary;   //! energies of gammas in emcal */ 
         TH1F*                   fNeutralPDG;            //! neutral particles pdg
         // emcal hists
-        TH1F*                   fEMCnClus_SIG;          //! calo: #clusters in emcal signal
-        TH1F*                   fEMCnClus_BG;           //! calo: #clusters in emcal bg
+        TH1F*                   fnCluster_SIG;          //! calo: #clusters in emcal signal
+        TH1F*                   fnCluster_BG;           //! calo: #clusters in emcal bg
 
-        TH1F*                   fEMCnMatchedClus_SIG;   //! calo: # matched clusters in emcal sig
-        TH1F*                   fEMCnMatchedClus_BG;    //! calo: # matched clusters in emcal bg
+        TH1F*                   fnMatchedCluster_SIG;   //! calo: # matched clusters in emcal sig
+        TH1F*                   fnMatchedCluster_BG     //! calo: # matched clusters in emcal bg
 
-        TH2F*                   fEMC_nClusVSnMatched_SIG; //! calo: nclus VS n-matched-clus sig
-        TH2F*                   fEMC_nClusVSnMatched_BG;  //! calo: nclus VS n-matched-clus bg
+        TH2F*                   fnClus_VS_nMatched_SIG; //! calo: nclus VS n-matched-clus sig
+        TH2F*                   fnClus_VS_nMatched_BG;  //! calo: nclus VS n-matched-clus bg
 
-        TH1F*                   fEMCenergy_SIG;         //! calo: energy sig
-        TH1F*                   fEMCenergy_BG;          //! calo: energy bg
+        TH1F*                   fEnergy_SIG;         //! calo: energy sig
+        TH1F*                   fEnergy_BG;          //! calo: energy bg
 
-        TH2F*                   fEMC_nClusVSenergy_SIG;  //! calo: 2D #clus vs energy signal
-        TH2F*                   fEMC_nClusVSenergy_BG;   //! calo: 2D #clus vs energy bg
+        TH2F*                   fnClus_VS_energy_SIG;  //! calo: 2D #clus vs energy signal
+        TH2F*                   fnClus_VS_energy_BG;   //! calo: 2D #clus vs energy bg
 
-        TH1F*                   fEMCal_dphiEta_pion;  //! phi-eta distance of cluster hit to track
-        TH1F*                   fEMCal_dphiEta_gamma; //! phi-eta distance of cluster hit to track
+        TH1F*                   fdPhiEta_pion;      //! phi-eta distance of cluster hit to track
+        TH1F*                   fdPhiEta_gamma;     //! phi-eta distance of cluster hit to track
+
+        TH1F*                   fClusterTime_SIG;   //! time of highest e cell in cluster
+        TH1F*                   fClusterTime_BG;    //! time of highest e cell in cluster
         
         // not implemented but neccessary
         AliAnalysisTaskEMCAL(const AliAnalysisTaskEMCAL&); 
