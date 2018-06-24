@@ -67,7 +67,7 @@ class AliAnalysisTaskEMCAL : public AliAnalysisTaskSE, public CEPBGBase
         TH1F*                   fnCluster_BG;           //! calo: #clusters in emcal bg
 
         TH1F*                   fnMatchedCluster_SIG;   //! calo: # matched clusters in emcal sig
-        TH1F*                   fnMatchedCluster_BG     //! calo: # matched clusters in emcal bg
+        TH1F*                   fnMatchedCluster_BG;    //! calo: # matched clusters in emcal bg
 
         TH2F*                   fnClus_VS_nMatched_SIG; //! calo: nclus VS n-matched-clus sig
         TH2F*                   fnClus_VS_nMatched_BG;  //! calo: nclus VS n-matched-clus bg
