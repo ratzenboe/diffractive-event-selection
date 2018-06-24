@@ -36,6 +36,8 @@ PlotTask::PlotTask(TString fname, TString option)
   , fLableSize(36)
   , fPlotTextSize(39)
   , fLegendTextSize(35)
+  , fAxisMin(0.)
+  , fAxisMax(2.5)
 {
     fOutFileBaseName = fname;
     // remove the .root at the end of the filename ".root" = 5 characters at the end
@@ -126,7 +128,7 @@ TString PlotTask::Title(TH1F* hist) const
     return out_str;
 }
 
-void PlotTask::AddPlots(TString finalName, TString hname1, TString hname2,
+void PlotTask::AddHists(TString finalName, TString hname1, TString hname2,
                         TString hname3, TString hname4)
 {
     TH1F* h_1 = (TH1F*)((TH1F*)fHistList->FindObject(hname1))->Clone(finalName);
@@ -197,7 +199,7 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
         h5 = ScaleHist(h5, main_hist);
         h5->Draw("same ep");         // Draw h2 on top of main_hist
     }
-    main_hist->SetAxisRange(0., 2.5,"X");
+    main_hist->SetAxisRange(fAxisMin, fAxisMax,"X");
     if (fLogPlot) pad1->SetLogy();               // pad1 becomes the current pad
     pad1->Update();
 
@@ -374,7 +376,7 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4, TH
     TCanvas* canv = new TCanvas("InvMass","",1450,1000);
 
     Double_t integral = hist1->Integral(1,hist1->GetSize()-2); 
-    Double_t integral_2(-1), integral_3(-1), integral_4(-1);
+    Double_t integral_2(-1), integral_3(-1), integral_4(-1), integral_5(-1);
     if (h_2) integral_2 = h_2->Integral(1,h_2->GetSize()-2); 
     if (h_3) integral_3 = h_3->Integral(1,h_3->GetSize()-2); 
     if (h_4) integral_4 = h_4->Integral(1,h_4->GetSize()-2); 
@@ -415,7 +417,7 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4, TH
     hist1->GetXaxis()->SetLabelFont(43);
     hist1->GetYaxis()->SetLabelFont(43);
 
-    hist1->SetAxisRange(0., 2.5,"X");
+    hist1->SetAxisRange(fAxisMin, fAxisMax,"X");
 
     hist1->Draw();
     if (fLogPlot) gPad->SetLogy();
@@ -521,7 +523,7 @@ TCanvas* PlotTask::PlotHist(TH1F* hist) const
     /* hist->GetXaxis()->SetLabelFont(42); */
     /* hist->GetYaxis()->SetLabelFont(42); */
 
-    hist->SetAxisRange(0., 2.5,"X");
+    hist->SetAxisRange(fAxisMin, fAxisMax,"X");
 
     hist->Draw();
     /* hist->SetMarkerStyle(k); */
@@ -591,23 +593,30 @@ void PlotTask::PlotRatio(TString hname1, TString hname2, TString hname3,
     // set the alice plot-style
     SetStyle();
 
-    TH1F* h_1 = 
-        (TH1F*)((TH1F*)fHistList->FindObject(hname1))->Clone((hname1+"_cln").Data());
-    TH1F *h_2(0x0), *h_3(0x0), *h_4(0x0), *h_5(0x0);
-    if (hname2!="") h_2 = 
-        (TH1F*)((TH1F*)fHistList->FindObject(hname2))->Clone((hname2+"_cln").Data());
+    if (!fHistList->FindObject(hname1)) {
+        printf("<E> No histogram found named %s\n", hname1.Data()); return; }
+    TH1F* h_1 = (TH1F*)((TH1F*)fHistList->FindObject(hname1))->Clone((hname1+"_cln").Data());
+    // 2nd histogram
+    if (!fHistList->FindObject(hname2)){ 
+        printf("<E> No histogram found named %s\n", hname2.Data()); return; }
+    TH1F* h_2 = (TH1F*)((TH1F*)fHistList->FindObject(hname2))->Clone((hname2+"_cln").Data());
+
+    TH1F *h_3(0x0), *h_4(0x0), *h_5(0x0);
+    // 3rd histogram
+    if (hname3!="" && !fHistList->FindObject(hname3)){ 
+        printf("<E> No histogram found named %s\n", hname3.Data()); return; }
     if (hname3!="") h_3 = 
         (TH1F*)((TH1F*)fHistList->FindObject(hname3))->Clone((hname3+"_cln").Data());
+    // 4th histogram
+    if (hname4!="" && !fHistList->FindObject(hname4)){ 
+        printf("<E> No histogram found named %s\n", hname4.Data()); return; }
     if (hname4!="") h_4 = 
         (TH1F*)((TH1F*)fHistList->FindObject(hname4))->Clone((hname4+"_cln").Data());
+    // 5th histogram
+    if (hname5!="" && !fHistList->FindObject(hname5)){ 
+        printf("<E> No histogram found named %s\n", hname5.Data()); return; }
     if (hname5!="") h_5 = 
         (TH1F*)((TH1F*)fHistList->FindObject(hname5))->Clone((hname5+"_cln").Data());    
-    // we check if the histograms all derive from TH1
-    if (!h_1 || !h_1->InheritsFrom("TH1")) { printf("<E> No histogram found named %s\n", hname1.Data()); return; }
-    if (!h_2 || !h_2->InheritsFrom("TH1"))  { printf("<E> No histogram found named %s\n", hname2.Data()); return; }
-    if (h_3 && !h_3->InheritsFrom("TH1"))  { printf("<E> No histogram found named %s\n", hname3.Data()); return; } 
-    if (h_4 && !h_4->InheritsFrom("TH1"))  { printf("<E> No histogram found named %s\n", hname4.Data()); return; }
-    if (h_5 && !h_5->InheritsFrom("TH1"))  { printf("<E> No histogram found named %s\n", hname5.Data()); return; }
 
     TCanvas *c = 0x0;
     c = rp(h_1, h_2, h_3, h_4, h_5);
@@ -634,23 +643,30 @@ void PlotTask::PlotAdd(TString hname1, TString hname2,
 
     // we clone the histograms from the fHistList in order not to mess up the original
     // histograms (that in term would violate the const functions
-    TH1F* h_1 = 
-        (TH1F*)((TH1F*)fHistList->FindObject(hname1))->Clone((hname1+"_cln").Data());
-    TH1F *h_2(0x0), *h_3(0x0), *h_4(0x0), *h_5(0x0);
-    if (hname2!="") h_2 = 
-        (TH1F*)((TH1F*)fHistList->FindObject(hname2))->Clone((hname2+"_cln").Data());
+    if (!fHistList->FindObject(hname1)) {
+        printf("<E> No histogram found named %s\n", hname1.Data()); return; }
+    TH1F* h_1 = (TH1F*)((TH1F*)fHistList->FindObject(hname1))->Clone((hname1+"_cln").Data());
+    // 2nd histogram
+    if (!fHistList->FindObject(hname2)){ 
+        printf("<E> No histogram found named %s\n", hname2.Data()); return; }
+    TH1F* h_2 = (TH1F*)((TH1F*)fHistList->FindObject(hname2))->Clone((hname2+"_cln").Data());
+
+    TH1F *h_3(0x0), *h_4(0x0), *h_5(0x0);
+    // 3rd histogram
+    if (hname3!="" && !fHistList->FindObject(hname3)){ 
+        printf("<E> No histogram found named %s\n", hname3.Data()); return; }
     if (hname3!="") h_3 = 
         (TH1F*)((TH1F*)fHistList->FindObject(hname3))->Clone((hname3+"_cln").Data());
+    // 4th histogram
+    if (hname4!="" && !fHistList->FindObject(hname4)){ 
+        printf("<E> No histogram found named %s\n", hname4.Data()); return; }
     if (hname4!="") h_4 = 
         (TH1F*)((TH1F*)fHistList->FindObject(hname4))->Clone((hname4+"_cln").Data());
+    // 5th histogram
+    if (hname5!="" && !fHistList->FindObject(hname5)){ 
+        printf("<E> No histogram found named %s\n", hname5.Data()); return; }
     if (hname5!="") h_5 = 
-        (TH1F*)((TH1F*)fHistList->FindObject(hname5))->Clone((hname5+"_cln").Data());
-    // we check if the histograms all derive from TH1
-    if (!h_1 || !h_1->InheritsFrom("TH1")) { printf("<E> No histogram found named %s\n", hname1.Data()); return ; }
-    if (h_2 && !h_2->InheritsFrom("TH1"))  { printf("<E> No histogram found named %s\n", hname2.Data()); return ; }
-    if (h_3 && !h_3->InheritsFrom("TH1"))  { printf("<E> No histogram found named %s\n", hname3.Data()); return ; }
-    if (h_4 && !h_4->InheritsFrom("TH1"))  { printf("<E> No histogram found named %s\n", hname4.Data()); return ; }
-    if (h_5 && !h_5->InheritsFrom("TH1"))  { printf("<E> No histogram found named %s\n", hname5.Data()); return ; }
+        (TH1F*)((TH1F*)fHistList->FindObject(hname5))->Clone((hname5+"_cln").Data());    
 
     TCanvas *c = 0x0;
     if (h_1 && !h_2 && !h_3 && !h_4) c = PlotHist(h_1);
