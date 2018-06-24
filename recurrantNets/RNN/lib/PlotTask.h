@@ -15,10 +15,13 @@ class PlotTask
     // Setters
     void                SetBatch(Bool_t sb) { fSetBatch = sb; }
     void                SetLog(Bool_t lp) { fLogPlot = lp; }
+    // Sizes
     void                SetTitleSize(Int_t size) { fTitleSize = size; }
     void                SetLableSize(Int_t size) { fLableSize = size; }
     void                SetPlotTextSize(Int_t size) { fPlotTextSize = size; }
     void                SetLegendTextSize(Int_t size) { fLegendTextSize = size; }
+    // axis range
+    void                SetAxisRange(Double_t xmin, Double_t xmax) {fAxisMin=xmin; fAxisMax=xmax;}
 
     void                ResetSizes();
 
@@ -46,9 +49,13 @@ class PlotTask
     Int_t               fPlotTextSize;
     Int_t               fLegendTextSize;
 
+    // axis range
+    Double_t            fAxisMin;
+    Double_t            fAxisMax;
+
     // private functions returning the canvas
     TCanvas*            PlotAddHists(TH1F* hist1, TH1F* h_2=0x0, 
-                                     TH1F* h_3=0x0, TH1F* h_4=0x0) const;
+                                     TH1F* h_3=0x0, TH1F* h_4=0x0, TH1F* h_5=0x0) const;
     TCanvas*            PlotHist(TH1F* hist1) const;
     TCanvas*            rp(TH1F* main_hist, TH1F* h2, TH1F* h3=0x0, 
                            TH1F* h4=0x0, TH1F* h5=0x0) const;
