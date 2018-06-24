@@ -30,7 +30,7 @@ AliAnalysisTaskSE* AddEMCALTask(TString name = "name", Long_t state, UInt_t TTma
     }
     // by default, a file is open for writing. here, we get the filename
     TString fileName = AliAnalysisManager::GetCommonFileName();
-    fileName += ":MCTask";      // create a subfolder in the file
+    fileName += ":EMCALTask";      // create a subfolder in the file
     // now we create an instance of the MC task
     AliAnalysisTaskEMCAL* task = new AliAnalysisTaskEMCAL(
             name.Data(),state,TTmask,TTpattern,hitfile);   
