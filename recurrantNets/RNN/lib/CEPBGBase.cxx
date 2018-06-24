@@ -481,20 +481,25 @@ Bool_t CEPBGBase::UpdateGlobalVars(const char* currentFileName, Int_t entry)
 {
     // CurrentFileName: func from AliAnalysisTaskSE
     if (fCurrentDir=="" || fCurrentDir != GetDirFromFullPath(currentFileName)) {
+        if (fHitFile) { fHitFile->Close(); delete fHitFile; fHitFile = 0x0; }
         fCurrentDir = GetDirFromFullPath(currentFileName);
+        printf("<I> Current directory: %s\n", fCurrentDir.Data());
         fHitFile = TFile::Open(fCurrentDir+fHitFileName);
     }
-    if (!fHitFile) return kFALSE;
+    if (!fHitFile) {
+        printf("<E> File %s not found!\n",(fCurrentDir+fHitFileName).Data()); 
+        return kFALSE;
+    }
     TString iev_str;
     iev_str.Form("Event%i", entry);
     fHitDir = fHitFile->GetDirectory(iev_str);
-    if (!fHitDir) return kFALSE;
+    if (!fHitDir) {printf("<E> Directory not found!\n"); return kFALSE;}
     // get the hit-tree corresponding to the event 
     fHitDir->GetObject("TreeH", fHitTree);
-    if (!fHitTree) return kFALSE;
+    if (!fHitTree) {printf("<E> HitTree not found!\n"); return kFALSE;}
     fHitBranch = fHitTree->GetBranch("EMCAL");
     fHitBranch->SetAddress(&fHitsArray);
-    if (!fHitBranch) return kFALSE;
+    if (!fHitBranch) {printf("<E> fHitBranch not found!\n"); return kFALSE;}
 
     return kTRUE;
 }
