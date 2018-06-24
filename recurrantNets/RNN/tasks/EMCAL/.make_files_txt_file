@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # array=(/media/hdd/Pythia8GridFiles/258017_*/AliESDs.root)
-array=(~/remote_data1/pbuehler/alice/Pythia8CEP_new/258017_*/AliESDs.root)
+# array=(~/remote_data1/pbuehler/alice/Pythia8CEP_new/258017_*/AliESDs.root)
+array=(~/remote_data1/pbuehler/alice/Pythia8CEP_EMCalHits/MBR/{257963,257979,258053}/*/AliESDs.root)
 
 for dir in "${array[@]}"; do
     echo "$dir" >> files.txt
