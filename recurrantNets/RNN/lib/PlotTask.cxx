@@ -123,11 +123,26 @@ TString PlotTask::Title(TH1F* hist) const
     else if (title_str=="fInvMass_LS_plus")  out_str = "Like sign (+)";
     else if (title_str=="fInvMass_LS_minus") out_str = "Like sign (-)";
     else if (title_str=="fNb_trks_passed") out_str = "N_{tracks}";
+    // plots from the emcal task
+    else if (title_str=="fGammaE") out_str = "Primary E_{#gamma}";
+    else if (title_str=="fSecondaryE_SIG") out_str = "Secondary E_{#gamma} (sig)";
+    else if (title_str=="fSecondaryE_BG")  out_str = "Secondary E_{#gamma} (FD)";
+    else if (title_str=="fEnergy_SIG") out_str = "Cluster energy (sig)";
+    else if (title_str=="fEnergy_BG")  out_str = "Cluster energy (FD)";
+    else if (title_str=="fdPhiEta_pion") out_str = "Pion #phi-#eta distance";
+    else if (title_str=="fdPhiEta_gamma") out_str = "Gamma #phi-#eta distance";
     else out_str = hist->GetTitle();
     
     return out_str;
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// add plot function: PlotSigBg(TString hnameSig, TString hnameBg)
+// add plot function: PlotSigBgNorm(TString hnameSig, TString hnameBg)
+//  -> in this function signal and BG have the same integral
+
+//_______________________________________________________________________________________
 void PlotTask::AddHists(TString finalName, TString hname1, TString hname2,
                         TString hname3, TString hname4)
 {
