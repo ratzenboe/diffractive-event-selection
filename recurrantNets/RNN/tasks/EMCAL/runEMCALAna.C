@@ -28,7 +28,7 @@ void runEMCALAna (
   const char *gridmode          = "full",     // Set the run mode (can be "full", "test", "offline", "submit" or "terminate"). Full & Test work for proof
   const bool isMC               = kTRUE,      // kTRUE = looking at MC truth or reconstructed, 0 = looking at real data
   const bool enableBGrejection  = kTRUE,      // apply BG rejection in physics selection
-  const Long64_t nentries       = 1e7,          // for local and proof mode, ignored in grid mode. Set to 1234567890 for all events.
+  const Long64_t nentries       = 1e12,          // for local and proof mode, ignored in grid mode. Set to 1234567890 for all events.
   const Long64_t firstentry     = 0,          // for local and proof mode, ignored in grid mode
   const char *proofdataset      = "/alice/sim/LHC10c_000120821_p1", // path to dataset on proof cluster, for proof analysis
   const char *proofcluster      = "alice-caf.cern.ch",              // which proof cluster to use in proof mode
