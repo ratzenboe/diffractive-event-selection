@@ -194,16 +194,16 @@ TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
     h_sig->GetXaxis()->SetLabelFont(43);
     h_sig->GetYaxis()->SetLabelFont(43);
 
-    h_bbg->GetXaxis()->SetTitleOffset(1.1);
-    h_bbg->GetYaxis()->SetTitleOffset(1.15);
-    h_bbg->GetYaxis()->SetTitleSize(fTitleSize);
-    h_bbg->GetXaxis()->SetTitleSize(fTitleSize);
-    h_bbg->GetXaxis()->SetTitleFont(43);
-    h_bbg->GetYaxis()->SetTitleFont(43);
-    h_bbg->GetXaxis()->SetLabelSize(fLableSize);
-    h_bbg->GetYaxis()->SetLabelSize(fLableSize);
-    h_bbg->GetXaxis()->SetLabelFont(43);
-    h_bbg->GetYaxis()->SetLabelFont(43);
+    h_bg->GetXaxis()->SetTitleOffset(1.1);
+    h_bg->GetYaxis()->SetTitleOffset(1.15);
+    h_bg->GetYaxis()->SetTitleSize(fTitleSize);
+    h_bg->GetXaxis()->SetTitleSize(fTitleSize);
+    h_bg->GetXaxis()->SetTitleFont(43);
+    h_bg->GetYaxis()->SetTitleFont(43);
+    h_bg->GetXaxis()->SetLabelSize(fLableSize);
+    h_bg->GetYaxis()->SetLabelSize(fLableSize);
+    h_bg->GetXaxis()->SetLabelFont(43);
+    h_bg->GetYaxis()->SetLabelFont(43);
 
 
     if (h_sig->GetBinContent(h_sig->GetMaximumBin())>=h_bg->GetBinContent(h_bg->GetMaximumBin())){
