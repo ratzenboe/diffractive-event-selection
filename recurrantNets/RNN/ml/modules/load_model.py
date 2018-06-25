@@ -88,11 +88,6 @@ def train_model(data, run_mode_user, val_data,
 
         return history
 
-    elif 'anomaly' in run_mode_user:
-        history = train_autoencoder(data, val_data, batch_size, n_epochs, out_path, dropout, 
-                          n_layers, batch_norm, activation)
-        return history
-
     elif 'koala' in run_mode_user:
         history = train_composite_NN(data, val_data, batch_size, n_epochs, rnn_layer,
                            out_path, dropout, class_weight,
@@ -104,77 +99,6 @@ def train_model(data, run_mode_user, val_data,
     else:
         raise NameError('ERROR: Unrecognized model {}'.format(run_mode_user))
 
-
-
-def train_autoencoder(data, val_data, batch_size=32, n_epochs=50, out_path = 'output/', 
-                      dropout=0.2, n_layers=[14,7,7,14], batch_norm=False, activation='relu'):
-    """
-    Autoencoder for anomaly detection
-    """
-    if not isinstance(n_layers, list):
-        raise TypeError('The variable "n_layers" is not a list but rather ' \
-                'of type {}.'.format(type(n_layers)))
-    try:
-        # we use an autoencoder thus the target is the 
-        # X_train itself
-        X_train = data['feature_matrix']
-        # train only on bg data, as this will be the only available source
-        bg_indices = np.array(np.where(data['target']==0)).ravel()
-        X_train = X_train[bg_indices]
-        train_data = {'feature_matrix': X_train}
-
-    except KeyError:
-        raise KeyError('The data-dictionary provided does not contain' \
-                'all necessary keys for the selected run-mode (run_mode_user)')
-
-    input_train = Input(shape=(X_train.shape[-1],), name='feature_matrix')
-    if activation != 'relu':
-        x = Dense(n_layers[0], kernel_initializer='glorot_normal')(input_train)
-        x = (getattr(keras.layers, activation)())(x)
-    else:
-         x = Dense(n_layers[0], 
-                  activation = activation, 
-                  kernel_initializer = 'glorot_normal')(input_train)
-
-    for layer_nodes in n_layers[1:]:
-        if activation != 'relu':
-            x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
-            x = (getattr(keras.layers, activation)())(x)
-        else:
-            x = Dense(layer_nodes, 
-                      activation         = activation, 
-                      kernel_initializer = 'glorot_normal')(x)
-        if batch_norm:
-            x = BatchNormalization()(x)
-        if dropout > 0.0:
-            x = Dropout(dropout)(x)
-
-    main_output = Dense(X_train.shape[-1],
-                        activation = 'sigmoid', 
-                        name = 'main_output', 
-                        kernel_initializer = 'glorot_normal')(x)
-    model = Model(inputs=input_train, outputs=main_output)
-
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['mse'])
-            
-    print(model.summary())
-    try:
-        checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
-                                       verbose=0,
-                                       save_best_only=True)
-        history = model.fit(train_data,
-                            X_train,  
-                            epochs = n_epochs, 
-                            batch_size = batch_size,
-                            validation_data = val_data,
-                            callbacks = [checkpointer]).history
-                  # ,callbacks = [callback_ROC(train_data_dic, 
-                  #                           output_targets, 
-                  #                           output_prefix=out_path)])
-    except KeyboardInterrupt:
-        print('Training ended early.')
-
-    return history
 
 
 def train_koala(data, val_data, batch_size=64, n_epochs=50, out_path = 'output/', 
