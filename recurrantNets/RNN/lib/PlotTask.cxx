@@ -38,6 +38,10 @@ PlotTask::PlotTask(TString fname, TString option)
   , fLegendTextSize(35)
   , fAxisMin(0.)
   , fAxisMax(2.5)
+  , fLegXmin(-999.)
+  , fLegXmax(-999.)
+  , fLegYmin(-999.)
+  , fLegYmax(-999.)
 {
     fOutFileBaseName = fname;
     // remove the .root at the end of the filename ".root" = 5 characters at the end
@@ -90,6 +94,21 @@ void PlotTask::ResetSizes()
 
     fAxisMax = 2.5;
     fAxisMin = 0.;
+}
+
+//_______________________________________________________________________________________
+void PlotTask::ResetLegendPos()
+{
+    fLegXmin = -999; fLegXmax = -999; fLegYmin = -999; fLegYmax = -999;
+}
+
+//_______________________________________________________________________________________
+void PlotTask::SetLegendPos(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
+{
+    fLegXmin = xmin;
+    fLegXmax = xmax;
+    fLegYmin = ymin;
+    fLegYmax = ymax;
 }
 
 //_______________________________________________________________________________________
@@ -216,8 +235,12 @@ TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
     else { y += 0.02; tex.DrawLatex(x*xmax, y*ymax, tex_str); }
 
     TLegend* leg = 0x0; 
-    if (fLogPlot) leg = new TLegend(0.21616,0.180698, 0.450276, 0.389117);
-    else leg = new TLegend(0.595994, 0.48152, 0.874309, 0.661191);
+    // the legend can be set manually but only temporarily 
+    // (fLegXmin was picked arbitrarily, all leg coordinates should be positive)
+    if (fLegXmin<=0) {
+        if (fLogPlot) leg = new TLegend(0.21616,0.180698, 0.450276, 0.389117);
+        else leg = new TLegend(0.595994, 0.48152, 0.874309, 0.661191);
+    } else leg = new TLegend(fLegXmin, fLegYmin, fLegXmax, fLegYmax);
     leg->AddEntry(h_sig, Title(h_sig).Data(), "pe");
     if (h_bg) leg->AddEntry(h_bg, Title(h_bg).Data(), "pe");
     leg->SetTextFont(43);
@@ -482,8 +505,10 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
     else tex.DrawLatex(x*xmax, y*ymax, tex_str);
 
     TLegend* leg = 0x0;
-    if (fLogPlot) leg = new TLegend(0.224541,0.13638,0.556761,0.364879);
-    else leg = new TLegend(0.620166, 0.295981, 0.898481, 0.590789);
+    if (fLegXmin<=0) {
+        if (fLogPlot) leg = new TLegend(0.224541,0.13638,0.556761,0.364879);
+        else leg = new TLegend(0.620166, 0.295981, 0.898481, 0.590789);
+    } else leg = new TLegend(fLegXmin, fLegYmin, fLegXmax, fLegYmax);
     leg->AddEntry(main_hist, (Title(main_hist)).Data(), "le");
     leg->AddEntry(h2, (Title(h2)).Data(), "pe");
     if (h3) leg->AddEntry(h3, (Title(h3)).Data(), "pe");
@@ -493,6 +518,7 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
     leg->SetTextSize(fLegendTextSize);
     leg->SetFillStyle(0);
     leg->Draw();
+    // if legend was set temporararily we undo these changes to not disturb the next plot
 
     c->Update();
     return c;
@@ -605,8 +631,10 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4, TH
 
 
     TLegend* leg = 0x0; 
-    if (fLogPlot) leg = new TLegend(0.21616,0.180698, 0.450276, 0.389117);
-    else leg = new TLegend(0.595994, 0.48152, 0.874309, 0.661191);
+    if (fLegXmin<=0) {
+        if (fLogPlot) leg = new TLegend(0.21616,0.180698, 0.450276, 0.389117);
+        else leg = new TLegend(0.595994, 0.48152, 0.874309, 0.661191);
+    } else leg = new TLegend(fLegXmin, fLegYmin, fLegXmax, fLegYmax);
     leg->AddEntry(hist1, (Title(hist1)).Data(), "pe");
     if (h_2) leg->AddEntry(h_2, (Title(h_2) + "(" + n_2 + "%)").Data(), "pe");
     if (h_3) leg->AddEntry(h_3, (Title(h_3) + "(" + n_3 + "%)").Data(), "pe");
@@ -667,6 +695,7 @@ TCanvas* PlotTask::PlotHist(TH1F* hist) const
     /* leg->SetTextSize(0.04); */
     leg->SetFillStyle(0);
     leg->Draw();
+    // if legend was set temporararily we undo these changes to not disturb the next plot
 
     canv->Update();
     return canv;
