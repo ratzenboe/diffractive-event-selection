@@ -82,16 +82,14 @@ def train_model(data, run_mode_user, val_data,
     key_lst = list(data.keys()) 
     if (len(key_lst)==3 and 'event' in key_lst and 'track' in key_lst):
         history = train_evt_track(data, val_data, batch_size, n_epochs, rnn_layer,
-                           out_path, dropout, class_weight,
-                           n_layers, layer_nodes, batch_norm, k_reg, activation, 
-                           aux, flat)
+                           out_path, dropout, n_layers, layer_nodes, batch_norm, 
+                           k_reg, activation, aux, flat)
         return history
     
     else:
         history = train_composite_NN(data, val_data, batch_size, n_epochs, rnn_layer,
-                           out_path, dropout, class_weight,
-                           n_layers, layer_nodes, batch_norm, k_reg, activation, 
-                           aux, flat)
+                           out_path, dropout, n_layers, layer_nodes, batch_norm, 
+                           k_reg, activation, aux, flat, koala)
         return history
 
 
@@ -214,8 +212,8 @@ def train_evt_track(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM'
 
 
 def train_composite_NN(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM', 
-        out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
-        n_layers=3, layer_nodes=100, batch_norm=False, k_reg=0.01, activation='relu', 
+        out_path = 'output/', dropout = 0.2, n_layers=3, layer_nodes=100, 
+        batch_norm=False, k_reg=0.01, activation='relu', 
         aux=False, flat=False, koala=False):
 
 
