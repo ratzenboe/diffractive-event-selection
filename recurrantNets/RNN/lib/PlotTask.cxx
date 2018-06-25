@@ -178,8 +178,6 @@ TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
     h_sig->SetMarkerSize(1.4);
     h_sig->SetMarkerColor(kGreen+1);
 
-    h_sig->GetXaxis()->SetTitle("m_{#pi#pi} (GeV/c^{2})");
-    h_sig->GetYaxis()->SetTitle("Counts / (0.03 GeV/c^{2})");
     /* axis labels have to be set seperately, */
     /* gStyle is somehow set to default for the next adjustments */
     h_sig->GetXaxis()->SetTitleOffset(1.1);
@@ -193,18 +191,28 @@ TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
     h_sig->GetXaxis()->SetLabelFont(43);
     h_sig->GetYaxis()->SetLabelFont(43);
 
-    /* h_sig->SetAxisRange(fAxisMin, fAxisMax,"X"); */
-    /* if (!fLogPlot) h_sig->SetAxisRange(0., */ 
-    /*                         TMath::Max(h_sig->GetBinContent(h_sig->GetMaximumBin()), */ 
-    /*                                    h_bg->GetBinContent(h_bg->GetMaximumBin()))*1.2); */
+    h_bbg->GetXaxis()->SetTitleOffset(1.1);
+    h_bbg->GetYaxis()->SetTitleOffset(1.15);
+    h_bbg->GetYaxis()->SetTitleSize(fTitleSize);
+    h_bbg->GetXaxis()->SetTitleSize(fTitleSize);
+    h_bbg->GetXaxis()->SetTitleFont(43);
+    h_bbg->GetYaxis()->SetTitleFont(43);
+    h_bbg->GetXaxis()->SetLabelSize(fLableSize);
+    h_bbg->GetYaxis()->SetLabelSize(fLableSize);
+    h_bbg->GetXaxis()->SetLabelFont(43);
+    h_bbg->GetYaxis()->SetLabelFont(43);
 
-    /* h_sig->Draw(); */
+
     if (h_sig->GetBinContent(h_sig->GetMaximumBin())>=h_bg->GetBinContent(h_bg->GetMaximumBin())){
         // h-sig has to be plotted first as to not crop away any hist points
+        h_sig->GetXaxis()->SetTitle("m_{#pi#pi} (GeV/c^{2})");
+        h_sig->GetYaxis()->SetTitle("Counts / (0.03 GeV/c^{2})");
         h_sig->SetAxisRange(fAxisMin, fAxisMax,"X");
         h_sig->Draw();
         h_bg->Draw("same");
     } else {
+        h_bg->GetXaxis()->SetTitle("m_{#pi#pi} (GeV/c^{2})");
+        h_bg->GetYaxis()->SetTitle("Counts / (0.03 GeV/c^{2})");
         h_bg->SetAxisRange(fAxisMin, fAxisMax,"X");
         h_bg->Draw();
         h_sig->Draw("same");
@@ -217,7 +225,6 @@ TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
     h_bg->SetMarkerStyle(4);
     h_bg->SetMarkerSize(1.4);
     h_bg->SetMarkerColor(kRed+1);
-    /* h_bg->Draw("same"); */
 
     canv->Update();
 

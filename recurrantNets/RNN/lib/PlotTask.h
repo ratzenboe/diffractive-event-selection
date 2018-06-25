@@ -13,7 +13,6 @@ class PlotTask
     // Destructor
                         ~PlotTask();
     // Setters
-    void                SetBatch(Bool_t sb) { fSetBatch = sb; }
     void                SetLog(Bool_t lp) { fLogPlot = lp; }
     // Sizes
     void                SetTitleSize(Int_t size) { fTitleSize = size; }
@@ -22,17 +21,27 @@ class PlotTask
     void                SetLegendTextSize(Int_t size) { fLegendTextSize = size; }
     // axis range
     void                SetAxisRange(Double_t xmin, Double_t xmax) {fAxisMin=xmin; fAxisMax=xmax;}
+    // Positional & text setters
+    void                SetLegendPos(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);
+    void                SetTextPos(Double_t x, Double_t y) { fTextX = x; fTextY = y; }
+    void                SetTextString(TString txtstr) { fTextString = txtstr; }
 
     void                ResetSizes();
+    void                ResetLegendPos();
+    void                ResetTextPos() { fTextX = -999.; fTextY = -999.; }
+    void                ResetTextString() { fTextString = ""; }
+    // swich canvas display on or off
+    void                ToggleDisplayCanvas() { fSetBatch = !fSetBatch; }
 
     // functions plotting a histogram and saving it in 
     void                PlotAdd(TString hname1, TString hname2="", TString hname3="", 
                                 TString hname4="", TString hname5="") const;
     void                PlotRatio(TString hname1, TString hname2, TString hname3="", 
                                   TString hname4="", TString hname5="") const;
+    void                PlotSigBg(TString hnameSig, TString hnameBg, Bool_t kNorm=kFALSE) const;
+    // add histograms together creating a new one with name&title finalName
     void                AddHists(TString finalName, TString hname1, TString hname2,
                                  TString hname3="", TString hname4="");
- 
   private:
     // if the y axis should be logarithmic
     Bool_t              fLogPlot;        
@@ -52,6 +61,16 @@ class PlotTask
     // axis range
     Double_t            fAxisMin;
     Double_t            fAxisMax;
+    // legend position
+    Double_t            fLegXmin;
+    Double_t            fLegXmax;
+    Double_t            fLegYmin;
+    Double_t            fLegYmax;
+    // text position
+    Double_t            fTextX;
+    Double_t            fTextY;
+    // text string
+    TString             fTextString;
 
     // private functions returning the canvas
     TCanvas*            PlotAddHists(TH1F* hist1, TH1F* h_2=0x0, 
@@ -59,7 +78,8 @@ class PlotTask
     TCanvas*            PlotHist(TH1F* hist1) const;
     TCanvas*            rp(TH1F* main_hist, TH1F* h2, TH1F* h3=0x0, 
                            TH1F* h4=0x0, TH1F* h5=0x0) const;
-    
+    TCanvas*            SigBg(TH1F* h_sig, TH1F* h_bg) const;
+
     // get the title of a histogram
     TString             Title(TH1F* hist) const;
     // scale histogram to other histogram
