@@ -84,34 +84,127 @@ def train_model(data, run_mode_user, val_data,
                            out_path, dropout, class_weight,
                            n_layers, layer_nodes, batch_norm, k_reg, activation, 
                            aux, flat, koala=False)
-
-            # history = train_hypernet(data, val_data, batch_size, n_epochs, rnn_layer,
-            #                out_path, dropout, class_weight,
-            #                n_layers, layer_nodes, batch_norm, activation, aux, flat, koala=False)
-
         return history
-
-    elif 'anomaly' in run_mode_user:
-        history = train_autoencoder(data, val_data, batch_size, n_epochs, out_path, dropout, 
-                          n_layers, batch_norm, activation)
-        return history
-
-    elif 'koala' in run_mode_user:
-        history = train_composite_NN(data, val_data, batch_size, n_epochs, rnn_layer,
-                           out_path, dropout, class_weight,
-                           n_layers, layer_nodes, batch_norm, k_reg, activation, 
-                           aux, flat, koala=True)
-
-        # history = train_hypernet(data, val_data, batch_size, n_epochs, rnn_layer,
-        #                    out_path, dropout, class_weight,
-        #                    n_layers, layer_nodes, batch_norm, activation, aux, flat, koala=True)
-
-
-        return history
-
 
     else:
         raise NameError('ERROR: Unrecognized model {}'.format(run_mode_user))
+
+
+def train_evt_track(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM', 
+        out_path = 'output/', dropout = 0.2, n_layers=3, layer_nodes=100, 
+        batch_norm=False, k_reg=0.01, activation='relu', 
+        aux=False, flat=False):
+
+        try:
+            train_data = data.copy()
+            if flat:
+                event_name = 'feature_matrix'
+                X_event_train = train_data.pop('feature_matrix')
+                X_track_train = None
+            else:
+                event_name = 'event'
+                X_event_train   = train_data.pop('event')
+                X_track_train   = train_data.pop('track')
+
+            y_train         = train_data.pop('target')
+
+            if train_data:
+                raise ValueError('The input dictionary contains unknown keys: {}'.format(
+                    list(train_data.keys())))
+            
+            input_data = data.copy()
+            input_data.pop('target')
+
+        except KeyError:
+            raise KeyError('The data-dictionary provided does not contain' \
+                    'all necessary keys for the selected run-mode (run_mode_user)')
+
+        input_list = []
+        # this following data is of shape (n_evts, n_features)
+        # the network is fed with n_features
+        if len(X_event_train.shape)==1:
+            EVENT_SHAPE = (1,)
+        else:
+            EVENT_SHAPE = (X_event_train.shape[-1],)
+        event_input = Input(shape=EVENT_SHAPE, name=event_name)
+        input_list.append(event_input)
+        # ------ Build the model ---------
+        # RNNs feeding into the event level layer
+        # track_mask = Masking(mask_value=float(-999), name='track_masking')(track_input)
+        # event needs no masking
+        if not flat:
+            TRACK_SHAPE      = X_track_train.shape[1:]
+            N_FEATURES_track = TRACK_SHAPE[-1]
+            track_input = Input(shape=TRACK_SHAPE, name='track')
+            input_list.append(track_input)
+            try:
+                track_rnn = Masking(mask_value=float(-999), name='track_masking')(track_input)
+                track_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_track, 
+                    name='track_rnn'))(track_rnn)
+                if batch_norm:
+                    track_rnn = BatchNormalization(name='track_batch_norm')(track_rnn)
+                if dropout > 0.0:
+                    track_rnn = Dropout(dropout, name='track_dropout')(track_rnn)
+
+            except AttributeError:
+                raise AttributeError('{} is not a valid Keras layer!'.format(rnn_layer))
+            concatenate_list = [track_rnn, event_input]
+        else:
+            concatenate_list = [event_input]
+  
+        if len(concatenate_list)>1:
+            x = keras.layers.concatenate(concatenate_list)
+        else: 
+            x = concatenate_list[0]
+        # add an auxilairy output
+        output_list = []
+        output_data = []
+        if aux: 
+            aux_output_track = Dense(1, activation='sigmoid', name='aux_evt_trk')(x)
+            output_list.append(aux_output_track)
+            output_data.append(y_train)
+        for i in range(0,n_layers):
+            if activation in special_activations:
+                x = Dense(layer_nodes, kernel_initializer='glorot_normal')(x)
+                x = (getattr(keras.layers, activation)())(x)
+            else:
+                x = Dense(layer_nodes, activation = activation, 
+                        kernel_regularizer=regularizers.l2(k_reg),
+                        kernel_initializer = 'glorot_normal')(x)
+            if batch_norm:
+                x = BatchNormalization()(x)
+            if dropout > 0.0:
+                x = Dropout(dropout)(x)
+
+        main_output = Dense(1, 
+                            activation = 'sigmoid', 
+                            name = 'main_output', 
+                            kernel_initializer = 'glorot_normal')(x)
+        output_list.insert(0, main_output)  
+        output_data.append(y_train)
+        model = Model(inputs=input_list, outputs=output_list)
+  
+        model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+        print(model.summary())
+        try:
+            checkpointer = ModelCheckpoint(filepath=out_path+'best_model.h5',
+                               verbose=0,
+                               save_best_only=True)
+            history = model.fit(input_data,
+                                output_data,  
+                                epochs = n_epochs, 
+                                batch_size = batch_size,
+                                validation_data = val_data,
+                                # callbacks = [checkpointer]).history
+                                callbacks = [callback_ROC(input_data, output_data, 
+                                                          output_prefix=out_path),
+                                             checkpointer]).history
+
+        except KeyboardInterrupt:
+            print('Training ended early.')
+
+        return history
+
 
 def train_composite_NN(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM', 
         out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
