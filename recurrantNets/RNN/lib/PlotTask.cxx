@@ -42,6 +42,9 @@ PlotTask::PlotTask(TString fname, TString option)
   , fLegXmax(-999.)
   , fLegYmin(-999.)
   , fLegYmax(-999.)
+  , fTextX(-999.)
+  , fTextY(-999.)
+  , fTextString("")
 {
     fOutFileBaseName = fname;
     // remove the .root at the end of the filename ".root" = 5 characters at the end
@@ -236,10 +239,13 @@ TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
     ymax = canv->GetFrame()->GetY2();
     printf("xmax: %.2f, y_max: %.2f\n", xmax, ymax);
     TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}";
+    if (fTextString!="") tex_str = fTextString;
     Double_t x(0), y(0);
     RelativeTextPosition(x,y);
-    if (fLogPlot) { y -= 0.02; tex.DrawLatex(x*xmax, y*std::pow(10.,ymax), tex_str); }
-    else { y += 0.02; tex.DrawLatex(x*xmax, y*ymax, tex_str); }
+    if (fTextX==-999.){
+        if (fLogPlot) { y -= 0.02; tex.DrawLatex(x*xmax, y*std::pow(10.,ymax), tex_str); }
+        else { y += 0.02; tex.DrawLatex(x*xmax, y*ymax, tex_str); }
+    } else tex.DrawLatex(fTextX, fTextY, tex_str); 
 
     TLegend* leg = 0x0; 
     // the legend can be set manually but only temporarily 
@@ -506,10 +512,13 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
     tex.SetTextFont(43);
     tex.SetTextSize(fPlotTextSize);
     TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}";
+    if (fTextString!="") tex_str = fTextString;
     Double_t x(0), y(0);
     RelativeTextPosition(x,y);
-    if (fLogPlot) tex.DrawLatex(x*xmax, y*std::pow(10.,ymax), tex_str);
-    else tex.DrawLatex(x*xmax, y*ymax, tex_str);
+    if (fTextX==-999.){
+        if (fLogPlot) tex.DrawLatex(x*xmax, y*std::pow(10.,ymax), tex_str);
+        else tex.DrawLatex(x*xmax, y*ymax, tex_str);
+    } else tex.DrawLatex(fTextX, fTextY, tex_str); 
 
     TLegend* leg = 0x0;
     if (fLegXmin<=0) {
@@ -630,12 +639,14 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4, TH
     ymax = canv->GetFrame()->GetY2();
     printf("xmax: %.2f, y_max: %.2f\n", xmax, ymax);
     TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}";
+    if (fTextString!="") tex_str = fTextString;
     Double_t x(0), y(0);
     RelativeTextPosition(x,y);
     y += 0.02;
-    if (fLogPlot) tex.DrawLatex(x*xmax, y*std::pow(10.,ymax), tex_str);
-    else tex.DrawLatex(x*xmax, y*ymax, tex_str);
-
+    if (fTextX==-999.){
+        if (fLogPlot) tex.DrawLatex(x*xmax, y*std::pow(10.,ymax), tex_str);
+        else tex.DrawLatex(x*xmax, y*ymax, tex_str);
+    } else tex.DrawLatex(fTextX, fTextY, tex_str); 
 
     TLegend* leg = 0x0; 
     if (fLegXmin<=0) {
