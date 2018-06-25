@@ -94,9 +94,9 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
 
     title = kwargs.pop('title', None)
     xlabel = kwargs.pop('xlabel', 'x')
-    sig_label = kwargs.pop('sig_label', 'signal')
-    bg_label = kwargs.pop('bg_label', 'background')
-    combined_label = kwargs.pop('combined_label', 'signal+backgr.')
+    sig_label = kwargs.pop('sig_label', 'Signal')
+    bg_label = kwargs.pop('bg_label', 'BG')
+    combined_label = kwargs.pop('combined_label', 'S+B')
     normed = kwargs.pop('normed', None)
 
     if kwargs:
@@ -150,8 +150,8 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     plt.xlabel(xlabel, fontsize=17)
     plt.ylabel('Entries', fontsize=17)
     plt.legend(fontsize=14)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
+    plt.xticks(fontsize=11)
+    plt.yticks(fontsize=11)
     plt.tight_layout()
     plt.savefig(out_path + 'feature_' + title + '_' + xlabel + '.png')
     plt.savefig(out_path + 'feature_' + title + '_' + xlabel + '.pdf')
