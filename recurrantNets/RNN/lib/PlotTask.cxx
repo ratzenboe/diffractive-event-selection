@@ -280,6 +280,9 @@ void PlotTask::PlotSigBg(TString hnameSig, TString hnameBg, Bool_t kNorm) const
         printf("<E> No histogram found named %s\n", hnameBg.Data()); return; }
     TH1F* h_bg = (TH1F*)((TH1F*)fHistList->FindObject(hnameBg))->Clone((hnameBg+"_cln").Data());
 
+    if (!h_sig->InheritsFrom("TH1F")) { printf("<E> %s not a TH1F\n", hnameSig.Data()); return; }
+    if (!h_bg->InheritsFrom("TH1F"))  { printf("<E> %s not a TH1F\n", hnameBg.Data()); return; }
+
     if (kNorm) h_bg = ScaleHist(h_bg, h_sig);
 
     TCanvas *c = 0x0;
@@ -795,6 +798,12 @@ void PlotTask::PlotRatio(TString hname1, TString hname2, TString hname3,
     if (hname5!="") h_5 = 
         (TH1F*)((TH1F*)fHistList->FindObject(hname5))->Clone((hname5+"_cln").Data());    
 
+    if (!h_1->InheritsFrom("TH1F")) { printf("<E> %s not a TH1F\n", hname1.Data()); return; }
+    if (!h_2->InheritsFrom("TH1F")) { printf("<E> %s not a TH1F\n", hname2.Data()); return; }
+    if (h_3) if (!h_3->InheritsFrom("TH1F")){printf("<E> %s not a TH1F\n",hname3.Data()); return;}
+    if (h_4) if (!h_4->InheritsFrom("TH1F")){printf("<E> %s not a TH1F\n",hname4.Data()); return;}
+    if (h_5) if (!h_5->InheritsFrom("TH1F")){printf("<E> %s not a TH1F\n",hname5.Data()); return;}
+
     TCanvas *c = 0x0;
     c = rp(h_1, h_2, h_3, h_4, h_5);
 
@@ -844,6 +853,13 @@ void PlotTask::PlotAdd(TString hname1, TString hname2,
         printf("<E> No histogram found named %s\n", hname5.Data()); return; }
     if (hname5!="") h_5 = 
         (TH1F*)((TH1F*)fHistList->FindObject(hname5))->Clone((hname5+"_cln").Data());    
+
+    if (!h_1->InheritsFrom("TH1F")) { printf("<E> %s not a TH1F\n", hname1.Data()); return; }
+    if (h_2) if (!h_2->InheritsFrom("TH1F")){printf("<E> %s not a TH1F\n",hname2.Data()); return; }
+    if (h_3) if (!h_3->InheritsFrom("TH1F")){printf("<E> %s not a TH1F\n",hname3.Data()); return;}
+    if (h_4) if (!h_4->InheritsFrom("TH1F")){printf("<E> %s not a TH1F\n",hname4.Data()); return;}
+    if (h_5) if (!h_5->InheritsFrom("TH1F")){printf("<E> %s not a TH1F\n",hname5.Data()); return;}
+
 
     TCanvas *c = 0x0;
     if (h_1 && !h_2 && !h_3 && !h_4) c = PlotHist(h_1);
