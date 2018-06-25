@@ -79,15 +79,22 @@ def train_model(data, run_mode_user, val_data,
                 'but insted {}'.format(type(rnn_layer)))
 
 
-    if 'NN' in run_mode_user:
+    key_lst = list(data.keys()) 
+    if (len(key_lst)==3 and 'event' in key_lst and 'track' in key_lst):
+        history = train_evt_track(data, val_data, batch_size, n_epochs, rnn_layer,
+                           out_path, dropout, class_weight,
+                           n_layers, layer_nodes, batch_norm, k_reg, activation, 
+                           aux, flat)
+        return history
+    
+    else:
         history = train_composite_NN(data, val_data, batch_size, n_epochs, rnn_layer,
                            out_path, dropout, class_weight,
                            n_layers, layer_nodes, batch_norm, k_reg, activation, 
-                           aux, flat, koala=False)
+                           aux, flat)
         return history
 
-    else:
-        raise NameError('ERROR: Unrecognized model {}'.format(run_mode_user))
+
 
 
 def train_evt_track(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM', 
