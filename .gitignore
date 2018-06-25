@@ -108,7 +108,7 @@ venv.bak/
 
 # output files are too big for a online repository
 /recurrantNets/RNN/data/*
-/recurrantNets/RNN/code/output/*
+/recurrantNets/RNN/ml/output/*
 /imageNets/pretrainedmodels/*
 
 # ignore the save copy
