@@ -13,8 +13,8 @@ import fnmatch
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot                        as plt
-import seaborn                                  as sns
-sns.set()
+# import seaborn                                  as sns
+# sns.set()
 
 import numpy                                    as np
 import pandas                                   as pd
@@ -127,7 +127,7 @@ def main():
 
     # if koala indices are still left in the data we get rid of them
     not_99_indices = np.arange(evt_dictionary['target'].shape[0])[evt_dictionary['target']!=99]
-    if not_99_indices:
+    if not_99_indices.shape[0] != evt_dictionary['target'].shape[0]:
         for key in evt_dictionary.keys():
             evt_dictionary[key] = evt_dictionary[key][not_99_indices]
 
@@ -193,6 +193,7 @@ def main():
                      # 'aux_output': evt_dic_val['target']
                      }
         evt_dic_val.pop('target')
+        X_val_data = evt_dic_val
     else:
         y_val_data = evt_dic_val.pop('target')
         X_val_data = evt_dic_val

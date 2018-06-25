@@ -8,8 +8,8 @@ import itertools
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set()
+# import seaborn as sns
+# sns.set()
 
 import numpy as np
 import pandas as pd
@@ -150,6 +150,8 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     plt.xlabel(xlabel, fontsize=17)
     plt.ylabel('Entries', fontsize=17)
     plt.legend(fontsize=14)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
     plt.tight_layout()
     plt.savefig(out_path + 'feature_' + title + '_' + xlabel + '.png')
     plt.savefig(out_path + 'feature_' + title + '_' + xlabel + '.pdf')

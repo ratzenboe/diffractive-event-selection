@@ -6,8 +6,8 @@ import numpy as np
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set()
+# import seaborn as sns
+# sns.set()
 
 from sklearn.metrics import roc_auc_score
 
