@@ -87,6 +87,9 @@ void PlotTask::ResetSizes()
     fLableSize= 36;
     fPlotTextSize = 39;
     fLegendTextSize = 35;
+
+    fAxisMax = 2.5;
+    fAxisMin = 0.;
 }
 
 //_______________________________________________________________________________________
@@ -136,11 +139,123 @@ TString PlotTask::Title(TH1F* hist) const
     return out_str;
 }
 
+//_______________________________________________________________________________________
+TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
+{
+    // go into batch mode where canvases are not drawn:
 
-//////////////////////////////////////////////////////////////////////////////////////////
-// add plot function: PlotSigBg(TString hnameSig, TString hnameBg)
-// add plot function: PlotSigBgNorm(TString hnameSig, TString hnameBg)
-//  -> in this function signal and BG have the same integral
+    TCanvas* canv = new TCanvas("SigBg","",1450,1000);
+
+    /* Double_t integral_sig = h_sig->Integral(1,h_sig->GetSize()-2); */ 
+    /* Double_t integral_bg  = h_bg->Integral( 1,h_bg->GetSize()-2); */ 
+
+    h_sig->Sumw2();
+    h_bg->Sumw2();
+
+    // histogram specific actions
+    h_sig->SetLineColor(kGreen+1);
+    h_sig->SetLineWidth(2);
+    h_sig->SetMarkerStyle(20);
+    h_sig->SetMarkerSize(1.4);
+    h_sig->SetMarkerColor(kGreen+1);
+
+    h_sig->GetXaxis()->SetTitle("m_{#pi#pi} (GeV/c^{2})");
+    h_sig->GetYaxis()->SetTitle("Counts / (0.03 GeV/c^{2})");
+    /* axis labels have to be set seperately, */
+    /* gStyle is somehow set to default for the next adjustments */
+    h_sig->GetXaxis()->SetTitleOffset(1.1);
+    h_sig->GetYaxis()->SetTitleOffset(1.15);
+    h_sig->GetYaxis()->SetTitleSize(fTitleSize);
+    h_sig->GetXaxis()->SetTitleSize(fTitleSize);
+    h_sig->GetXaxis()->SetTitleFont(43);
+    h_sig->GetYaxis()->SetTitleFont(43);
+    h_sig->GetXaxis()->SetLabelSize(fLableSize);
+    h_sig->GetYaxis()->SetLabelSize(fLableSize);
+    h_sig->GetXaxis()->SetLabelFont(43);
+    h_sig->GetYaxis()->SetLabelFont(43);
+
+    /* h_sig->SetAxisRange(fAxisMin, fAxisMax,"X"); */
+    /* if (!fLogPlot) h_sig->SetAxisRange(0., */ 
+    /*                         TMath::Max(h_sig->GetBinContent(h_sig->GetMaximumBin()), */ 
+    /*                                    h_bg->GetBinContent(h_bg->GetMaximumBin()))*1.2); */
+
+    /* h_sig->Draw(); */
+    if (h_sig->GetBinContent(h_sig->GetMaximumBin())>=h_bg->GetBinContent(h_bg->GetMaximumBin())){
+        // h-sig has to be plotted first as to not crop away any hist points
+        h_sig->SetAxisRange(fAxisMin, fAxisMax,"X");
+        h_sig->Draw();
+        h_bg->Draw("same");
+    } else {
+        h_bg->SetAxisRange(fAxisMin, fAxisMax,"X");
+        h_bg->Draw();
+        h_sig->Draw("same");
+    }
+
+    if (fLogPlot) gPad->SetLogy();
+
+    h_bg->SetLineColor(kRed+1);
+    h_bg->SetLineWidth(2);
+    h_bg->SetMarkerStyle(4);
+    h_bg->SetMarkerSize(1.4);
+    h_bg->SetMarkerColor(kRed+1);
+    /* h_bg->Draw("same"); */
+
+    canv->Update();
+
+    TLatex tex;
+    tex.SetTextFont(43);
+    tex.SetTextSize(fPlotTextSize);
+    Double_t xmax, ymax;
+    xmax = canv->GetFrame()->GetX2();
+    ymax = canv->GetFrame()->GetY2();
+    printf("xmax: %.2f, y_max: %.2f\n", xmax, ymax);
+    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}";
+    Double_t x(0), y(0);
+    RelativeTextPosition(x,y);
+    if (fLogPlot) { y -= 0.02; tex.DrawLatex(x*xmax, y*std::pow(10.,ymax), tex_str); }
+    else { y += 0.02; tex.DrawLatex(x*xmax, y*ymax, tex_str); }
+
+    TLegend* leg = 0x0; 
+    if (fLogPlot) leg = new TLegend(0.21616,0.180698, 0.450276, 0.389117);
+    else leg = new TLegend(0.595994, 0.48152, 0.874309, 0.661191);
+    leg->AddEntry(h_sig, Title(h_sig).Data(), "pe");
+    if (h_bg) leg->AddEntry(h_bg, Title(h_bg).Data(), "pe");
+    leg->SetTextFont(43);
+    leg->SetTextSize(fLegendTextSize);
+    leg->SetFillStyle(0);
+    leg->Draw();
+
+    canv->Update();
+    return canv;
+}
+
+//_______________________________________________________________________________________
+void PlotTask::PlotSigBg(TString hnameSig, TString hnameBg, Bool_t kNorm) const
+{
+    gROOT->SetBatch(fSetBatch);
+    // set the alice plot-style
+    SetStyle();
+
+    if (!fHistList->FindObject(hnameSig)) {
+        printf("<E> No histogram found named %s\n", hnameSig.Data()); return; }
+    TH1F* h_sig = (TH1F*)((TH1F*)fHistList->FindObject(hnameSig))->Clone((hnameSig+"_cln").Data());
+    // 2nd histogram
+    if (!fHistList->FindObject(hnameBg)){ 
+        printf("<E> No histogram found named %s\n", hnameBg.Data()); return; }
+    TH1F* h_bg = (TH1F*)((TH1F*)fHistList->FindObject(hnameBg))->Clone((hnameBg+"_cln").Data());
+
+    if (kNorm) h_bg = ScaleHist(h_bg, h_sig);
+
+    TCanvas *c = 0x0;
+    c = SigBg(h_sig, h_bg);
+
+    TString outstr = fOutFileBaseName + "_" + hnameSig + "_" + hnameBg;
+    if (fLogPlot) outstr += "_log";
+    c->SaveAs((outstr+"_SigBg.pdf").Data());
+    if (fSetBatch) delete c;
+    c = 0x0;
+    printf("Saving output in %s\n", (outstr+"_SigBg.pdf").Data());
+}
 
 //_______________________________________________________________________________________
 void PlotTask::AddHists(TString finalName, TString hname1, TString hname2,
