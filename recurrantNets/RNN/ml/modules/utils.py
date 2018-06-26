@@ -462,7 +462,7 @@ def engineer_features(evt_dic, replace=False):
 
     df['eta_phi_diff'] = get_new_feature(eta_phi_dist, evt_dic_copy)
     df['opang']        = get_new_feature(opang, evt_dic_copy)
-    df['inv_mass']     = get_new_feature(inv_mass, evt_dic_copy)
+    # df['inv_mass']     = get_new_feature(inv_mass, evt_dic_copy)
 
     evt_dic_copy['event'] = df.to_records(index=False) 
 
