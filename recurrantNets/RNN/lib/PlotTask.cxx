@@ -187,13 +187,13 @@ TString PlotTask::Title(TH1F* hist) const
     else if (title_str=="fInvMass_LS_minus") out_str = "Like sign (-)";
     else if (title_str=="fNb_trks_passed") out_str = "N_{tracks}";
     // plots from the emcal task
-    else if (title_str=="fGammaE") out_str = "Primary E_{#gamma}";
+    else if (title_str=="fGammaE") out_str = "Primary E(#gamma)";
     else if (title_str=="fSecondaryE_SIG") out_str = "Secondary E(#gamma) (Sig)";
     else if (title_str=="fSecondaryE_BG")  out_str = "Secondary E";
     else if (title_str=="fEnergy_SIG") out_str = "E(cluster) (sig)";
     else if (title_str=="fEnergy_BG")  out_str = "E(cluster) (FD)";
-    else if (title_str=="fdPhiEta_pion") out_str = "Cluster-track distance in #phi-#eta (#pion)";
-    else if (title_str=="fdPhiEta_gamma") out_str = "Gamma #phi-#eta distance";
+    else if (title_str=="fdPhiEta_pion") out_str = "Cluster from #pi";
+    else if (title_str=="fdPhiEta_gamma") out_str = "Cluster from #gamma";
     else out_str = hist->GetTitle();
     
     return out_str;
