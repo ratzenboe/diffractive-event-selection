@@ -15,6 +15,7 @@ matplotlib.use('agg')
 import matplotlib.pyplot                        as plt
 # import seaborn                                  as sns
 # sns.set()
+from sklearn                                    import preprocessing
 
 import numpy                                    as np
 import pandas                                   as pd
@@ -35,7 +36,7 @@ from modules.utils                              import print_dict, split_diction
                                                        print_array_in_dictionary_stats, \
                                                        remove_field_name, flatten_dictionary, \
                                                        special_preprocessing, engineer_features, \
-                                                       flatten_feature
+                                                       flatten_feature, get_new_feature, inv_mass
 from modules.file_management                    import OutputManager
 from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAoutput, \
                                                        plot_cut_efficiencies, plot_all_features, \
@@ -116,6 +117,19 @@ def main():
     # fix the missing values (also defined in the 
     evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
     evt_dictionary, list_of_engineered_features = engineer_features(evt_dictionary, replace=False)
+
+    # get invariant mass distr to calculate the inv-mass ROC:
+    imass = get_new_feature(inv_mass, evt_dictionary)
+    # for the minmaxscaler to work
+    imass = imass.reshape(-1, 1)
+    # scale imass to 0-1
+    min_max_scaler = preprocessing.MinMaxScaler()
+    imass = min_max_scaler.fit_transform(imass)
+    # we also need to save the target values corresponding to each inv-mass sample
+    y_target = evt_dictionary['target'].copy()
+    # transform it into a std numpy array
+    y_target = np.array(y_target.tolist())
+    plot_ROCcurve(y_target, imass, out_path, label='inv_mass')
     
     if evt_id_string in evt_dictionary['event'].dtype.names:
         raise KeyError('Attention, the event id key is still in the data! '\
@@ -252,10 +266,6 @@ def main():
     MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
     del num_trueSignal, num_trueBackgr
 
-    if 'koala' in run_mode_user:
-        y_train_truth[y_train_truth==1] = 1
-        y_train_truth[(y_train_truth==99) | (y_train_truth==0)] = 0
-
     plot_ROCcurve(y_train_truth, y_train_score, out_path, label='train')
 
     del y_train_truth, y_train_score
@@ -276,10 +286,6 @@ def main():
                                                     out_path, label='test')
     MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
     del num_trueSignal, num_trueBackgr
-
-    if 'koala' in run_mode_user:
-        y_test_truth[y_test_truth==1] = 1
-        y_test_truth[(y_test_truth==99) | (y_test_truth==0)] = 0
 
     plot_ROCcurve(y_test_truth, y_test_score, out_path, label='test')
 
