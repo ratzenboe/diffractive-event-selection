@@ -43,29 +43,29 @@ void PlotEMCalTask(TString fname_hitfiles, TString fname_rest)
     PlotTask pt_hit(fname_hitfiles, "EMCAL");
     // we only make one plot with the hit files, for the other ones we use the full statistic
     pt_hit.SetAxisRange(0.,3.);
-    pt_hit.PlotRatio("fGammaE", "fSecondaryE_BG");
+    pt_hit.PlotSigBg("fGammaE", "fSecondaryE_BG");
 
     // log
     pt_hit.SetLog(kTRUE);
-    pt_hit.PlotRatio("fGammaE", "fSecondaryE_BG");
+    pt_hit.SetLegendPos(0.187414,0.188912,0.421853,0.397331);
+    pt_hit.PlotSigBg("fGammaE", "fSecondaryE_BG");
+    pt_hit.ResetLegendPos();
 
     //////////////////////////////////////////////////////////////
     // now the plots with the full statistic
     PlotTask pt_full(fname_rest, "EMCAL");
 
-    pt_full.SetAxisRange(-1.e-7, 1.e-7);
-    pt_full.PlotSigBg("fClusterTime_SIG", "fClusterTime_BG");
-    pt_full.SetAxisRange(0.,3.);
-    pt_full.PlotSigBg("fEnergy_SIG", "fEnergy_BG");
-    pt_full.SetAxisRange(0.,5.);
-    pt_full.PlotSigBg("fdPhiEta_pion", "fdPhiEta_gamma");
+    /* pt_full.SetAxisRange(-1.e-7, 1.e-7); */
+    /* pt_full.PlotSigBg("fClusterTime_SIG", "fClusterTime_BG"); */
 
     pt_full.SetLog(kTRUE);
-    pt_full.SetAxisRange(-1.e-7, 1.e-7);
-    pt_full.PlotSigBg("fClusterTime_SIG", "fClusterTime_BG");
-    pt_full.SetAxisRange(0.,3.);
+    pt_full.SetAxisRange(0.,1.3);
+    pt_full.SetTextPos(0.711745,4137,76);
+    pt_full.SetLegendPos(0.592669, 0.477413,0.827109,0.667351);
     pt_full.PlotSigBg("fEnergy_SIG", "fEnergy_BG");
+    pt_full.ResetTextPos();
     pt_full.SetAxisRange(0.,5.);
+    pt_full.SetLegendPos(0.587137,0.552361,0.821577,0.709446);
     pt_full.PlotSigBg("fdPhiEta_pion", "fdPhiEta_gamma");
 }
 
