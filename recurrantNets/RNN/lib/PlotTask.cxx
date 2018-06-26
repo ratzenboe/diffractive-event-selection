@@ -46,6 +46,7 @@ PlotTask::PlotTask(TString fname, TString option)
   , fTextY(-999.)
   , fTextString("")
 {
+    this->ResetColors();
     fOutFileBaseName = fname;
     // remove the .root at the end of the filename ".root" = 5 characters at the end
     fOutFileBaseName.Remove(fOutFileBaseName.Length()-5, 5);
