@@ -29,12 +29,15 @@ class PlotTask
     void                SetStdColors(Int_t c1=kBlack, Int_t c2=6, Int_t c3=8, 
                                      Int_t c4=kBlue, Int_t c5=kYellow);
     void                SetSigBgColors(Int_t c1=kGreen+1, Int_t c2=kRed+1);
+    void                SetXaxisText(TString txt) { fXaxisText = txt; }
+    void                SetYaxisText(TString txt) { fYaxisText = txt; }
 
     void                ResetSizes();
     void                ResetLegendPos();
     void                ResetTextPos() { fTextX = -999.; fTextY = -999.; }
     void                ResetTextString() { fTextString = ""; }
     void                ResetColors();
+    void                ResetAxisText();
     // swich canvas display on or off
     void                ToggleDisplayCanvas() { fSetBatch = !fSetBatch; }
 
@@ -79,6 +82,9 @@ class PlotTask
     // Colors 
     Int_t               fStdColors[5];
     Int_t               fSigBgColors[2];
+    // X-y labels
+    TString             fXaxisText;
+    TString             fYaxisText;
 
     // private functions returning the canvas
     TCanvas*            PlotAddHists(TH1F* hist1, TH1F* h_2=0x0, 
