@@ -43,6 +43,8 @@ void PlotEMCalTask(TString fname_hitfiles, TString fname_rest)
     PlotTask pt_hit(fname_hitfiles, "EMCAL");
     // we only make one plot with the hit files, for the other ones we use the full statistic
     pt_hit.SetAxisRange(0.,3.);
+    pt_hit.SetXaxisText("E (GeV)");
+    pt_hit.SetYaxisText("Counts / (0.04 GeV)");
     pt_hit.PlotSigBg("fGammaE", "fSecondaryE_BG");
 
     // log
@@ -57,12 +59,16 @@ void PlotEMCalTask(TString fname_hitfiles, TString fname_rest)
 
     pt_full.SetLog(kTRUE);
     pt_full.SetAxisRange(0.,1.3);
-    pt_full.SetTextPos(0.711745,4137,76);
+    pt_full.SetTextPos(0.711745,4137.76);
     pt_full.SetLegendPos(0.592669, 0.477413,0.827109,0.667351);
+    pt_full.SetXaxisText("E (GeV)");
+    pt_full.SetYaxisText("Counts / (0.03 GeV)");
     pt_full.PlotSigBg("fEnergy_SIG", "fEnergy_BG");
     pt_full.ResetTextPos();
     pt_full.SetAxisRange(0.,5.);
     pt_full.SetLegendPos(0.587137,0.552361,0.821577,0.709446);
+    pt_full.SetXaxisText("Cluster distance to nearest track in #phi-#eta space");
+    pt_full.SetYaxisText("Counts");
     pt_full.PlotSigBg("fdPhiEta_pion", "fdPhiEta_gamma");
 }
 
