@@ -260,6 +260,7 @@ Bool_t CEPBGBase::ThreePlusCase(AliMCEvent* MCevt)
 Double_t CEPBGBase::GetMass(TObjArray* tracks, Int_t nTracksTT, 
                             TArrayI* TTindices, AliMCEvent* MCevt) const
 {
+    Int_t pdg_goal = 211;
     TParticle* part = 0x0;
     // construct invariant mass 
     TLorentzVector v_lor = TLorentzVector(0,0,0,0);
@@ -275,6 +276,7 @@ Double_t CEPBGBase::GetMass(TObjArray* tracks, Int_t nTracksTT,
         // get the particle corresponding to MCind
         part = GetPartByLabel(MCind, MCevt);
         if (!part) return -1.;
+        if (abs(part->GetPdgCode())!=pdg_goal) return -1.;
         // set MC mass and momentum
         TLorentzVector lv;
         part->Momentum(lv);
