@@ -754,9 +754,18 @@ void CEPBGBase::PrintStack(AliMCEvent* MCevent, Bool_t prim) const
     Int_t nParticles = prim ? nPrimaries : nTracks;
     for (Int_t ii(4); ii<nParticles; ii++) {
         TParticle* part = stack->Particle(ii);
-        printf("%i: %-13s: E=%-6.8f, Mother: %i, Daugther 0: %i, 1: %i", 
-                ii, part->GetName(), part->Energy(), 
+        printf("%-3i: %-13s: px=%-6.3f, py=%6.3f, pz=%6.3f, E=%-6.3f, m=%-6.3f, Mother: %i, Daugther 0: %i, 1: %i", 
+                ii, part->GetName(), 
+                part->Px(), part->Py(), part->Pz(), part->Energy(), part->GetMass(), 
                 part->GetMother(0), part->GetDaughter(0), part->GetDaughter(1));
+        /* Double_t calc_px, calc_py, calc_pz, calc_e; */
+        /* calc_px = part->Pt()*TMath::Cos(part->Phi()); */
+        /* calc_py = part->Pt()*TMath::Sin(part->Phi()); */
+        /* calc_pz = part->Pt()*TMath::SinH(part->Eta()); */
+        /* calc_e  = TMath::Sqrt( TMath::Max((calc_px*calc_px + calc_py*calc_py + calc_pz*calc_pz + (part->GetMass()*part->GetMass())), 0.) ); */
+        /* TLorentzVector lv; */
+        /* lv.SetXYZM(calc_px, calc_py, calc_pz, part->GetMass()); */
+        /* printf("    Calc px=%-6.3f, py=%6.3f, pz=%6.3f, E=%-6.3f, getCalcmass=%-6.3f, E_lv=%-6.3f", calc_px, calc_py, calc_pz, calc_e, part->GetCalcMass(), lv.E()); */
         if (part->GetStatusCode()==1) printf("   final");
         printf("\n");
         if (ii==nPrimaries-1) printf("-------------- Primaries end ------------------\n");
