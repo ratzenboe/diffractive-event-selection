@@ -402,27 +402,29 @@ def inv_mass(arr):
     returns the invariant mass of particles (only 2 allowed)
     """
     # mass of the pion 139.6 MeV
-    m_pion = 0.139570;
+    m_pion = 0.13957;
+    # first particle
     p1_0 = arr['pt'][0] * np.cos(arr['phi'][0])
     p2_0 = arr['pt'][0] * np.sin(arr['phi'][0]) 
     p3_0 = arr['pt'][0] * np.sinh(arr['eta'][0])
-    e_0  = np.sqrt(np.maximum((p1_0**2 + p2_0**2 + p3_0**2 - m_pion**2), 0.))
-
+    e_0  = np.sqrt(np.maximum((p1_0**2 + p2_0**2 + p3_0**2 + m_pion**2), 0.))
+    # e_0  = np.sqrt(np.abs(p1_0**2 + p2_0**2 + p3_0**2 - m_pion**2))
+    # second particle
     p1_1 = arr['pt'][1] * np.cos(arr['phi'][1])
     p2_1 = arr['pt'][1] * np.sin(arr['phi'][1]) 
     p3_1 = arr['pt'][1] * np.sinh(arr['eta'][1])
-    e_1  = np.sqrt(np.maximum((p1_1**2 + p2_1**2 + p3_1**2 - m_pion**2), 0.))
-
+    # e_1  = np.sqrt(np.abs(p1_1**2 + p2_1**2 + p3_1**2 - m_pion**2))
+    e_1  = np.sqrt(np.maximum((p1_1**2 + p2_1**2 + p3_1**2 + m_pion**2), 0.))
+    # resulting 4-mom
     p1_res = p1_0 + p1_1
     p2_res = p2_0 + p2_1
     p3_res = p3_0 + p3_1
     e_res  = e_0  + e_1
-
-    mm = e_res**2 - p1_res**2 - p2_res**2 - p3_res**2
+    # resulting mass-sqared
+    mm = e_res**2 - (p1_res**2 + p2_res**2 + p3_res**2)
     if mm<0:
-        return -np.sqrt(-mm)
-    else:
-        return np.sqrt(mm)
+        return np.sqrt(-mm)
+    return np.sqrt(mm)
 
 def get_new_feature(feat_func, evt_dic):
     """
