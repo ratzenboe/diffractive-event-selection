@@ -100,6 +100,35 @@ void PlotTask::ResetSizes()
 }
 
 //_______________________________________________________________________________________
+void PlotTask::ResetColors()
+{
+    fStdColors[0] = kBlack;
+    fStdColors[1] = 6;
+    fStdColors[2] = 8;
+    fStdColors[3] = kBlue;
+    fStdColors[4] = kYellow;
+
+    fSigBgColors[0] = kGreen+1;
+    fSigBgColors[1] = kRed+1;
+}
+
+//_______________________________________________________________________________________
+void PlotTask::SetStdColors(Int_t c1, Int_t c2, Int_t c3, Int_t c4, Int_t c5)
+{
+    fStdColors[0] = c1;
+    fStdColors[1] = c2;
+    fStdColors[2] = c3;
+    fStdColors[3] = c4;
+    fStdColors[4] = c5;
+}
+
+//_______________________________________________________________________________________
+void PlotTask::SetSigBgColors(Int_t c1, Int_t c2)
+{
+    fSigBgColors[0] = c1; fSigBgColors[1] = c2;
+}
+
+//_______________________________________________________________________________________
 void PlotTask::ResetLegendPos()
 {
     fLegXmin = -999; fLegXmax = -999; fLegYmin = -999; fLegYmax = -999;
@@ -150,11 +179,11 @@ TString PlotTask::Title(TH1F* hist) const
     else if (title_str=="fNb_trks_passed") out_str = "N_{tracks}";
     // plots from the emcal task
     else if (title_str=="fGammaE") out_str = "Primary E_{#gamma}";
-    else if (title_str=="fSecondaryE_SIG") out_str = "Secondary E_{#gamma} (sig)";
-    else if (title_str=="fSecondaryE_BG")  out_str = "Secondary E_{#gamma} (FD)";
-    else if (title_str=="fEnergy_SIG") out_str = "Cluster energy (sig)";
-    else if (title_str=="fEnergy_BG")  out_str = "Cluster energy (FD)";
-    else if (title_str=="fdPhiEta_pion") out_str = "Pion #phi-#eta distance";
+    else if (title_str=="fSecondaryE_SIG") out_str = "Secondary E(#gamma) (Sig)";
+    else if (title_str=="fSecondaryE_BG")  out_str = "Secondary E";
+    else if (title_str=="fEnergy_SIG") out_str = "E(cluster) (sig)";
+    else if (title_str=="fEnergy_BG")  out_str = "E(cluster) (FD)";
+    else if (title_str=="fdPhiEta_pion") out_str = "Cluster-track distance (#pion) #phi-#eta distance";
     else if (title_str=="fdPhiEta_gamma") out_str = "Gamma #phi-#eta distance";
     else out_str = hist->GetTitle();
     
@@ -175,11 +204,11 @@ TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
     h_bg->Sumw2();
 
     // histogram specific actions
-    h_sig->SetLineColor(kGreen+1);
+    h_sig->SetLineColor(fSigBgColors[0]);
     h_sig->SetLineWidth(2);
     h_sig->SetMarkerStyle(20);
     h_sig->SetMarkerSize(1.4);
-    h_sig->SetMarkerColor(kGreen+1);
+    h_sig->SetMarkerColor(fSigBgColors[0]);
 
     /* axis labels have to be set seperately, */
     /* gStyle is somehow set to default for the next adjustments */
@@ -223,11 +252,11 @@ TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
 
     if (fLogPlot) gPad->SetLogy();
 
-    h_bg->SetLineColor(kRed+1);
+    h_bg->SetLineColor(fSigBgColors[1]);
     h_bg->SetLineWidth(2);
     h_bg->SetMarkerStyle(4);
     h_bg->SetMarkerSize(1.4);
-    h_bg->SetMarkerColor(kRed+1);
+    h_bg->SetMarkerColor(fSigBgColors[1]);
 
     canv->Update();
 
@@ -409,8 +438,8 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
     h_diff12->Divide(h2);
     h_diff12->SetMarkerStyle(21);
     h_diff12->SetMarkerSize(1.2);
-    h_diff12->SetMarkerColor(8);
-    h_diff12->SetLineColor(8);
+    h_diff12->SetMarkerColor(fStdColors[1]);
+    h_diff12->SetLineColor(fStdColors[1]);
     h_diff12->Draw("ep");       // Draw the ratio plot
 
     // Define the second ratio plot
@@ -420,8 +449,8 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
         h_diff13->Divide(h3);
         h_diff13->SetMarkerStyle(25);
         h_diff13->SetMarkerSize(1.2);
-        h_diff13->SetMarkerColor(6);
-        h_diff13->SetLineColor(6);
+        h_diff13->SetMarkerColor(fStdColors[2]);
+        h_diff13->SetLineColor(fStdColors[2]);
         h_diff13->Draw("same ep");       // Draw the ratio plot
     }
     // Define the second ratio plot
@@ -431,8 +460,8 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
         h_diff14->Divide(h4);
         h_diff14->SetMarkerStyle(20);
         h_diff14->SetMarkerSize(1.2);
-        h_diff14->SetMarkerColor(kBlue);
-        h_diff14->SetLineColor(kBlue);
+        h_diff14->SetMarkerColor(fStdColors[3]);
+        h_diff14->SetLineColor(fStdColors[3]);
         h_diff14->Draw("same ep");       // Draw the ratio plot
     }
     if (h5) {
@@ -441,13 +470,13 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
         h_diff15->Divide(h5);
         h_diff15->SetMarkerStyle(24);
         h_diff15->SetMarkerSize(1.2);
-        h_diff15->SetMarkerColor(kRed);
-        h_diff15->SetLineColor(kRed);
+        h_diff15->SetMarkerColor(fStdColors[4]);
+        h_diff15->SetLineColor(fStdColors[4]);
         h_diff15->Draw("same ep");       // Draw the ratio plot
     }
 
     // main_hist settings
-    main_hist->SetLineColor(kBlack);
+    main_hist->SetLineColor(fStdColors[0]);
     main_hist->SetLineWidth(2);
     // Y axis main_hist plot settings
     /* main_hist->GetXaxis()->SetTitle("m_{#pi#pi} (GeV/c^{2})"); */
@@ -458,32 +487,32 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
     main_hist->GetYaxis()->SetLabelOffset(0.02);
 
     // h2 settings
-    h2->SetLineColor(8);
+    h2->SetLineColor(fStdColors[1]);
     h2->SetMarkerStyle(21);
     h2->SetMarkerSize(1.2);
-    h2->SetMarkerColor(8);
+    h2->SetMarkerColor(fStdColors[1]);
     h2->SetLineWidth(2);
     
     // h2 settings
     if (h3) {
-        h3->SetLineColor(6);
+        h3->SetLineColor(fStdColors[2]);
         h3->SetMarkerStyle(25);
         h3->SetMarkerSize(1.2);
-        h3->SetMarkerColor(6);
+        h3->SetMarkerColor(fStdColors[2]);
         h3->SetLineWidth(2);
     }
     if (h4) {
-        h4->SetLineColor(kBlue);
+        h4->SetLineColor(fStdColors[3]);
         h4->SetMarkerStyle(20);
         h4->SetMarkerSize(1.2);
-        h4->SetMarkerColor(kBlue);
+        h4->SetMarkerColor(fStdColors[3]);
         h4->SetLineWidth(2);
     }
     if (h5) {
-        h5->SetLineColor(kRed);
+        h5->SetLineColor(fStdColors[4]);
         h5->SetMarkerStyle(24);
         h5->SetMarkerSize(1.2);
-        h5->SetMarkerColor(kRed);
+        h5->SetMarkerColor(fStdColors[4]);
         h5->SetLineWidth(2);
     }      
 
@@ -571,11 +600,11 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4, TH
     if (h_5) h_5->Sumw2();
 
     // histogram specific actions
-    hist1->SetLineColor(kBlack);
+    hist1->SetLineColor(fStdColors[0]);
     hist1->SetLineWidth(2);
     hist1->SetMarkerStyle(20);
     hist1->SetMarkerSize(1.4);
-    hist1->SetMarkerColor(kBlack);
+    hist1->SetMarkerColor(fStdColors[0]);
 
     hist1->GetXaxis()->SetTitle("m_{#pi#pi} (GeV/c^{2})");
     hist1->GetYaxis()->SetTitle("Counts / (0.03 GeV/c^{2})");
@@ -599,37 +628,37 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4, TH
 
     if (h_2) {
         // 6 = magenta
-        h_2->SetLineColor(6);
+        h_2->SetLineColor(fStdColors[1]);
         h_2->SetLineWidth(2);
         h_2->SetMarkerStyle(24);
         h_2->SetMarkerSize(1.4);
-        h_2->SetMarkerColor(6);
+        h_2->SetMarkerColor(fStdColors[1]);
         h_2->Draw("same");
     }
     if (h_3) {
         // 8 = dark green
-        h_3->SetLineColor(8);
+        h_3->SetLineColor(fStdColors[2]);
         h_3->SetLineWidth(2);
         // 21 = filled square
         h_3->SetMarkerStyle(21);
         h_3->SetMarkerSize(1.4);
-        h_3->SetMarkerColor(8);
+        h_3->SetMarkerColor(fStdColors[2]);
         h_3->Draw("same");
     }
     if (h_4) {
-        h_4->SetLineColor(kBlue);
+        h_4->SetLineColor(fStdColors[3]);
         h_4->SetLineWidth(2);
         h_4->SetMarkerStyle(25);
         h_4->SetMarkerSize(1.4);
-        h_4->SetMarkerColor(kBlue);
+        h_4->SetMarkerColor(fStdColors[3]);
         h_4->Draw("same");
     }
     if (h_5) {
-        h_5->SetLineColor(kYellow);
+        h_5->SetLineColor(fStdColors[4]);
         h_5->SetLineWidth(2);
         h_5->SetMarkerStyle(27);
         h_5->SetMarkerSize(1.4);
-        h_5->SetMarkerColor(kYellow);
+        h_5->SetMarkerColor(fStdColors[4]);
         h_5->Draw("same");
     }
     canv->Update();
