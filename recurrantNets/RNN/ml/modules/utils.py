@@ -397,15 +397,87 @@ def opang(arr):
 
     return angle_between(v1,v2)
 
-
-def get_eta_phi_dist_array(evt_dic):
+def inv_mass(arr):
     """
-    returns an numpy array of the distance of the particles in the eta-phi space that can 
-    be added to the features at any point in the program
+    returns the invariant mass of particles (only 2 allowed)
+    """
+    # mass of the pion 139.6 MeV
+    m_pion = 0.139570;
+    p1_0 = arr['pt'][0] * np.cos(arr['phi'][0])
+    p2_0 = arr['pt'][0] * np.sin(arr['phi'][0]) 
+    p3_0 = arr['pt'][0] * np.sinh(arr['eta'][0])
+    e_0  = np.sqrt(np.maximum((p1_0**2 + p2_0**2 + p3_0**2 - m_pion**2), 0.))
+
+    p1_1 = arr['pt'][1] * np.cos(arr['phi'][1])
+    p2_1 = arr['pt'][1] * np.sin(arr['phi'][1]) 
+    p3_1 = arr['pt'][1] * np.sinh(arr['eta'][1])
+    e_1  = np.sqrt(np.maximum((p1_1**2 + p2_1**2 + p3_2**2 - m_pion**2), 0.))
+
+    p1_res = p1_0 + p1_1
+    p2_res = p2_0 + p2_1
+    p3_res = p3_0 + p3_1
+    e_res  = e_0  + e_1
+
+    mm = e_res**2 - p1_res**2 - p2_res**2 - p3_res**2
+    if mm<0:
+        return -np.sqrt(-mm)
+    else
+        return np.sqrt(mm)
+
+# def get_eta_phi_dist_array(evt_dic):
+#     """
+#     returns an numpy array of the distance of the particles in the eta-phi space that can 
+#     be added to the features at any point in the program
+#     """
+#     try:
+#         track_arr = evt_dic['track']
+#         new_feature = np.apply_along_axis(eta_phi_dist, 1, track_arr)
+
+#         return new_feature
+
+#     except KeyError:
+#         raise KeyError('The key "track" is not in among the evt dictionary keys: ' \
+#                 '{}'.format(list(evt_dic.keys())))
+
+
+# def get_opang_dist_array(evt_dic):
+#     """
+#     returns an numpy array of the opening angle that can be added to the features 
+#     at any point in the program
+#     """
+#     try:
+#         track_arr = evt_dic['track']
+#         new_feature = np.apply_along_axis(opang, 1, track_arr)
+
+#         return new_feature
+
+#     except KeyError:
+#         raise KeyError('The key "track" is not in among the evt dictionary keys: ' \
+#                 '{}'.format(list(evt_dic.keys())))
+
+# def get_invmass_dist_array(evt_dic):
+#     """
+#     returns an numpy array of the invariant mas that can be added to the features 
+#     at any point in the program
+#     """
+#     try:
+#         track_arr = evt_dic['track']
+#         new_feature = np.apply_along_axis(opang, 1, track_arr)
+
+#         return new_feature
+
+#     except KeyError:
+#         raise KeyError('The key "track" is not in among the evt dictionary keys: ' \
+#                 '{}'.format(list(evt_dic.keys())))
+
+def get_new_feature(feat_func, evt_dic):
+    """
+    returns an numpy array of the new feature(e.g. opang, eta_phi_dist, inv_mass) that 
+    can be added to the features at any point in the program
     """
     try:
         track_arr = evt_dic['track']
-        new_feature = np.apply_along_axis(eta_phi_dist, 1, track_arr)
+        new_feature = np.apply_along_axis(feat_func, 1, track_arr)
 
         return new_feature
 
@@ -413,21 +485,6 @@ def get_eta_phi_dist_array(evt_dic):
         raise KeyError('The key "track" is not in among the evt dictionary keys: ' \
                 '{}'.format(list(evt_dic.keys())))
 
-
-def get_opang_dist_array(evt_dic):
-    """
-    returns an numpy array of the opening angle that can be added to the features 
-    at any point in the program
-    """
-    try:
-        track_arr = evt_dic['track']
-        new_feature = np.apply_along_axis(opang, 1, track_arr)
-
-        return new_feature
-
-    except KeyError:
-        raise KeyError('The key "track" is not in among the evt dictionary keys: ' \
-                '{}'.format(list(evt_dic.keys())))
 
 
 def engineer_features(evt_dic, replace=False):
@@ -447,8 +504,9 @@ def engineer_features(evt_dic, replace=False):
     for name in evt_dic_copy['event'].dtype.names: 
         df[name] = evt_dic_copy['event'][name].ravel() 
 
-    df['eta_phi_diff'] = get_eta_phi_dist_array(evt_dic_copy)
-    df['opang']        = get_opang_dist_array(evt_dic_copy)
+    df['eta_phi_diff'] = get_new_feature(eta_phi_dist, evt_dic_copy)
+    df['opang']        = get_new_feature(opang, evt_dic_copy)
+    df['inv_mass']     = get_new_feature(inv_mass, evt_dic_copy)
 
     evt_dic_copy['event'] = df.to_records(index=False) 
 
