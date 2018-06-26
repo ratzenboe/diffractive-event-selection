@@ -80,7 +80,7 @@ def train_model(data, run_mode_user, val_data,
 
 
     key_lst = list(data.keys()) 
-    if (len(key_lst)==3 and 'event' in key_lst and 'track' in key_lst):
+    if ('emcal' not in key_lst):
         history = train_evt_track(data, val_data, batch_size, n_epochs, rnn_layer,
                            out_path, dropout, n_layers, layer_nodes, batch_norm, 
                            k_reg, activation, aux, flat)
