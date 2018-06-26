@@ -47,9 +47,9 @@ def plot_all_features(evt_dic, outpath, post_fix='', real_bg=False, normed=None)
     target_array = evt_dic['target']
     sig_value = 1
     bg_value  = 0
-    sig_label = 'signal'
-    bg_label  = 'background'
-    combined_label  = 'signal+backgr.'
+    sig_label = 'Signal'
+    bg_label  = 'BG'
+    combined_label  = 'S+B'
     if real_bg:
         sig_value = 0
         bg_value  = 99
@@ -191,7 +191,7 @@ def plot_autoencoder_output(y_predictions, y_target, y_true, out_path, label='')
                  range=(x_total.min(), x_total.max()),
                  alpha=.25,
                  color='black',
-                 label='signal+backgr.')
+                 label='S+B')
     
     n_trueNeg, bins_trueNeg, patches_trueNeg = \
         plt.hist(x_bg,
@@ -199,7 +199,7 @@ def plot_autoencoder_output(y_predictions, y_target, y_true, out_path, label='')
                  range=(x_total.min(), x_total.max()),
                  alpha=0.5,
                  color='#dd0000',
-                 label='background')
+                 label='BG')
     
     n_truePos, bins_truePos, patches_truePos = \
         plt.hist(x_sig,
@@ -207,7 +207,7 @@ def plot_autoencoder_output(y_predictions, y_target, y_true, out_path, label='')
                  range=(x_total.min(), x_total.max()),
                  alpha=0.5,
                  color='green',
-                 label='signal')
+                 label='Signal')
     
     # plt.title('Put title here')
     # plt.xlim(-0.05, 1.05)
@@ -248,7 +248,7 @@ def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
                  range=(0., 1.),
                  alpha=.25,
                  color='black',
-                 label='signal+backgr.')
+                 label='S+B')
     
     n_trueNeg, bins_trueNeg, patches_trueNeg = \
         plt.hist(y_score_trueNeg,
@@ -256,7 +256,7 @@ def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
                  range=(0., 1.),
                  alpha=0.5,
                  color='#dd0000',
-                 label='background')
+                 label='BG')
     
     if y_score_truePos.shape[0] > 0:
         n_truePos, bins_truePos, patches_truePos = \
@@ -265,7 +265,7 @@ def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
                      range=(0., 1.),
                      alpha=0.5,
                      color='green',
-                     label='signal')
+                     label='Signal')
     else:
         n_truePos = None
         
