@@ -47,6 +47,7 @@ PlotTask::PlotTask(TString fname, TString option)
   , fTextString("")
 {
     this->ResetColors();
+    this->ResetAxisText();
     fOutFileBaseName = fname;
     // remove the .root at the end of the filename ".root" = 5 characters at the end
     fOutFileBaseName.Remove(fOutFileBaseName.Length()-5, 5);
@@ -145,6 +146,13 @@ void PlotTask::SetLegendPos(Double_t xmin, Double_t ymin, Double_t xmax, Double_
 }
 
 //_______________________________________________________________________________________
+void PlotTask::ResetAxisText()
+{
+    fXaxisText = "m_{#pi#pi} (GeV/c^{2})";
+    fYaxisText = "Counts / (0.03 GeV/c^{2})";
+}
+
+//_______________________________________________________________________________________
 void PlotTask::RelativeTextPosition(Double_t &x, Double_t &y) const
 {
     if (fPlotTextSize>42) { x=0.47; y = (fLogPlot) ? 0.20 : 0.76; }
@@ -184,7 +192,7 @@ TString PlotTask::Title(TH1F* hist) const
     else if (title_str=="fSecondaryE_BG")  out_str = "Secondary E";
     else if (title_str=="fEnergy_SIG") out_str = "E(cluster) (sig)";
     else if (title_str=="fEnergy_BG")  out_str = "E(cluster) (FD)";
-    else if (title_str=="fdPhiEta_pion") out_str = "Cluster-track distance (#pion) #phi-#eta distance";
+    else if (title_str=="fdPhiEta_pion") out_str = "Cluster-track distance in #phi-#eta (#pion)";
     else if (title_str=="fdPhiEta_gamma") out_str = "Gamma #phi-#eta distance";
     else out_str = hist->GetTitle();
     
@@ -238,14 +246,14 @@ TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
 
     if (h_sig->GetBinContent(h_sig->GetMaximumBin())>=h_bg->GetBinContent(h_bg->GetMaximumBin())){
         // h-sig has to be plotted first as to not crop away any hist points
-        h_sig->GetXaxis()->SetTitle("m_{#pi#pi} (GeV/c^{2})");
-        h_sig->GetYaxis()->SetTitle("Counts / (0.03 GeV/c^{2})");
+        h_sig->GetXaxis()->SetTitle(fXaxisText);
+        h_sig->GetYaxis()->SetTitle(fYaxisText);
         h_sig->SetAxisRange(fAxisMin, fAxisMax,"X");
         h_sig->Draw();
         h_bg->Draw("same");
     } else {
-        h_bg->GetXaxis()->SetTitle("m_{#pi#pi} (GeV/c^{2})");
-        h_bg->GetYaxis()->SetTitle("Counts / (0.03 GeV/c^{2})");
+        h_bg->GetXaxis()->SetTitle(fXaxisText);
+        h_bg->GetYaxis()->SetTitle(fYaxisText);
         h_bg->SetAxisRange(fAxisMin, fAxisMax,"X");
         h_bg->Draw();
         h_sig->Draw("same");
@@ -481,7 +489,7 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
     main_hist->SetLineWidth(2);
     // Y axis main_hist plot settings
     /* main_hist->GetXaxis()->SetTitle("m_{#pi#pi} (GeV/c^{2})"); */
-    main_hist->GetYaxis()->SetTitle("Counts / (0.03 GeV/c^{2})");
+    main_hist->GetYaxis()->SetTitle(fYaxisText);
     main_hist->GetYaxis()->SetTitleSize(fTitleSize);
     main_hist->GetYaxis()->SetTitleFont(43);
     main_hist->GetYaxis()->SetTitleOffset(1.3);
@@ -521,8 +529,8 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
     h_diff12->SetTitle(""); // Remove the ratio title
 
     // Y axis ratio plot settings
-    h_diff12->GetYaxis()->SetTitle("ratios");
-    h_diff12->GetXaxis()->SetTitle("m_{#pi#pi} (GeV/c^{2})");
+    h_diff12->GetYaxis()->SetTitle("Ratios");
+    h_diff12->GetXaxis()->SetTitle(fXaxisText);
     h_diff12->GetYaxis()->SetNdivisions(303);
     h_diff12->GetYaxis()->SetTitleSize(fTitleSize);
     h_diff12->GetYaxis()->SetTitleFont(43);
@@ -607,8 +615,8 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4, TH
     hist1->SetMarkerSize(1.4);
     hist1->SetMarkerColor(fStdColors[0]);
 
-    hist1->GetXaxis()->SetTitle("m_{#pi#pi} (GeV/c^{2})");
-    hist1->GetYaxis()->SetTitle("Counts / (0.03 GeV/c^{2})");
+    hist1->GetXaxis()->SetTitle(fXaxisText);
+    hist1->GetYaxis()->SetTitle(fYaxisText);
     /* axis labels have to be set seperately, */
     /* gStyle is somehow set to default for the next adjustments */
     hist1->GetXaxis()->SetTitleOffset(1.1);
@@ -717,8 +725,8 @@ TCanvas* PlotTask::PlotHist(TH1F* hist) const
     hist->SetMarkerSize(1.4);
     hist->SetMarkerColor(kBlue);
 
-    hist->GetXaxis()->SetTitle("m_{#pi#pi} (GeV/c^{2})");
-    hist->GetYaxis()->SetTitle("Counts / (0.03 GeV/c^{2})");
+    hist->GetXaxis()->SetTitle(fXaxisText);
+    hist->GetYaxis()->SetTitle(fYaxisText);
     // axis labels have to be set seperately,
     // gStyle is somehow set to default for the next adjustments
     hist->GetXaxis()->SetTitleOffset(1.1);
