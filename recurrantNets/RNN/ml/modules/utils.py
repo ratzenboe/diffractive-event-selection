@@ -411,7 +411,7 @@ def inv_mass(arr):
     p1_1 = arr['pt'][1] * np.cos(arr['phi'][1])
     p2_1 = arr['pt'][1] * np.sin(arr['phi'][1]) 
     p3_1 = arr['pt'][1] * np.sinh(arr['eta'][1])
-    e_1  = np.sqrt(np.maximum((p1_1**2 + p2_1**2 + p3_2**2 - m_pion**2), 0.))
+    e_1  = np.sqrt(np.maximum((p1_1**2 + p2_1**2 + p3_1**2 - m_pion**2), 0.))
 
     p1_res = p1_0 + p1_1
     p2_res = p2_0 + p2_1
@@ -421,54 +421,8 @@ def inv_mass(arr):
     mm = e_res**2 - p1_res**2 - p2_res**2 - p3_res**2
     if mm<0:
         return -np.sqrt(-mm)
-    else
+    else:
         return np.sqrt(mm)
-
-# def get_eta_phi_dist_array(evt_dic):
-#     """
-#     returns an numpy array of the distance of the particles in the eta-phi space that can 
-#     be added to the features at any point in the program
-#     """
-#     try:
-#         track_arr = evt_dic['track']
-#         new_feature = np.apply_along_axis(eta_phi_dist, 1, track_arr)
-
-#         return new_feature
-
-#     except KeyError:
-#         raise KeyError('The key "track" is not in among the evt dictionary keys: ' \
-#                 '{}'.format(list(evt_dic.keys())))
-
-
-# def get_opang_dist_array(evt_dic):
-#     """
-#     returns an numpy array of the opening angle that can be added to the features 
-#     at any point in the program
-#     """
-#     try:
-#         track_arr = evt_dic['track']
-#         new_feature = np.apply_along_axis(opang, 1, track_arr)
-
-#         return new_feature
-
-#     except KeyError:
-#         raise KeyError('The key "track" is not in among the evt dictionary keys: ' \
-#                 '{}'.format(list(evt_dic.keys())))
-
-# def get_invmass_dist_array(evt_dic):
-#     """
-#     returns an numpy array of the invariant mas that can be added to the features 
-#     at any point in the program
-#     """
-#     try:
-#         track_arr = evt_dic['track']
-#         new_feature = np.apply_along_axis(opang, 1, track_arr)
-
-#         return new_feature
-
-#     except KeyError:
-#         raise KeyError('The key "track" is not in among the evt dictionary keys: ' \
-#                 '{}'.format(list(evt_dic.keys())))
 
 def get_new_feature(feat_func, evt_dic):
     """
