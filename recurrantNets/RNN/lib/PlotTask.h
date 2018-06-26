@@ -28,7 +28,7 @@ class PlotTask
 
     void                SetStdColors(Int_t c1=kBlack, Int_t c2=6, Int_t c3=8, 
                                      Int_t c4=kBlue, Int_t c5=kYellow);
-    void                SetSigBgColors(Int_t c1=kGreen+1, Int_t kRed+1);
+    void                SetSigBgColors(Int_t c1=kGreen+1, Int_t c2=kRed+1);
 
     void                ResetSizes();
     void                ResetLegendPos();
