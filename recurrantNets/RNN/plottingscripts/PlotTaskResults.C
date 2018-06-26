@@ -55,9 +55,6 @@ void PlotEMCalTask(TString fname_hitfiles, TString fname_rest)
     // now the plots with the full statistic
     PlotTask pt_full(fname_rest, "EMCAL");
 
-    /* pt_full.SetAxisRange(-1.e-7, 1.e-7); */
-    /* pt_full.PlotSigBg("fClusterTime_SIG", "fClusterTime_BG"); */
-
     pt_full.SetLog(kTRUE);
     pt_full.SetAxisRange(0.,1.3);
     pt_full.SetTextPos(0.711745,4137,76);
