@@ -12,10 +12,8 @@
 \usepackage{graphicx}
 \usepackage[absolute,overlay]{textpos}
 
-
-
-
 \usepackage{tikz}
+
 \usetikzlibrary{positioning}
 \usetikzlibrary{arrows}
 \usetikzlibrary{shapes}
@@ -83,6 +81,7 @@ Stefan Meyer Institut\\
 \date[26.April 2018] % (optional)
 {26. April 2018}
  
+\makeatother
 \begin{document}
 
 %------------------------------------------------ 
@@ -408,6 +407,61 @@ Stefan Meyer Institut\\
 \end{frame}
 
 %------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Feed down}
+    \centering\includegraphics[width=9cm,keepaspectratio]{pics/FD_list}%
+%     \centering\begin{tikzpicture}
+%         \node[inner sep=0pt] (cep) at (0,0) {\includegraphics[height=3cm,keepaspectratio]{pics/doc}};
+%     \end{tikzpicture}
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{Feed down}
+    \centering\includegraphics[width=11.5cm,keepaspectratio]{pics/AnalysisResults_fInvMass_FD_fInvMass_FD_hasGammas_fInvMass_FD_emcal_add_save}%
+\end{frame}
+
+% %------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{EMCal signal}
+    \centering\includegraphics[width=11.5cm,keepaspectratio]{pics/AnalysisResults_hitfiles_fGammaE_fSecondaryE_BG_log_SigBg}%
+\end{frame}
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{EMCal signal}
+    \vspace*{3mm}
+    \begin{columns}[T] % align columns
+        \begin{column}{.48\textwidth}
+            \centering\includegraphics[width=6.0cm,keepaspectratio]{pics/AnalysisResults_hitfiles_fGammaE_fSecondaryE_BG_log_SigBg}%
+        \end{column}%
+        \hfill%
+        \begin{column}{.48\textwidth}
+            \centering\includegraphics[width=6.0cm,keepaspectratio]{pics/2012-Aug-07-Trigger_efficiency_EMCal_cluster}%
+        \end{column}%
+    \end{columns}
+\end{frame}
+
+% %------------------------------------------------ 
+
+
+
+% \begin{frame}
+%     \frametitle{Feed down}
+%     \textbf{Feed down} \emph{vs} \text{fully reconstructed} events\\
+%     \vspace*{3mm}
+%     \centering\begin{tikzpicture}
+%         \node[inner sep=0pt] (cep) at (0,0) {\includegraphics[height=8cm,keepaspectratio]{pics/2012-Aug-07-Trigger_efficiency_EMCal_cluster}}
+%     \end{tikzpicture}
+% \end{frame}
+
+
+
+%------------------------------------------------ 
 {\setbeamercolor{background canvas}{bg=red!20}
 \begin{frame}
     \frametitle{Motivation}
@@ -420,6 +474,17 @@ Stefan Meyer Institut\\
      \end{itemize}
 \end{frame}
 }
+
+%------------------------------------------------ 
+
+\begin{frame}
+    \frametitle{MVA-feasability: t-SNE}
+    \centering\includegraphics[width=11.5cm,keepaspectratio]{pics/t-sne_perplexitiy30_npts3000}%
+\end{frame}
+
+%------------------------------------------------ 
+
+
 
 %------------------------------------------------ 
 
@@ -1572,51 +1637,9 @@ Stefan Meyer Institut\\
     \begin{itemize}
         \item Need higher statistics to train models
         \item Missing components in MC data 
-        \item Feature distributions real~$\leftrightarrow$~MC data not always overlapping
+        \item Feature distributions real~$\leftrightarrow$~MC data not always overlapping (Covariate shift~$\to$~reweigthing)
         \item CEP simulations active field of research
-        \item EMCal corrections
     \end{itemize}
-\end{frame}
-
-% -----------------------------------------------
-
-
-\begin{frame}
-    \frametitle{EMCal corrections}
-    \begin{itemize}
-        \item<1-> Currently: emcal data are not making a difference\\\hspace*{5mm}$\to$~however, they should!
-        \item<2-> EMCal correction framework should (hopefully) fix that\\
-    \end{itemize}
-    \vspace*{5mm}
-    \centering\begin{tikzpicture}
-        \node<1->[inner sep=0pt] (output) at (0,0)
-            {\includegraphics[height=40mm,keepaspectratio]{pics/piechart}};
-        \node<1->[inner sep=0pt, above=of output ,yshift=-9mm] (txt1)
-            {Feed down contributions};
-
-%         % EMCal correction pics
-%         \node<2>[inner sep=0pt] (emcampl) at (0,0)
-%             {\includegraphics[height=40mm,keepaspectratio]{pics/emc_ampl_cep_comp}};
-%         \node<2>[inner sep=0pt, above=of emcampl,yshift=-9mm] (txt2)
-%             {EMC amplitude};
-
-%         \node<2>[inner sep=0pt, right=of emcampl, xshift=-5mm] (emcamplCorr)
-%             {\includegraphics[height=40mm,keepaspectratio]{pics/emcal_amplidude}};
-%         \node<2>[inner sep=0pt, above=of emcamplCorr,yshift=-9mm] (txt3)
-%             {Corrected amplitude};
-
-%         \node<3>[inner sep=0pt] (emctime) at (0,0)
-%             {\includegraphics[height=40mm,keepaspectratio]{pics/emcal_time_cep_comp}};
-%         \node<3>[inner sep=0pt, above=of emctime,yshift=-9mm] (txt2)
-%             {EMC time};
-
-%         \node<3>[inner sep=0pt, right=of emctime, xshift=-5mm] (emctimeCorr)
-%             {\includegraphics[height=40mm,keepaspectratio]{pics/emcal_time}};
-%         \node<3>[inner sep=0pt, above=of emctimeCorr,yshift=-9mm] (txt3)
-%             {Corrected time};
-
-
-      \end{tikzpicture}
 \end{frame}
 
 % --------------------------------------------
