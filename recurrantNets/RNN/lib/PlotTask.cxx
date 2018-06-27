@@ -308,7 +308,7 @@ TCanvas* PlotTask::Significance(TH1F* h_sig, TH1F* h_bg) const
         if (fLogPlot) leg = new TLegend(0.21616,0.180698, 0.450276, 0.389117);
         else leg = new TLegend(0.595994, 0.48152, 0.874309, 0.661191);
     } else leg = new TLegend(fLegXmin, fLegYmin, fLegXmax, fLegYmax);
-    leg->AddEntry(h_significance, "Significance", "l");
+    leg->AddEntry(h_significance, "Signif.=#frac{N_{Sig}}{#sqrt{N_{Sig}+N_{BG}}}", "l");
     leg->SetTextFont(43);
     leg->SetTextSize(fLegendTextSize);
     leg->SetFillStyle(0);
