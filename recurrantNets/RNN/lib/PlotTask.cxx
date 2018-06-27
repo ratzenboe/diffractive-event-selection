@@ -64,7 +64,7 @@ PlotTask::PlotTask(TString fname, TString option)
         }
         fHistList = (TList*)dir->Get("BGOutputContainer");
     }
-    else if (option.Contains("EMCAL") {
+    else if (option.Contains("EMCAL")) {
         dir = file->GetDirectory("EMCALTask");
         if (!dir) { 
             printf("<E> Direcotry not found in file %s\n", fname.Data()); 
@@ -200,6 +200,174 @@ TString PlotTask::Title(TH1F* hist) const
     
     return out_str;
 }
+
+TCanvas* PlotTask::Significance(TH1F* h_sig, TH1F* h_bg) const
+{
+    TCanvas* canv = new TCanvas("SigBg","",1450,1000);
+
+    /* Double_t integral_sig = h_sig->Integral(1,h_sig->GetSize()-2); */ 
+    /* Double_t integral_bg  = h_bg->Integral( 1,h_bg->GetSize()-2); */ 
+    h_sig->Sumw2();
+    h_bg->Sumw2();
+
+    TH1F* h_significance = (TH1F*)h_sig->Clone("significance");
+    Double_t int_signal, int_bg, signif;
+    for (Int_t ii(1); ii<=h_significance->GetSize()-2; ii++) {
+        int_signal = h_sig->Integral(1, ii);
+        int_bg     = h_bg->Integral(1, ii);
+        if (int_signal+int_bg==0.) { 
+            h_significance->SetBinContent(ii, 0.); 
+            continue; 
+        }
+        signif = int_signal/TMath::Sqrt(int_signal+int_bg);
+        h_significance->SetBinContent(ii, signif);
+    }
+
+    // histogram specific actions
+    h_significance->SetLineColor(fSigBgColors[0]);
+    h_significance->SetLineWidth(2);
+    h_significance->SetMarkerStyle(20);
+    h_significance->SetMarkerSize(1.4);
+    h_significance->SetMarkerColor(fSigBgColors[0]);
+
+    /* axis labels have to be set seperately, */
+    /* gStyle is somehow set to default for the next adjustments */
+    h_significance->GetXaxis()->SetTitleOffset(1.1);
+    h_significance->GetYaxis()->SetTitleOffset(1.15);
+    h_significance->GetYaxis()->SetTitleSize(fTitleSize);
+    h_significance->GetXaxis()->SetTitleSize(fTitleSize);
+    h_significance->GetXaxis()->SetTitleFont(43);
+    h_significance->GetYaxis()->SetTitleFont(43);
+    h_significance->GetXaxis()->SetLabelSize(fLableSize);
+    h_significance->GetYaxis()->SetLabelSize(fLableSize);
+    h_significance->GetXaxis()->SetLabelFont(43);
+    h_significance->GetYaxis()->SetLabelFont(43);
+
+    /* h_bg->GetXaxis()->SetTitleOffset(1.1); */
+    /* h_bg->GetYaxis()->SetTitleOffset(1.15); */
+    /* h_bg->GetYaxis()->SetTitleSize(fTitleSize); */
+    /* h_bg->GetXaxis()->SetTitleSize(fTitleSize); */
+    /* h_bg->GetXaxis()->SetTitleFont(43); */
+    /* h_bg->GetYaxis()->SetTitleFont(43); */
+    /* h_bg->GetXaxis()->SetLabelSize(fLableSize); */
+    /* h_bg->GetYaxis()->SetLabelSize(fLableSize); */
+    /* h_bg->GetXaxis()->SetLabelFont(43); */
+    /* h_bg->GetYaxis()->SetLabelFont(43); */
+
+
+    /* if (h_sig->GetBinContent(h_sig->GetMaximumBin())>=h_bg->GetBinContent(h_bg->GetMaximumBin())){ */
+    /*     // h-sig has to be plotted first as to not crop away any hist points */
+    /*     h_sig->GetXaxis()->SetTitle(fXaxisText); */
+    /*     h_sig->GetYaxis()->SetTitle(fYaxisText); */
+    /*     h_sig->SetAxisRange(fAxisMin, fAxisMax,"X"); */
+    /*     h_sig->Draw(); */
+    /*     h_bg->Draw("same"); */
+    /* } else { */
+    /*     h_bg->GetXaxis()->SetTitle(fXaxisText); */
+    /*     h_bg->GetYaxis()->SetTitle(fYaxisText); */
+    /*     h_bg->SetAxisRange(fAxisMin, fAxisMax,"X"); */
+    /*     h_bg->Draw(); */
+    /*     h_sig->Draw("same"); */
+    /* } */
+    h_significance->GetXaxis()->SetTitle(fXaxisText);
+    h_significance->GetYaxis()->SetTitle(fYaxisText);
+    h_significance->SetAxisRange(fAxisMin, fAxisMax,"X");
+    h_significance->Draw("hist");
+
+    if (fLogPlot) gPad->SetLogy();
+
+    /* h_bg->SetLineColor(fSigBgColors[1]); */
+    /* h_bg->SetLineWidth(2); */
+    /* h_bg->SetMarkerStyle(4); */
+    /* h_bg->SetMarkerSize(1.4); */
+    /* h_bg->SetMarkerColor(fSigBgColors[1]); */
+
+    canv->Update();
+
+    TLatex tex;
+    tex.SetTextFont(43);
+    tex.SetTextSize(fPlotTextSize);
+    Double_t xmax, ymax, ymin;
+    xmax = canv->GetFrame()->GetX2();
+    ymax = canv->GetFrame()->GetY2();
+    ymin = canv->GetFrame()->GetY1();
+    printf("xmax: %.2f, y_max: %.2f\n", xmax, ymax);
+    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}";
+    if (fTextString!="") tex_str = fTextString;
+    Double_t x(0), y(0);
+    RelativeTextPosition(x,y);
+    if (fTextX==-999.){
+        if (fLogPlot) { y -= 0.02; tex.DrawLatex(x*xmax, y*std::pow(10.,ymax), tex_str); }
+        else { y += 0.02; tex.DrawLatex(x*xmax, y*ymax, tex_str); }
+    } else tex.DrawLatex(fTextX, fTextY, tex_str); 
+
+    TLegend* leg = 0x0; 
+    // the legend can be set manually but only temporarily 
+    // (fLegXmin was picked arbitrarily, all leg coordinates should be positive)
+    if (fLegXmin<=0) {
+        if (fLogPlot) leg = new TLegend(0.21616,0.180698, 0.450276, 0.389117);
+        else leg = new TLegend(0.595994, 0.48152, 0.874309, 0.661191);
+    } else leg = new TLegend(fLegXmin, fLegYmin, fLegXmax, fLegYmax);
+    leg->AddEntry(h_significance, "Significance", "l");
+    leg->SetTextFont(43);
+    leg->SetTextSize(fLegendTextSize);
+    leg->SetFillStyle(0);
+    leg->Draw();
+
+    TLine line;
+    Double_t factor = 1.002;
+    if (fLogPlot) factor = 2.;
+    Double_t x_max_sign = h_significance->GetBinCenter(h_significance->GetMaximumBin());
+    Double_t ymax_hist  = h_significance->GetBinContent(h_significance->GetMaximumBin());
+    line.SetLineStyle(9);
+    line.SetLineWidth(2);
+    // 15 = grey
+    line.SetLineColor(15);
+    line.DrawLine(x_max_sign, ymin, x_max_sign, ymax_hist*factor);
+
+    TLatex linetxt;
+    linetxt.SetTextFont(43);
+    linetxt.SetTextSize(28);
+    linetxt.SetTextAngle(90);
+    linetxt.SetTextColor(15);
+    TString max_sig_str;
+    Double_t y_pos = 0.95*(ymin+ymax_hist*factor)/2.;
+    Double_t x_pos = 0.9*x_max_sign;
+    max_sig_str.Form("%.2f",x_max_sign);
+    linetxt.DrawLatex(x_pos, y_pos, ("Maximum significance: "+max_sig_str).Data());
+
+    canv->Update();
+    return canv;
+}
+//_______________________________________________________________________________________
+void PlotTask::PlotSignificance(TString hnameSig, TString hnameBg) const
+{
+    gROOT->SetBatch(fSetBatch);
+    // set the alice plot-style
+    SetStyle();
+
+    if (!fHistList->FindObject(hnameSig)) {
+        printf("<E> No histogram found named %s\n", hnameSig.Data()); return; }
+    TH1F* h_sig = (TH1F*)((TH1F*)fHistList->FindObject(hnameSig))->Clone((hnameSig+"_cln").Data());
+    // 2nd histogram
+    if (!fHistList->FindObject(hnameBg)){ 
+        printf("<E> No histogram found named %s\n", hnameBg.Data()); return; }
+    TH1F* h_bg = (TH1F*)((TH1F*)fHistList->FindObject(hnameBg))->Clone((hnameBg+"_cln").Data());
+
+    if (!h_sig->InheritsFrom("TH1F")) { printf("<E> %s not a TH1F\n", hnameSig.Data()); return; }
+    if (!h_bg->InheritsFrom("TH1F"))  { printf("<E> %s not a TH1F\n", hnameBg.Data()); return; }
+
+    TCanvas *c = 0x0;
+    c = Significance(h_sig, h_bg);
+
+    TString outstr = fOutFileBaseName + "_" + hnameSig + "_" + hnameBg;
+    if (fLogPlot) outstr += "_log";
+    c->SaveAs((outstr+"_Significance.pdf").Data());
+    if (fSetBatch) delete c;
+    c = 0x0;
+    printf("Saving output in %s\n", (outstr+"_Significance.pdf").Data());
+}
+
 
 //_______________________________________________________________________________________
 TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
