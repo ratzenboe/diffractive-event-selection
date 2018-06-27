@@ -64,7 +64,7 @@ PlotTask::PlotTask(TString fname, TString option)
         }
         fHistList = (TList*)dir->Get("BGOutputContainer");
     }
-    else {
+    else if (option.Contains("EMCAL") {
         dir = file->GetDirectory("EMCALTask");
         if (!dir) { 
             printf("<E> Direcotry not found in file %s\n", fname.Data()); 
@@ -72,6 +72,8 @@ PlotTask::PlotTask(TString fname, TString option)
         }
         fHistList = (TList*)dir->Get("EMCALOutputContainer");
     }
+    else fHistList = (TList*)file->Get(option);
+
     if (!fHistList) { 
         printf("<E> List not found in file %s\n", fname.Data()); 
         gSystem->Exit(1); 
@@ -611,7 +613,7 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4, TH
     // histogram specific actions
     hist1->SetLineColor(fStdColors[0]);
     hist1->SetLineWidth(2);
-    hist1->SetMarkerStyle(20);
+    /* hist1->SetMarkerStyle(20); */
     hist1->SetMarkerSize(1.4);
     hist1->SetMarkerColor(fStdColors[0]);
 
