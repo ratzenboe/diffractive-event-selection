@@ -47,6 +47,7 @@ class PlotTask
     void                PlotRatio(TString hname1, TString hname2, TString hname3="", 
                                   TString hname4="", TString hname5="") const;
     void                PlotSigBg(TString hnameSig, TString hnameBg, Bool_t kNorm=kFALSE) const;
+    void                PlotSignificance(TString hnameSig, TString hnameBg) const;
     // add histograms together creating a new one with name&title finalName
     void                AddHists(TString finalName, TString hname1, TString hname2,
                                  TString hname3="", TString hname4="");
@@ -93,6 +94,7 @@ class PlotTask
     TCanvas*            rp(TH1F* main_hist, TH1F* h2, TH1F* h3=0x0, 
                            TH1F* h4=0x0, TH1F* h5=0x0) const;
     TCanvas*            SigBg(TH1F* h_sig, TH1F* h_bg) const;
+    TCanvas*            Significance(TH1F* h_sig, TH1F* h_bg) const;
 
     // get the title of a histogram
     TString             Title(TH1F* hist) const;

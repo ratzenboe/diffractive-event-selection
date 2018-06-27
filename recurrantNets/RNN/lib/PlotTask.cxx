@@ -21,6 +21,7 @@
 #include <TFrame.h>
 #include <TGaxis.h>
 #include <TMath.h>
+#include <TKey.h>
 
 #include "PlotTask.h"
 
@@ -72,9 +73,11 @@ PlotTask::PlotTask(TString fname, TString option)
         }
         fHistList = (TList*)dir->Get("EMCALOutputContainer");
     }
-    else fHistList = (TList*)file->Get(option);
+    else {
+        fHistList = (TList*)file->Get(option);
+    }
 
-    if (!fHistList) { 
+    if (!fHistList || fHistList->GetEntries()==0) { 
         printf("<E> List not found in file %s\n", fname.Data()); 
         gSystem->Exit(1); 
     }
@@ -173,6 +176,7 @@ TString PlotTask::Title(TH1F* hist) const
 {
     TString out_str;
     TString title_str = hist->GetTitle();
+    if (title_str=="") title_str = hist->GetName();
     if (title_str=="fInvMass_FD") out_str = "Feed down";
     else if (title_str=="fInvMass_FD_emcal") out_str = "only #gamma";
     else if (title_str=="fInvMass_FD_3plus") out_str = "3+ tracks";
