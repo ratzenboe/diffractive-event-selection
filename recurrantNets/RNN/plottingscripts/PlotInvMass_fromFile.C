@@ -144,7 +144,7 @@ void PlotInvMass(TString input_dirname, TString output_prefix="", TString path_t
     hist_list->Add(hInvarmass_fd);
  
     outfile->cd();
-    hist_list->Write();
+    hist_list->Write("inv_mass");
     outfile->Close();
     delete outfile;
 
