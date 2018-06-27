@@ -21,6 +21,7 @@ void PlotBgTask(TString fname)
     pt.PlotAdd("fInvMass_FD", "fInvMass_FD_emcal", "fInvMass_FD_3plus", "fInvMass_FD_other");
     pt.PlotAdd("fInvMass_3plusTrks", "fInvMass_3trks", "fInvMass_4trks", 
                "fInvMass_5trks", "fInvMass_6trks");
+    pt.PlotAdd("fInvMass_FD", "fInvMass_FD_hasGammas", "fInvMass_FD_emcal");
 
     // plot the same plots logarithmically
     pt.SetLog(kTRUE);
@@ -36,6 +37,7 @@ void PlotBgTask(TString fname)
     pt.PlotAdd("fInvMass_FD", "fInvMass_FD_emcal", "fInvMass_FD_3plus", "fInvMass_FD_other");
     pt.PlotAdd("fInvMass_3plusTrks", "fInvMass_3trks", "fInvMass_4trks", 
                "fInvMass_5trks", "fInvMass_6trks");
+    pt.PlotAdd("fInvMass_FD", "fInvMass_FD_hasGammas", "fInvMass_FD_emcal");
 }
 
 void PlotEMCalTask(TString fname_hitfiles, TString fname_rest)
@@ -56,7 +58,14 @@ void PlotEMCalTask(TString fname_hitfiles, TString fname_rest)
     //////////////////////////////////////////////////////////////
     // now the plots with the full statistic
     PlotTask pt_full(fname_rest, "EMCAL");
-
+    pt_full.SetAxisRange(0.,5.);
+    pt_full.SetSigBgColors(9);
+    pt_full.SetTextPos(2.76802,47.8254);
+    pt_full.SetXaxisText("Cluster distance to nearest track in #phi-#eta space");
+    pt_full.SetYaxisText("Significance");
+    pt_full.PlotSignificance("fdPhiEta_pion", "fdPhiEta_gamma");
+    pt_full.ResetColors();
+ 
     pt_full.SetLog(kTRUE);
     pt_full.SetAxisRange(0.,1.3);
     pt_full.SetTextPos(0.711745,4137.76);
