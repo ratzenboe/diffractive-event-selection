@@ -57,8 +57,7 @@ void PlotInvMass(TString input_dirname, TString output_prefix="", TString path_t
                 cep_tree->Add(input_dirname + fname);
             }
         }
-    }
-    else { printf("<E> No files found in %s", input_dirname.Data()); gSystem->Exit(1); }
+    } else { printf("<E> No files found in %s\n", input_dirname.Data()); gSystem->Exit(1); }
 
     CEPRawEventBuffer* cep_raw_evt = 0x0;
     CEPEventBuffer* cep_evt = 0x0;
@@ -134,7 +133,6 @@ void PlotInvMass(TString input_dirname, TString output_prefix="", TString path_t
 
         if (is_full_recon(cep_evt)) hInvarmass->Fill(tot_lor_vec.M());
         else hInvarmass_fd->Fill(tot_lor_vec.M());
-        
     }
     // cursor of status display has to move to the next line
     std::cout << std::endl;
