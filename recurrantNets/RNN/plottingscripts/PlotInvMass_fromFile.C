@@ -68,8 +68,8 @@ void PlotInvMass(TString input_dirname, TString output_prefix="", TString path_t
     TFile* outfile=new TFile((output_prefix+"invar_mass_plot.root").Data(), "RECREATE");
 
     // event level features:
-    TH1F* hInvarmass = new TH1F("invar_mass_full_recon", "", 150, 0, 2.5);
-    TH1F* hInvarmass_fd = new TH1F("invar_mass_feed_down", "", 150, 0, 2.5);
+    TH1F* hInvarmass = new TH1F("invar_mass_full_recon", "", 100, 0, 3.);
+    TH1F* hInvarmass_fd = new TH1F("invar_mass_feed_down", "", 100, 0, 3.);
     TList* hist_list = new TList();
 
     // for display purposes only!
@@ -142,7 +142,7 @@ void PlotInvMass(TString input_dirname, TString output_prefix="", TString path_t
     hist_list->Add(hInvarmass_fd);
  
     outfile->cd();
-    hist_list->Write("inv_mass");
+    hist_list->Write();
     outfile->Close();
     delete outfile;
 
