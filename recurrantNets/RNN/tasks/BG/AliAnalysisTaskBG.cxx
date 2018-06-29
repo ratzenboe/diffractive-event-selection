@@ -308,7 +308,7 @@ void AliAnalysisTaskBG::UserExec(Option_t *)
         // if matchTracks is true if at least one track can be propergated to emcal
         // then if the distance betw. the track and the cluster is above a cut value (0.6)
         // we assume that the cluster originates from a gamma 
-        if (MatchTracks(clust, fTracks, nTracksTT, TTindices, fMCEvent, dPhiEtaMin)) {
+        if (MatchTracks(clust, fTracks, nTracksTT, TTindices, dPhiEtaMin)) {
             if (dPhiEtaMin<=0.51) continue;
         }
         // here we assume that the cluster originates from a gamma:
