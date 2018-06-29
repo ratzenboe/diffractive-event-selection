@@ -406,7 +406,7 @@ Bool_t CEPBGBase::EvtFullRecon(TObjArray* tracks, Int_t nTracksTT,
 
 //_____________________________________________________________________________
 Bool_t CEPBGBase::MatchTracks(AliESDCaloCluster* clust, TObjArray* tracks, Int_t nTracksTT, 
-                              TArrayI* TTindices, AliMCEvent* MCevt, Double_t& dPhiEtaMin) 
+                              TArrayI* TTindices, Double_t& dPhiEtaMin) 
 {
     dPhiEtaMin = 999.;
      
@@ -425,11 +425,6 @@ Bool_t CEPBGBase::MatchTracks(AliESDCaloCluster* clust, TObjArray* tracks, Int_t
         Int_t trkIndex = TTindices->At(kk);
         // the original track
         AliESDtrack *tmptrk = (AliESDtrack*) tracks->At(trkIndex);
-        TParticle* part = GetPartByLabel(tmptrk->GetLabel(), MCevt);
-        if (!part) continue;
-        // set MC mass and momentum
-        TLorentzVector lv;
-        part->Momentum(lv);
         // track position on emcal
         Double_t trkPhiOnEmc = tmptrk->GetTrackPhiOnEMCal();
         // Map phi to [0,2pi)

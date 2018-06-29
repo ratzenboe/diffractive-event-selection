@@ -119,7 +119,7 @@ class CEPBGBase
         // Match cluster to track & if true passed by reference var dPhiEtaMin is describing dist
         Bool_t                  MatchTracks(AliESDCaloCluster* clust, 
                                             TObjArray* tracks, Int_t nTracksTT, TArrayI* TTindices, 
-                                            AliMCEvent* MCevt, Double_t& dPhiEtaMin);
+                                            Double_t& dPhiEtaMin);
 
         // fill EventStorage with new event
         void                    NewEvent(AliMCEvent* MCevt);
