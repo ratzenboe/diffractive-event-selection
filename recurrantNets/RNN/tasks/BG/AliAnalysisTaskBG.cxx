@@ -294,7 +294,7 @@ void AliAnalysisTaskBG::UserExec(Option_t *)
     if (nTracksTT!=TTindices->GetSize()) {
         printf("\n\n\n nTracksTT: %i != TTindices->GetSize(): %i\n", 
                 nTracksTT, TTindices->GetSize());
-        gSystem->Exit(1);
+        return ;
     }    
     // //////////////////////////////////////////////////////////////////////
     // here check if gamma has made hit in emcal entered 
