@@ -291,7 +291,11 @@ void AliAnalysisTaskBG::UserExec(Option_t *)
     // ---------------------------- Analyse type of decay ----------------------------
     /* if(nTracksTT==2) NewEvent(fMCEvent); */
     //////////////////////////////////////////////////////////////////////////////////
-    
+    if (nTracksTT!=TTindices->GetSize()) {
+        printf("\n\n\n nTracksTT: %i != TTindices->GetSize(): %i\n", 
+                nTracksTT, TTindices->GetSize());
+        gSystem->Exit(1);
+    }    
     // //////////////////////////////////////////////////////////////////////
     // here check if gamma has made hit in emcal entered 
     Int_t nClusters = fESD->GetNumberOfCaloClusters();
@@ -305,29 +309,27 @@ void AliAnalysisTaskBG::UserExec(Option_t *)
         // then if the distance betw. the track and the cluster is above a cut value (0.6)
         // we assume that the cluster originates from a gamma 
         if (MatchTracks(clust, fTracks, nTracksTT, TTindices, fMCEvent, dPhiEtaMin)) {
-            if (dPhiEtaMin<0.6) continue;
+            if (dPhiEtaMin<=0.51) continue;
         }
         // here we assume that the cluster originates from a gamma:
         hasClusterFromGamma = kTRUE;
         // need only one cluster to classify event as bg
         break;
     }
-    if (EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent) 
-            && nTracksTT==2 && hasClusterFromGamma) {
+    Bool_t isEvtFullRecon = EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent);
+    if (isEvtFullRecon && nTracksTT==2) {
         // emcal hit invmass contribution from sig evts
-        fInvMass_GammaDet_sig->Fill(GetMass(fTracks, nTracksTT, TTindices, fMCEvent));
-    }
+        Double_t mass_fullr = GetMass(fTracks, nTracksTT, TTindices, fMCEvent);
+        if (mass_fullr==-1) return ;
+        if (hasClusterFromGamma) {
+            fInvMass_GammaDet_sig->Fill(mass_fullr);
+        } else fInvMass_noBGCluster_sig->Fill(mass_fullr);
+    } 
     //////////////////////////////////////////////////////////////////////////////////
-
-    if (nTracksTT!=TTindices->GetSize()) {
-        printf("\n\n\n nTracksTT: %i != TTindices->GetSize(): %i\n", 
-                nTracksTT, TTindices->GetSize());
-        gSystem->Exit(1);
-    }
  
     //////////////////////////////////////////////////////////////////////////////////
     // ---------------------------- Analyse bg components ----------------------------
-    if (!EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent)) {
+    if (!isEvtFullRecon) {
         if (nTracksTT==2) {
             Double_t mass = GetMass(fTracks, nTracksTT, TTindices, fMCEvent);
             if (mass!=-1.) fInvMass_FD->Fill(mass);
@@ -343,6 +345,7 @@ void AliAnalysisTaskBG::UserExec(Option_t *)
             //////////////////////////////////////////////////////////////////////////
             // ------------------ emcal real fd bg -----------------------------------
             if (hasClusterFromGamma) fInvMass_GammaDet_bg->Fill(mass);
+            else fInvMass_noBGCluster_FD->Fill(mass);
             // //////////////////////////////////////////////////////////////////////
         } else {
             /////////////////////////////////////////////////////////////////////////
