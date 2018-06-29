@@ -80,6 +80,9 @@ class AliAnalysisTaskBG : public AliAnalysisTaskSE, public CEPBGBase
         // number of tracks passing through the lhc16filter
         TH1I*                   fNb_trks_passed;    //! nb tracks passing lhc16filter
 
+        // invarmass after EMCal-cluster bg reduction
+        TH1F*                   fInvMass_noBGCluster_sig; //! invar mass of 2pi w/ no emc-clusters
+        TH1F*                   fInvMass_noBGCluster_FD;  //! invar mass of 2pi w/ no emc-clusters
        
         // not implemented but neccessary
         AliAnalysisTaskBG(const AliAnalysisTaskBG&); 
