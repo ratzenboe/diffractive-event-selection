@@ -22,6 +22,7 @@
 #include "TRandom.h"
 #include "TChain.h"
 #include "TMath.h"
+#include "TSystem.h"
 #include "TDatabasePDG.h"
 #include "TCollection.h"
 #include "AliAnalysisTask.h"
@@ -80,6 +81,9 @@ AliAnalysisTaskBG::AliAnalysisTaskBG()
   , fInvMass_LS_plus(0)
   , fInvMass_LS_minus(0)
   , fNb_trks_passed(0)
+  // ivmass 2pi, no emc-cluster
+  , fInvMass_noBGCluster_sig(0)
+  , fInvMass_noBGCluster_FD(0)
 {
     // default constructor, don't allocate memory here!
     // this is used by root for IO purposes, it needs to remain empty
@@ -121,6 +125,9 @@ AliAnalysisTaskBG::AliAnalysisTaskBG(const char* name,
   , fInvMass_LS_plus(0)
   , fInvMass_LS_minus(0)
   , fNb_trks_passed(0)
+  // ivmass 2pi, no emc-cluster
+  , fInvMass_noBGCluster_sig(0)
+  , fInvMass_noBGCluster_FD(0)
 {
     // constructor
     /* DefineInput(0, TChain::Class());    // define the input of the analysis: */ 
@@ -192,6 +199,9 @@ void AliAnalysisTaskBG::UserCreateOutputObjects()
 
     fNb_trks_passed = new TH1I("fNb_trks_passed", "fNb_trks_passed", 8, 2, 10);
 
+    fInvMass_noBGCluster_sig = new TH1F("fInvMass_noBGCluster_sig", "fInvMass_noBGCluster_sig",100, 0, 3);
+    fInvMass_noBGCluster_FD = new TH1F("fInvMass_noBGCluster_FD", "fInvMass_noBGCluster_FD",100, 0, 3);
+
     fOutList->Add(fInvMass_FD);          
     fOutList->Add(fInvMass_FD_emcal);          
     fOutList->Add(fInvMass_FD_3plus);          
@@ -207,6 +217,8 @@ void AliAnalysisTaskBG::UserCreateOutputObjects()
     fOutList->Add(fInvMass_LS_plus);          
     fOutList->Add(fInvMass_LS_minus);          
     fOutList->Add(fNb_trks_passed);          
+    fOutList->Add(fInvMass_noBGCluster_sig);          
+    fOutList->Add(fInvMass_noBGCluster_FD);          
 
     PostData(1, fOutList);              // postdata will notify the analysis manager of changes 
                                         // and updates to the fOutList object. 
@@ -304,6 +316,13 @@ void AliAnalysisTaskBG::UserExec(Option_t *)
             && nTracksTT==2 && hasClusterFromGamma) {
         // emcal hit invmass contribution from sig evts
         fInvMass_GammaDet_sig->Fill(GetMass(fTracks, nTracksTT, TTindices, fMCEvent));
+    }
+    //////////////////////////////////////////////////////////////////////////////////
+
+    if (nTracksTT!=TTindices->GetSize()) {
+        printf("\n\n\n nTracksTT: %i != TTindices->GetSize(): %i\n", 
+                nTracksTT, TTindices->GetSize());
+        gSystem->Exit(1);
     }
  
     //////////////////////////////////////////////////////////////////////////////////
