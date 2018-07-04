@@ -533,6 +533,23 @@ void PlotTask::AddHists(TString finalName, TString hname1, TString hname2,
 }
 
 //_______________________________________________________________________________________
+void PlotTask::LikeSignHist(TString hLSplus, TString hLSminus)
+{
+    TH1F* h_1 = (TH1F*)((TH1F*)fHistList->FindObject(hLSplus))->Clone("LS (#sqrt{++ #times --})");
+    h_1->SetTitle(finalName);
+    TH1F* h_2 = 
+        (TH1F*)((TH1F*)fHistList->FindObject(hname2))->Clone((hLSminus+"_cln").Data());
+
+    // LS = sqrt( h_1*h_2 )
+    h_1->Multiply(h_2);
+    h_1->Sumw2();
+
+    for (Int_t ii(1); ii<=h_1->GetSize()-2; ii++) {
+        h_1->SetBinContent(ii, TMath::Sqrt(h_1->GetBinContent(ii)));
+    }
+    fHistList->Add(h_1);
+}
+//_______________________________________________________________________________________
 TH1F* PlotTask::ScaleHist(TH1F* h_toScale, TH1F* h_main) const
 {
     Double_t integral_toScale = h_toScale->Integral(1,h_toScale->GetSize()-2); 
