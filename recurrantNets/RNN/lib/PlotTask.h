@@ -51,6 +51,8 @@ class PlotTask
     // add histograms together creating a new one with name&title finalName
     void                AddHists(TString finalName, TString hname1, TString hname2,
                                  TString hname3="", TString hname4="");
+    void                LikeSignHist(TString hLSplus, TString hLSminus);
+
   private:
     // if the y axis should be logarithmic
     Bool_t              fLogPlot;        
