@@ -535,7 +535,7 @@ void PlotTask::AddHists(TString finalName, TString hname1, TString hname2,
 //_______________________________________________________________________________________
 void PlotTask::LikeSignHist(TString hLSplus, TString hLSminus)
 {
-    TString histname = "LS (#sqrt{++ #times --})";
+    TString histname = "Like sign (#sqrt{++ #times --})";
     TH1F* h_1 = (TH1F*)((TH1F*)fHistList->FindObject(hLSplus))->Clone(histname);
     h_1->SetTitle(histname);
     TH1F* h_2 = 
@@ -543,11 +543,11 @@ void PlotTask::LikeSignHist(TString hLSplus, TString hLSminus)
 
     // LS = sqrt( h_1*h_2 )
     h_1->Multiply(h_2);
-    h_1->Sumw2();
 
     for (Int_t ii(1); ii<=h_1->GetSize()-2; ii++) {
         h_1->SetBinContent(ii, TMath::Sqrt(h_1->GetBinContent(ii)));
     }
+    h_1->Sumw2();
     fHistList->Add(h_1);
 }
 //_______________________________________________________________________________________
