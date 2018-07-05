@@ -1062,12 +1062,13 @@ void PlotTask::PlotAdd(TString hname1, TString hname2,
     if (!fHistList->FindObject(hname1)) {
         printf("<E> No histogram found named %s\n", hname1.Data()); return; }
     TH1F* h_1 = (TH1F*)((TH1F*)fHistList->FindObject(hname1))->Clone((hname1+"_cln").Data());
-    // 2nd histogram
-    if (!fHistList->FindObject(hname2)){ 
-        printf("<E> No histogram found named %s\n", hname2.Data()); return; }
-    TH1F* h_2 = (TH1F*)((TH1F*)fHistList->FindObject(hname2))->Clone((hname2+"_cln").Data());
 
-    TH1F *h_3(0x0), *h_4(0x0), *h_5(0x0);
+    TH1F *h_2(0x0), *h_3(0x0), *h_4(0x0), *h_5(0x0);
+    // 2nd histogram
+    if (hname2!="" && !fHistList->FindObject(hname2)){ 
+        printf("<E> No histogram found named %s\n", hname2.Data()); return; }
+    if (hname2!="") h_2 = 
+        (TH1F*)((TH1F*)fHistList->FindObject(hname2))->Clone((hname2+"_cln").Data());
     // 3rd histogram
     if (hname3!="" && !fHistList->FindObject(hname3)){ 
         printf("<E> No histogram found named %s\n", hname3.Data()); return; }
