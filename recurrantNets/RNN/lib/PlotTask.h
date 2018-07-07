@@ -20,7 +20,7 @@ class PlotTask
     void                SetPlotTextSize(Int_t size) { fPlotTextSize = size; }
     void                SetLegendTextSize(Int_t size) { fLegendTextSize = size; }
     // axis range
-    void                SetAxisRange(Double_t xmin, Double_t xmax) {fAxisMin=xmin; fAxisMax=xmax;}
+    void                SetAxisRange(Double_t xmin, Double_t xmax) {fAxisMin=xmin; fAxisMax=xmax; fSetRange=kTRUE;}
     // Positional & text setters
     void                SetLegendPos(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);
     void                SetTextPos(Double_t x, Double_t y) { fTextX = x; fTextY = y; }
@@ -38,8 +38,9 @@ class PlotTask
     void                ResetTextString() { fTextString = ""; }
     void                ResetColors();
     void                ResetAxisText();
-    // swich canvas display on or off
+    // swich functions
     void                ToggleDisplayCanvas() { fSetBatch = !fSetBatch; }
+    void                ToggleAutoRange() { fSetRange = !fSetRange; }
 
     // functions plotting a histogram and saving it in 
     void                PlotAdd(TString hname1, TString hname2="", TString hname3="", 
@@ -52,12 +53,16 @@ class PlotTask
     void                AddHists(TString finalName, TString hname1, TString hname2,
                                  TString hname3="", TString hname4="");
     void                LikeSignHist(TString hLSplus, TString hLSminus);
+    // print out the various histograms stored in fHistlist
+    void                PrintHists() const;
 
   private:
     // if the y axis should be logarithmic
     Bool_t              fLogPlot;        
     // if the plot should just be saved or displayed
     Bool_t              fSetBatch;
+    // if range should be set manually
+    Bool_t              fSetRange;
     // the list of histograms
     TList               *fHistList;
     // the basename for the output
