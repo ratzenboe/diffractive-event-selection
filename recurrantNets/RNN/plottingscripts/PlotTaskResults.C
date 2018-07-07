@@ -7,13 +7,16 @@ void PlotBgTask(TString fname)
     PlotTask pt(fname, "BG");
     
     // create a combined LS plot
-    pt.AddHists("Like sign (+-)", "fInvMass_LS_plus", "fInvMass_LS_minus");
+    pt.ToogleAutoRange();
+    pt.LikeSignHist("fInvMass_LS_plus", "fInvMass_LS_minus");
 
     // ratio plots
-    pt.PlotRatio("fInvMass_FD", "fInvMass_3plusTrks", "fInvMass_GammaDet_bg", "Like sign (+-)");
+    pt.PlotRatio("fInvMass_FD", "fInvMass_3plusTrks", "fInvMass_GammaDet_bg", 
+                 "Like sign (#sqrt{++ #times --})");
     pt.PlotRatio("fInvMass_FD", "fInvMass_3plusTrks", "fInvMass_GammaDet_bg");
     pt.PlotRatio("fInvMass_FD", "fInvMass_LS_plus", "fInvMass_LS_minus");
-    pt.PlotRatio("fInvMass_FD", "fInvMass_LS_plus", "fInvMass_LS_minus", "Like sign (+-)");
+    pt.PlotRatio("fInvMass_FD", "fInvMass_LS_plus", "fInvMass_LS_minus", 
+                 "Like sign (#sqrt{++ #times --})");
     pt.PlotRatio("fInvMass_FD", "fInvMass_3plusTrks", "fInvMass_4trks", 
                  "fInvMass_5trks", "fInvMass_6trks");
     pt.PlotRatio("fInvMass_FD_hasGammas", "fInvMass_GammaDet_bg");
@@ -26,10 +29,12 @@ void PlotBgTask(TString fname)
     // plot the same plots logarithmically
     pt.SetLog(kTRUE);
     // ratio plots
-    pt.PlotRatio("fInvMass_FD", "fInvMass_3plusTrks", "fInvMass_GammaDet_bg", "Like sign (+-)");
+    pt.PlotRatio("fInvMass_FD", "fInvMass_3plusTrks", "fInvMass_GammaDet_bg", 
+                 "Like sign (#sqrt{++ #times --})");
     pt.PlotRatio("fInvMass_FD", "fInvMass_3plusTrks", "fInvMass_GammaDet_bg");
     pt.PlotRatio("fInvMass_FD", "fInvMass_LS_plus", "fInvMass_LS_minus");
-    pt.PlotRatio("fInvMass_FD", "fInvMass_LS_plus", "fInvMass_LS_minus", "Like sign (+-)");
+    pt.PlotRatio("fInvMass_FD", "fInvMass_LS_plus", "fInvMass_LS_minus", 
+                 "Like sign (#sqrt{++ #times --})");
     pt.PlotRatio("fInvMass_FD", "fInvMass_3plusTrks", "fInvMass_4trks", 
                  "fInvMass_5trks", "fInvMass_6trks");
     pt.PlotRatio("fInvMass_FD_hasGammas", "fInvMass_GammaDet_bg");
@@ -73,6 +78,8 @@ void PlotEMCalTask(TString fname_hitfiles, TString fname_rest)
     pt_full.SetXaxisText("E (GeV)");
     pt_full.SetYaxisText("Counts / (0.03 GeV)");
     pt_full.PlotSigBg("fEnergy_SIG", "fEnergy_BG");
+    /* pt_full.ResetTextPos(); */
+    pt_full.PlotRatio("fEnergy_BG", "fEnergy_SIG");
     pt_full.ResetTextPos();
     pt_full.SetAxisRange(0.,5.);
     pt_full.SetLegendPos(0.587137,0.552361,0.821577,0.709446);
