@@ -74,14 +74,32 @@ PlotTask::PlotTask(TString fname, TString option)
         fHistList = (TList*)dir->Get("EMCALOutputContainer");
     }
     else {
-        fHistList = (TList*)file->Get(option);
+        TList* lst = file->GetListOfKeys() ;
+        TList* histlist = new TList();
+        if (!lst) { printf("<E> No keys found in file\n"); gSystem->Exit(1); }
+        TIter next(lst) ;
+        TKey* key ;
+        TObject* obj ;
+        while ( key = (TKey*)next() ) {
+            obj = key->ReadObj() ;
+            if ( !obj->InheritsFrom("TH1F") ) {
+                printf("<W> Object %s is not 1D histogram : "
+                       "will not be read in\n", obj->GetName()) ;
+            }
+            printf("Hist name: %s title: %s\n",obj->GetName(),obj->GetTitle());
+            TH1F* hist = (TH1F*) obj->Clone();
+            hist->SetDirectory(0);
+            histlist->Add(hist);
+        }
+        fHistList = histlist;
     }
+
 
     if (!fHistList || fHistList->GetEntries()==0) { 
         printf("<E> List not found in file %s\n", fname.Data()); 
         gSystem->Exit(1); 
     }
-    fHistList->SetOwner(kTRUE);
+    /* fHistList->SetOwner(kTRUE); */
     // close the file, is not needed any more 
     file->Close();
     if (file) { delete file; file=0x0; dir=0x0; }
