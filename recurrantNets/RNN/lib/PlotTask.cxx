@@ -31,6 +31,7 @@ ClassImp(PlotTask)
 PlotTask::PlotTask(TString fname, TString option)
   : fLogPlot(kFALSE)  
   , fSetBatch(kTRUE)  
+  , fSetRange(kFALSE)  
   , fHistList (0x0)
   , fOutFileBaseName (0x0)
   , fTitleSize(42)
@@ -132,6 +133,7 @@ void PlotTask::ResetSizes()
 
     fAxisMax = 2.5;
     fAxisMin = 0.;
+    fSetRange = kFALSE;
 }
 
 //_______________________________________________________________________________________
@@ -303,7 +305,7 @@ TCanvas* PlotTask::Significance(TH1F* h_sig, TH1F* h_bg) const
     /* } */
     h_significance->GetXaxis()->SetTitle(fXaxisText);
     h_significance->GetYaxis()->SetTitle(fYaxisText);
-    h_significance->SetAxisRange(fAxisMin, fAxisMax,"X");
+    if (fSetRange) h_significance->SetAxisRange(fAxisMin, fAxisMax,"X");
     h_significance->Draw("hist");
 
     if (fLogPlot) gPad->SetLogy();
@@ -450,13 +452,13 @@ TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
         // h-sig has to be plotted first as to not crop away any hist points
         h_sig->GetXaxis()->SetTitle(fXaxisText);
         h_sig->GetYaxis()->SetTitle(fYaxisText);
-        h_sig->SetAxisRange(fAxisMin, fAxisMax,"X");
+        if (fSetRange) h_sig->SetAxisRange(fAxisMin, fAxisMax,"X");
         h_sig->Draw();
         h_bg->Draw("same");
     } else {
         h_bg->GetXaxis()->SetTitle(fXaxisText);
         h_bg->GetYaxis()->SetTitle(fYaxisText);
-        h_bg->SetAxisRange(fAxisMin, fAxisMax,"X");
+        if (fSetRange) h_bg->SetAxisRange(fAxisMin, fAxisMax,"X");
         h_bg->Draw();
         h_sig->Draw("same");
     }
@@ -626,7 +628,7 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
         h5 = ScaleHist(h5, main_hist);
         h5->Draw("same ep");         // Draw h2 on top of main_hist
     }
-    main_hist->SetAxisRange(fAxisMin, fAxisMax,"X");
+    if (fSetRange) main_hist->SetAxisRange(fAxisMin, fAxisMax,"X");
     if (fLogPlot) pad1->SetLogy();               // pad1 becomes the current pad
     pad1->Update();
 
@@ -850,7 +852,7 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4, TH
     hist1->GetXaxis()->SetLabelFont(43);
     hist1->GetYaxis()->SetLabelFont(43);
 
-    hist1->SetAxisRange(fAxisMin, fAxisMax,"X");
+    if (fSetRange) hist1->SetAxisRange(fAxisMin, fAxisMax,"X");
 
     hist1->Draw();
     if (fLogPlot) gPad->SetLogy();
@@ -955,7 +957,7 @@ TCanvas* PlotTask::PlotHist(TH1F* hist) const
 
     hist->GetXaxis()->SetTitle(fXaxisText);
     hist->GetYaxis()->SetTitle(fYaxisText);
-    hist->SetAxisRange(fAxisMin, fAxisMax,"X");
+    if (fSetRange) hist->SetAxisRange(fAxisMin, fAxisMax,"X");
     hist->Draw("hist");
 
     if (fLogPlot) gPad->SetLogy();
