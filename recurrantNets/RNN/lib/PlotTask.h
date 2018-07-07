@@ -9,7 +9,7 @@ class PlotTask
 {
   public:
     // Constructor
-                        PlotTask(TString fname, TString option="BG");
+                        PlotTask(TString fname, TString option="");
     // Destructor
                         ~PlotTask();
     // Setters
