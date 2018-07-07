@@ -119,7 +119,7 @@ void PlotTask::PrintHists() const
     TIter next(fHistList) ;
     TObject* obj ;
     while ( (obj = next()) ) {
-        printf("Hist name: %s title: %s\n",obj->GetName(),obj->GetTitle());
+        printf("Hist name: \"%s\" title: \"%s\"\n",obj->GetName(),obj->GetTitle());
     }
 }
 
