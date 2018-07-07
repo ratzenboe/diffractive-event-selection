@@ -113,6 +113,16 @@ PlotTask::~PlotTask()
 }
 
 //_______________________________________________________________________________________
+void PlotTask::PrintHists() const
+{
+    TIter next(fHistList) ;
+    TObject* obj ;
+    while ( (obj = next()) ) {
+        printf("Hist name: %s title: %s\n",obj->GetName(),obj->GetTitle());
+    }
+}
+
+//_______________________________________________________________________________________
 void PlotTask::ResetSizes()
 {
     fTitleSize = 42;
@@ -921,24 +931,17 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4, TH
 //_______________________________________________________________________________________
 TCanvas* PlotTask::PlotHist(TH1F* hist) const
 {
-    TCanvas* canv = new TCanvas("InvMass","",1450,1000);
+    TCanvas* canv = new TCanvas("SigBg","",1450,1000);
 
-    Double_t integral = hist->Integral(1,hist->GetSize()-2); 
-    TString n;
-    n.Form("%i", Int_t(integral));
-
-    hist->Sumw2();
-
-    hist->SetLineColor(kBlue);
+    // histogram specific actions
+    hist->SetLineColor(fSigBgColors[0]);
     hist->SetLineWidth(2);
     hist->SetMarkerStyle(20);
     hist->SetMarkerSize(1.4);
-    hist->SetMarkerColor(kBlue);
+    hist->SetMarkerColor(fSigBgColors[0]);
 
-    hist->GetXaxis()->SetTitle(fXaxisText);
-    hist->GetYaxis()->SetTitle(fYaxisText);
-    // axis labels have to be set seperately,
-    // gStyle is somehow set to default for the next adjustments
+    /* axis labels have to be set seperately, */
+    /* gStyle is somehow set to default for the next adjustments */
     hist->GetXaxis()->SetTitleOffset(1.1);
     hist->GetYaxis()->SetTitleOffset(1.15);
     hist->GetYaxis()->SetTitleSize(fTitleSize);
@@ -947,24 +950,47 @@ TCanvas* PlotTask::PlotHist(TH1F* hist) const
     hist->GetYaxis()->SetTitleFont(43);
     hist->GetXaxis()->SetLabelSize(fLableSize);
     hist->GetYaxis()->SetLabelSize(fLableSize);
-    /* hist->GetXaxis()->SetLabelFont(42); */
-    /* hist->GetYaxis()->SetLabelFont(42); */
+    hist->GetXaxis()->SetLabelFont(43);
+    hist->GetYaxis()->SetLabelFont(43);
 
+    hist->GetXaxis()->SetTitle(fXaxisText);
+    hist->GetYaxis()->SetTitle(fYaxisText);
     hist->SetAxisRange(fAxisMin, fAxisMax,"X");
+    hist->Draw("hist");
 
-    hist->Draw();
-    /* hist->SetMarkerStyle(k); */
-    /* hist->SetMarkerSize(1.2); */
-    /* hist->SetMarkerColor(kBlack); */
+    if (fLogPlot) gPad->SetLogy();
+
+    canv->Update();
+
     TLatex tex;
-    tex.DrawLatex(1.11086, 622.392, "#splitline{#splitline{ALICE simulation, this work}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}");
+    tex.SetTextFont(43);
+    tex.SetTextSize(fPlotTextSize);
+    Double_t xmax, ymax, ymin;
+    xmax = canv->GetFrame()->GetX2();
+    ymax = canv->GetFrame()->GetY2();
+    ymin = canv->GetFrame()->GetY1();
+    printf("xmax: %.2f, y_max: %.2f\n", xmax, ymax);
+    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}";
+    if (fTextString!="") tex_str = fTextString;
+    Double_t x(0), y(0);
+    RelativeTextPosition(x,y);
+    if (fTextX==-999.){
+        if (fLogPlot) { y -= 0.02; tex.DrawLatex(x*xmax, y*std::pow(10.,ymax), tex_str); }
+        else { y += 0.02; tex.DrawLatex(x*xmax, y*ymax, tex_str); }
+    } else tex.DrawLatex(fTextX, fTextY, tex_str); 
 
-    TLegend* leg = new TLegend(0.575377, 0.522727, 0.908291, 0.613636);
-    leg->AddEntry(hist, (Title(hist)).Data(), "pe");
-    /* leg->SetTextSize(0.04); */
+    TLegend* leg = 0x0; 
+    // the legend can be set manually but only temporarily 
+    // (fLegXmin was picked arbitrarily, all leg coordinates should be positive)
+    if (fLegXmin<=0) {
+        if (fLogPlot) leg = new TLegend(0.21616,0.180698, 0.450276, 0.389117);
+        else leg = new TLegend(0.595994, 0.48152, 0.874309, 0.661191);
+    } else leg = new TLegend(fLegXmin, fLegYmin, fLegXmax, fLegYmax);
+    leg->AddEntry(hist, Title(hist).Data(), "l");
+    leg->SetTextFont(43);
+    leg->SetTextSize(fLegendTextSize);
     leg->SetFillStyle(0);
     leg->Draw();
-    // if legend was set temporararily we undo these changes to not disturb the next plot
 
     canv->Update();
     return canv;
