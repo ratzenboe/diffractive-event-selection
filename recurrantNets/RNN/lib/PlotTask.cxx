@@ -935,12 +935,13 @@ TCanvas* PlotTask::PlotHist(TH1F* hist) const
 {
     TCanvas* canv = new TCanvas("SigBg","",1450,1000);
 
+    hist->Sumw2();
     // histogram specific actions
-    hist->SetLineColor(fSigBgColors[0]);
+    hist->SetLineColor(fStdColors[0]);
     hist->SetLineWidth(2);
     hist->SetMarkerStyle(20);
     hist->SetMarkerSize(1.4);
-    hist->SetMarkerColor(fSigBgColors[0]);
+    hist->SetMarkerColor(fStdColors[0]);
 
     /* axis labels have to be set seperately, */
     /* gStyle is somehow set to default for the next adjustments */
@@ -958,7 +959,7 @@ TCanvas* PlotTask::PlotHist(TH1F* hist) const
     hist->GetXaxis()->SetTitle(fXaxisText);
     hist->GetYaxis()->SetTitle(fYaxisText);
     if (fSetRange) hist->SetAxisRange(fAxisMin, fAxisMax,"X");
-    hist->Draw("hist");
+    hist->Draw("ep");
 
     if (fLogPlot) gPad->SetLogy();
 
@@ -988,7 +989,7 @@ TCanvas* PlotTask::PlotHist(TH1F* hist) const
         if (fLogPlot) leg = new TLegend(0.21616,0.180698, 0.450276, 0.389117);
         else leg = new TLegend(0.595994, 0.48152, 0.874309, 0.661191);
     } else leg = new TLegend(fLegXmin, fLegYmin, fLegXmax, fLegYmax);
-    leg->AddEntry(hist, Title(hist).Data(), "l");
+    leg->AddEntry(hist, Title(hist).Data(), "ep");
     leg->SetTextFont(43);
     leg->SetTextSize(fLegendTextSize);
     leg->SetFillStyle(0);
