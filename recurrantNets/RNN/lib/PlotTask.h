@@ -55,6 +55,8 @@ class PlotTask
     void                LikeSignHist(TString hLSplus, TString hLSminus);
     // print out the various histograms stored in fHistlist
     void                PrintHists() const;
+    // Change title of a histogram
+    void                ChangeTitleOfHist(TString hname, TString newTitle);
 
   private:
     // if the y axis should be logarithmic

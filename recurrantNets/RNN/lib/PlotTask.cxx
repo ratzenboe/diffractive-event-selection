@@ -563,6 +563,12 @@ void PlotTask::AddHists(TString finalName, TString hname1, TString hname2,
 }
 
 //_______________________________________________________________________________________
+void PlotTask::ChangeTitleOfHist(TString hname, TString newTitle)
+{
+    ((TH1F*)fHistList->FindObject(hname))->SetTitle(newTitle);
+}
+
+//_______________________________________________________________________________________
 void PlotTask::LikeSignHist(TString hLSplus, TString hLSminus)
 {
     TString histname = "Like sign (#sqrt{++ #times --})";
