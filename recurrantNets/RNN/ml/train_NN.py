@@ -118,18 +118,19 @@ def main():
     evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
     evt_dictionary, list_of_engineered_features = engineer_features(evt_dictionary, replace=False)
 
-    # get invariant mass distr to calculate the inv-mass ROC:
-    imass = get_new_feature(inv_mass, evt_dictionary)
-    # for the minmaxscaler to work
-    imass = imass.reshape(-1, 1)
-    # scale imass to 0-1
-    min_max_scaler = preprocessing.MinMaxScaler()
-    imass = min_max_scaler.fit_transform(imass)
-    # we also need to save the target values corresponding to each inv-mass sample
-    y_target = evt_dictionary['target'].copy()
-    # transform it into a std numpy array
-    y_target = np.array(y_target.tolist())
-    plot_ROCcurve(y_target, imass, out_path, label='inv_mass')
+    # Plot ROC curve of inv-mass cut
+    # # get invariant mass distr to calculate the inv-mass ROC:
+    # imass = get_new_feature(inv_mass, evt_dictionary)
+    # # for the minmaxscaler to work
+    # imass = imass.reshape(-1, 1)
+    # # scale imass to 0-1
+    # min_max_scaler = preprocessing.MinMaxScaler()
+    # imass = min_max_scaler.fit_transform(imass)
+    # # we also need to save the target values corresponding to each inv-mass sample
+    # y_target = evt_dictionary['target'].copy()
+    # # transform it into a std numpy array
+    # y_target = np.array(y_target.tolist())
+    # plot_ROCcurve(y_target, imass, out_path, label='inv_mass')
     
     if evt_id_string in evt_dictionary['event'].dtype.names:
         raise KeyError('Attention, the event id key is still in the data! '\
