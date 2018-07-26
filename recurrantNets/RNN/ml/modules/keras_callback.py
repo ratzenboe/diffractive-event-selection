@@ -58,13 +58,23 @@ class callback_ROC(keras.callbacks.Callback):
             val_data_np = [data for data in self.validation_data if type(data)==np.ndarray]
             val_data = [data for data in val_data_np if len(data.shape)>1 and data.shape[-1]>1]
             val_data_y = [data for data in val_data_np if len(data.shape)==2 and data.shape[-1]==1]
-            if len(val_data_y)>1:
+
+            if len(val_data)==1:
+                val_data = val_data[0]
+
+            if len(val_data_y)>=1:
                 val_data_y = val_data_y[0]
+            else:
+                return 
             val_data_y = val_data_y.ravel()
 
             y_pred_val = self.model.predict(val_data)
-            if len(y_pred_val)>1:
+            if type(y_pred_val)==list:
                 y_pred_val = y_pred_val[0]
+                y_pred_val = y_pred_val.ravel()
+
+            print('\n\n shape1: {}, shape2: {}\n\n'.format(
+                val_data_y.shape, y_pred_val.shape))
 
             roc_auc_val = roc_auc_score(val_data_y, y_pred_val)
             self.aucs_val.append(roc_auc_val)
@@ -78,13 +88,19 @@ class callback_ROC(keras.callbacks.Callback):
             val_data_np = [data for data in self.validation_data if type(data)==np.ndarray]
             val_data = [data for data in val_data_np if len(data.shape)>1 and data.shape[-1]>1]
             val_data_y = [data for data in val_data_np if len(data.shape)==2 and data.shape[-1]==1]
-            if len(val_data_y)>1:
+            if len(val_data)==1:
+                val_data = val_data[0]
+
+            if len(val_data_y)>=1:
                 val_data_y = val_data_y[0]
+            else: 
+                return 
             val_data_y = val_data_y.ravel()
 
             y_pred_val = self.model.predict(val_data)
             if type(y_pred_val)==list:
                 y_pred_val = y_pred_val[0]
+                y_pred_val = y_pred_val.ravel()
             # y_pred_val = self.model.predict(self.validation_data[0])
             
             roc_auc_val = roc_auc_score(val_data_y, y_pred_val)
