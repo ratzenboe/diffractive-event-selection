@@ -149,9 +149,11 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
             try:
                 track_rnn = Masking(mask_value=float(-999), name='track_masking')(track_input)
                 track_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_track, 
-                    name='track_rnn'))(track_rnn)
+                                                              name='track_rnn', 
+                                                              kernel_initializer='glorot_normal',
+                                                              kernel_regularizer=regularizers.l2(k_reg)))(track_rnn)
                 if dropout > 0.0:
-                    track_rnn = Dropout(dropout, name='track_dropout')(track_rnn)
+                    track_rnn = AlphaDropout(dropout, name='track_dropout')(track_rnn)
 
             except AttributeError:
                 raise AttributeError('{} is not a valid Keras layer!'.format(rnn_layer))
@@ -181,7 +183,7 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
                       # kernel_regularizer=regularizers.l2(k_reg),
                       kernel_initializer = 'lecun_normal')(x)
             if dropout > 0.0:
-                x = Dropout(dropout)(x)
+                x = AlphaDropout(dropout)(x)
 
         main_output = Dense(1, 
                             activation = 'sigmoid', 
@@ -268,7 +270,10 @@ def train_evt_track(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM'
             input_list.append(track_input)
             try:
                 track_rnn = Masking(mask_value=float(-999), name='track_masking')(track_input)
-                track_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_track, name='track_rnn'))(track_rnn)
+                track_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_track, 
+                                                              name='track_rnn', 
+                                                              kernel_initializer='glorot_normal',
+                                                              kernel_regularizer=regularizers.l2(k_reg)))(track_rnn)
                 if batch_norm:
                     track_rnn = BatchNormalization(name='track_batch_norm')(track_rnn)
                 if dropout > 0.0:
