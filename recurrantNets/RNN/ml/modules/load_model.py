@@ -78,6 +78,9 @@ def train_model(data, run_mode_user, val_data,
         raise TypeError('The variable "rnn_layer" is not a string type ' \
                 'but insted {}'.format(type(rnn_layer)))
 
+    if isinstance(dropout, list): 
+        if len(dropout)!=n_layers:
+            raise ValueError('The dropout list-lenght does not agree with the number of layers!');
 
     key_lst = list(data.keys()) 
     if ('emcal' not in key_lst and 'selu' not in activation):
@@ -103,6 +106,7 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
         out_path = 'output/', dropout = 0.2, n_layers=3, layer_nodes=100, 
         batch_norm=False, k_reg=0.01, activation='relu', 
         aux=False, flat=False):
+
 
         try:
             train_data = data.copy()
@@ -150,9 +154,11 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
                 track_rnn = Masking(mask_value=float(-999), name='track_masking')(track_input)
                 track_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_track, 
                                                               name='track_rnn', 
-                                                              kernel_initializer='glorot_normal',
-                                                              kernel_regularizer=regularizers.l2(k_reg)))(track_rnn)
-                if dropout > 0.0:
+                                                              activation='selu',
+                                                              kernel_initializer='lecun_normal'))(track_rnn)
+                if type(dropout) == list:
+                    track_rnn = AlphaDropout(dropout[0], name='track_dropout')(track_rnn)
+                else:
                     track_rnn = AlphaDropout(dropout, name='track_dropout')(track_rnn)
 
             except AttributeError:
@@ -169,7 +175,7 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
         output_list = []
         output_data = []
         if aux: 
-            aux_output_track = Dense(1, activation='sigmoid', name='aux_evt_trk')(x)
+            aux_output_track = Dense(1, activation='sigmoid', kernel_initializer='lecun_normal',name='aux_evt_trk')(x)
             output_list.append(aux_output_track)
             output_data.append(y_train)
         for i in range(0,n_layers):
@@ -180,9 +186,10 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
             x = Dense(layer_nodes, 
                       activation = 'selu', 
                       bias_initializer='zeros',
-                      # kernel_regularizer=regularizers.l2(k_reg),
                       kernel_initializer = 'lecun_normal')(x)
-            if dropout > 0.0:
+            if type(dropout) == list:
+                x = AlphaDropout(dropout[i])(x)
+            else:
                 x = AlphaDropout(dropout)(x)
 
         main_output = Dense(1, 
@@ -196,7 +203,7 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
 
         # opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
   
-        model.compile(optimizer=keras.optimizers.Adadelta(), 
+        model.compile(optimizer='adam',
                       loss='binary_crossentropy', 
                       metrics=['accuracy'])
         print(model.summary())
@@ -272,8 +279,7 @@ def train_evt_track(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM'
                 track_rnn = Masking(mask_value=float(-999), name='track_masking')(track_input)
                 track_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_track, 
                                                               name='track_rnn', 
-                                                              kernel_initializer='glorot_normal',
-                                                              kernel_regularizer=regularizers.l2(k_reg)))(track_rnn)
+                                                              kernel_initializer='glorot_normal'))(track_rnn)
                 if batch_norm:
                     track_rnn = BatchNormalization(name='track_batch_norm')(track_rnn)
                 if dropout > 0.0:
@@ -302,7 +308,6 @@ def train_evt_track(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM'
                 x = (getattr(keras.layers, activation)())(x)
             else:
                 x = Dense(layer_nodes, activation = activation, 
-                        kernel_regularizer=regularizers.l2(k_reg),
                         kernel_initializer = 'glorot_normal')(x)
             if batch_norm:
                 x = BatchNormalization()(x)
@@ -597,7 +602,6 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LS
                 x = (getattr(keras.layers, activation)())(x)
             else:
                 x = Dense(layer_nodes, activation = activation, 
-                        kernel_regularizer=regularizers.l2(k_reg),
                         kernel_initializer = 'glorot_normal')(x)
             if batch_norm:
                 x = BatchNormalization()(x)
