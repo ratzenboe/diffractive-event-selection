@@ -156,7 +156,7 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
                                                               name='track_rnn', 
                                                               activation='selu',
                                                               kernel_initializer='lecun_normal'))(track_rnn)
-                if type(dropout) == list:
+                if isinstance(dropou,list):
                     track_rnn = AlphaDropout(dropout[0], name='track_dropout')(track_rnn)
                 else:
                     track_rnn = AlphaDropout(dropout, name='track_dropout')(track_rnn)
@@ -187,7 +187,7 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
                       activation = 'selu', 
                       bias_initializer='zeros',
                       kernel_initializer = 'lecun_normal')(x)
-            if type(dropout) == list:
+            if isinstance(dropout,list):
                 x = AlphaDropout(dropout[i])(x)
             else:
                 x = AlphaDropout(dropout)(x)
@@ -282,7 +282,9 @@ def train_evt_track(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM'
                                                               kernel_initializer='glorot_normal'))(track_rnn)
                 if batch_norm:
                     track_rnn = BatchNormalization(name='track_batch_norm')(track_rnn)
-                if dropout > 0.0:
+                if isinstance(dropout,list):
+                    track_rnn = Dropout(dropout[0], name='track_dropout')(track_rnn)
+                else:
                     track_rnn = Dropout(dropout, name='track_dropout')(track_rnn)
 
             except AttributeError:
@@ -311,7 +313,9 @@ def train_evt_track(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM'
                         kernel_initializer = 'glorot_normal')(x)
             if batch_norm:
                 x = BatchNormalization()(x)
-            if dropout > 0.0:
+            if isinstance(dropout,list):
+                x = Dropout(dropout[i])(x)
+            else:
                 x = Dropout(dropout)(x)
 
         main_output = Dense(1, 
