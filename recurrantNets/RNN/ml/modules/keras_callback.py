@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
+from matplotlib.offsetbox import AnchoredText
 # import seaborn as sns
 # sns.set()
 
@@ -39,7 +40,7 @@ class callback_ROC(keras.callbacks.Callback):
         self.aucs_train = []
         self.losses = []
         plt.figure(figsize=(15, 8.44), dpi=150)
-        self.interval_evaluate_trainAUC = int(5)
+        self.interval_evaluate_trainAUC = int(1)
  
     def on_train_end(self, logs={}):
         return
@@ -120,13 +121,23 @@ class callback_ROC(keras.callbacks.Callback):
 
             plt.clf()
             plt.plot(self.aucs_val, label='validation sample', color='C1')
-            plt.plot(self.aucs_train, label='training sample', \
-                     marker='o', fillstyle='none', markersize=4, mew=2, linestyle='none', color='C0')
-            plt.xlabel("Epochs")
-            plt.ylabel("ROC AUC")
+            plt.plot(self.aucs_train, label='training sample', color='C0')
+            plt.xlabel("Epochs", fontsize=18)
+            plt.ylabel("ROC AUC", fontsize=18)
             plt.legend(loc='best', fontsize=16)
-            plt.grid(True)
+            plt.xticks(fontsize=13)
+            plt.yticks(fontsize=13)
             plt.ylim(0.5,1.05)
+
+            plt.annotate('ALICE simulation, this work\nPythia-8 MBR {}\n{} TeV'.format(
+                r'$\varepsilon=0.104$', r'$\sqrt{s} = 13$'), 
+                xy=(0.015, 0.876), xycoords='axes fraction', fontsize=17, 
+                bbox=dict(boxstyle="round", fc="w", ec="0.5", alpha=0.4))
+                #backgroundcolor='white')
+            # gets current axis
+            ax = plt.gca()
+            ax.yaxis.grid(True)
+
             plt.tight_layout()
             plt.savefig(self.output_prefix + 'learningcurve_rocauc_epochs.png')
             plt.savefig(self.output_prefix + 'learningcurve_rocauc_epochs.pdf')
