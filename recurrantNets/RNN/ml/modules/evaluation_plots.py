@@ -26,12 +26,22 @@ def plot_model_loss(history, out_path):
     Plot the model training and validation loss over the training epochs
     """
     plt.figure()
-    plt.plot(history['loss'])
-    plt.plot(history['val_loss'])
-    plt.title('model loss')
-    plt.ylabel('loss', fontsize=18)
-    plt.xlabel('epoch', fontsize=18)
-    plt.legend(['train', 'test'], loc='upper right', fontsize=15)
+    plt.plot(history['loss'], label='training')
+    plt.plot(history['val_loss'], label='validation')
+    # plt.title('model loss')
+    plt.ylabel('loss', fontsize=16)
+    plt.xlabel('epoch', fontsize=16)
+
+    plt.legend(loc=(0.717,0.66), fontsize=12)
+    plt.xticks(fontsize=11)
+    plt.yticks(fontsize=11)
+    plt.annotate('ALICE simulation, this work\nPythia-8 MBR {}\n{} TeV'.format(
+        r'$\varepsilon=0.104$', r'$\sqrt{s} = 13$'), 
+        xy=(0.55,0.835),
+        xycoords='axes fraction', 
+        fontsize=12, 
+        bbox=dict(boxstyle="round", fc="w", ec="0.5", alpha=0.4))
+
     plt.tight_layout()
 
     plt.savefig(out_path + 'model_loss' + '.png')
@@ -47,8 +57,8 @@ def plot_all_features(evt_dic, outpath, post_fix='', real_bg=False, normed=None)
     target_array = evt_dic['target']
     sig_value = 1
     bg_value  = 0
-    sig_label = 'Signal'
-    bg_label  = 'BG'
+    sig_label = 'Sig'
+    bg_label  = 'Bg'
     combined_label  = 'S+B'
     if real_bg:
         sig_value = 0
@@ -145,13 +155,20 @@ def plot_feature(x_sig, x_bg, out_path, **kwargs):
     # ks_p_val = stats.ks_2samp(n_trueNeg[non_zero_lst], n_truePos[non_zero_lst])[1]
     # plt.plot([], [], ' ', label='KS p-value: {:.3f}'.format(ks_p_val))
     
-    plt.title(title, fontsize=18)
+    # plt.title(title, fontsize=18)
     # plt.xlim(-0.05, 1.05)
     plt.xlabel(xlabel, fontsize=17)
     plt.ylabel('Entries', fontsize=17)
-    plt.legend(fontsize=14)
+    plt.legend(loc=(0.75,0.54),fontsize=13)
     plt.xticks(fontsize=11)
     plt.yticks(fontsize=11)
+    plt.annotate('ALICE simulation, this work\nPythia-8 MBR {}\n{} TeV'.format(
+        r'$\varepsilon=0.104$', r'$\sqrt{s} = 13$'), 
+        xy=(0.5,0.81),
+        xycoords='axes fraction', 
+        fontsize=13, 
+        bbox=dict(boxstyle="round", fc="w", ec="0.5", alpha=0.5))
+
     plt.tight_layout()
     plt.savefig(out_path + 'feature_' + title + '_' + xlabel + '.png')
     plt.savefig(out_path + 'feature_' + title + '_' + xlabel + '.pdf')
@@ -213,7 +230,7 @@ def plot_autoencoder_output(y_predictions, y_target, y_true, out_path, label='')
     # plt.xlim(-0.05, 1.05)
     plt.xlabel('Reconstruction error ' + label, fontsize=18)
     plt.ylabel('Entries', fontsize=18)
-    plt.legend(fontsize=15)
+    plt.legend(fontsize=16)
     plt.tight_layout()
     plt.savefig(out_path + 'reconstruction_error_' + label + '.png')
     plt.savefig(out_path + 'reconstruction_error_' + label + '.pdf')
@@ -249,15 +266,7 @@ def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
                  alpha=.25,
                  color='black',
                  label='S+B')
-    
-    n_trueNeg, bins_trueNeg, patches_trueNeg = \
-        plt.hist(y_score_trueNeg,
-                 bins=nbins,
-                 range=(0., 1.),
-                 alpha=0.5,
-                 color='#dd0000',
-                 label='BG')
-    
+   
     if y_score_truePos.shape[0] > 0:
         n_truePos, bins_truePos, patches_truePos = \
             plt.hist(y_score_truePos,
@@ -265,11 +274,18 @@ def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
                      range=(0., 1.),
                      alpha=0.5,
                      color='green',
-                     label='Signal')
+                     label='Sig')
     else:
         n_truePos = None
         
-    
+    n_trueNeg, bins_trueNeg, patches_trueNeg = \
+        plt.hist(y_score_trueNeg,
+                 bins=nbins,
+                 range=(0., 1.),
+                 alpha=0.5,
+                 color='#dd0000',
+                 label='Bg')
+     
     if y_score_trueBG.shape[0] > 0:
         n_trueBG, bins_trueBG, patches_trueBG = \
             plt.hist(y_score_trueBG,
@@ -282,9 +298,18 @@ def plot_MVAoutput(y_truth, y_score, out_path, label='', nbins=100):
  
     #plt.title('MVA output distribution (positive class)')
     plt.xlim(-0.05, 1.05)
-    plt.xlabel('MVA output', fontsize=18)
-    plt.ylabel('Entries', fontsize=18)
-    plt.legend(fontsize=15)
+    plt.xlabel('MVA output', fontsize=17)
+    plt.ylabel('Entries', fontsize=17)
+    plt.legend(loc=1, ncol=3,fontsize=12)
+    plt.xticks(fontsize=11)
+    plt.yticks(fontsize=11)
+    plt.annotate('ALICE simulation, this work\nPythia-8 MBR {}\n{} TeV'.format(
+        r'$\varepsilon=0.104$', r'$\sqrt{s} = 13$'), 
+        xy=(0.546,0.74),
+        xycoords='axes fraction', 
+        fontsize=12, 
+        bbox=dict(boxstyle="round", fc="w", ec="0.5", alpha=0.4))
+
     plt.tight_layout()
     plt.savefig(out_path + 'MVAoutput_distr_' + label + '.png')
     plt.savefig(out_path + 'MVAoutput_distr_' + label + '.pdf')
@@ -329,8 +354,8 @@ def plot_cut_efficiencies(num_signal, num_background, out_path, label=''):
 
     l1 = ax1.plot(MVAcut, signal_efficiency, label='signal efficiency', color='green')
     l2 = ax1.plot(MVAcut, backgr_efficiency, label='background efficiency', color='red')
-    ax1.set_xlabel('MVA cut', fontsize=18)
-    ax1.set_ylabel('Efficiency', fontsize=18)
+    ax1.set_xlabel('MVA cut', fontsize=17)
+    ax1.set_ylabel('Efficiency', fontsize=17)
 
     ax2 = ax1.twinx()
     significance_per_MVAcut = np.empty((0))
@@ -352,7 +377,7 @@ def plot_cut_efficiencies(num_signal, num_background, out_path, label=''):
                   label='max. significance for cut at %.2f' % MVAcut_opt,
                   marker='o', markersize=10, fillstyle='none', mew=2, linestyle='none',
                   color='#0000aa', alpha=.8)
-    ax2.set_ylabel('Significance', color='blue', fontsize=18)
+    ax2.set_ylabel('Significance', color='blue', fontsize=17)
     ax2.tick_params('y', colors='blue')
 
     #plt.title('MVA cut efficiencies')
@@ -390,10 +415,16 @@ def plot_ROCcurve(y_truth, y_score, out_path, sample_weight=None, label='', work
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlim([-0.05, 1.05])
     plt.ylim([-0.05, 1.05])
-    plt.xlabel('False Positive Rate', fontsize=18)
-    plt.ylabel('True Positive Rate', fontsize=18)
-    plt.title('Receiver operating characteristic curve')
+    plt.xlabel('False Positive Rate', fontsize=16)
+    plt.ylabel('True Positive Rate', fontsize=16)
+    plt.xticks(fontsize=11)
+    plt.yticks(fontsize=11)
     
+    plt.annotate('ALICE simulation, this work\nPythia-8 MBR {}\n{} TeV'.format(
+        r'$\varepsilon=0.104$', r'$\sqrt{s} = 13$'), 
+        xy=(0.516, 0.14), xycoords='axes fraction', fontsize=12, 
+        bbox=dict(boxstyle="round", fc="w", ec="0.5", alpha=0.4))
+ 
     if workingpoint != -1:
         # find and plot threshold closest to the chosen working point
         close_MVAcut_opt = np.argmin(np.abs(thresholds-workingpoint))
@@ -402,7 +433,7 @@ def plot_ROCcurve(y_truth, y_score, out_path, sample_weight=None, label='', work
                  label="threshold at %.2f" % workingpoint, fillstyle="none",
                  mew=2)
     
-    plt.legend(loc=4, fontsize=15)
+    plt.legend(loc=4, fontsize=12)
     plt.savefig(out_path + 'roc_curve_' + label + '.png')
     plt.savefig(out_path + 'roc_curve_' + label + '.pdf')
 
@@ -449,8 +480,8 @@ def plot_precision_recall_curve(y_truth, y_score, out_path, sample_weight=None, 
     
     plt.xlim([-0.05, 1.05])
     plt.ylim([-0.05, 1.05])
-    plt.xlabel('Recall', fontsize=18)
-    plt.ylabel('Precision', fontsize=18)
+    plt.xlabel('Recall', fontsize=17)
+    plt.ylabel('Precision', fontsize=17)
     #plt.title('Precision-Recall Curve')
     plt.legend(loc="lower right", fontsize=15)
     plt.savefig(out_path + 'precision_recall_' + label + '.png')
