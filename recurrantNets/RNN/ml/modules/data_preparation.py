@@ -616,7 +616,7 @@ def preprocess(evt_dic, out_path, load_fitted_attributes=False):
         #   {'event': ['a', 'b',...], 'track': [...], ...}
         scaling_attr = {}
         for key in evt_dic.keys():
-            if str(key) == 'target': 
+            if str(key) == 'target' or str(key) == 'sample_weights':
                 continue
             columns = list(evt_dic[key].dtype.names)
             # we have to fit new scaling attributes
@@ -779,6 +779,70 @@ def shape_data(evt_data):
     
 
     return evt_data, feature_names_dic
+
+
+def cut_data(evt_dic, cut_dic):
+    """
+    Args
+        evt_dic:
+            the event dictionary
+        ____________________________________________________________________
+
+        cut_dic:
+            dictionary where 
+                key = column in the data
+                value = a list of possible values or a function
+    _________________________________________________________________________
+
+    Operation breakdown
+        
+        the dictionary is looped over and the event ids that correspond to
+        the individual cuts are written to a list
+    _________________________________________________________________________
+
+    Return
+        
+        event dictionary with the corresponding data
+
+    """
+    n_evts_total = data.shape[0]
+    # array that only contains the indices of events with the right amount
+    # of tracks
+    bad_evt_list = []
+    for cut_key in cut_dic.keys():
+        for evt_key in evt_dic.keys():
+            if cut_key not in evt_dic[evt_key].dtype.names:
+                continue 
+            # here the key is in the event dictionary
+            if isinstance(cut_dic[cut_key], list):
+                data = data.loc[data[key].isin(value)]
+            elif isinstance(value, int) or isinstance(value, float):
+                # if the value is a function(e.g. lambda x: x < 3.1415)
+                data = data[data[key].apply(lambda x: x == value)]
+            elif isinstance(value, tuple):
+                if len(value) == 2:
+                    # sort the tuple as the values may not be in the right order 
+                    # becomes a list but we do not care 
+                    value = sorted(value)
+                    data = data[data[key].apply(lambda x: x > value[0] and x < value[1])]
+            else:
+                raise TypeError('The {} in cut_dic is not a supported ' \
+                        'type ({})'.format(key, type(value)))
+
+    list_of_events = data[event_id_string].values.tolist()
+    if not isinstance(list_of_events, list):
+        raise TypeError('The event-id-list is not a of type list!')
+    # the integers in this list are long-ints -> convert them here to standard ints
+    list_of_events = map(int, list_of_events)
+
+    # print-out
+    percentage_of_all = len(list_of_events)/n_evts_total
+    print(':: Processing {}/{} events ({:.2f}%) with the following number of ' \
+            'cuts:\n'.format(
+                len(list_of_events), n_evts_total, percentage_of_all))
+    print_dict(cut_dic)
+
+    return list_of_events
 
 
 
