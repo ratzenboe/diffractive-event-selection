@@ -78,7 +78,7 @@ def main():
         for key in evt_dictionary.keys():
                 evt_dictionary[key] = evt_dictionary[key][indices]
 
-except(OSError, IOError, TypeError, ValueError):
+    except(OSError, IOError, TypeError, ValueError):
         raise IOError('The event dictionary cannot be loaded from {}!'.format(inpath))
 
     evt_dictionary = get_sub_dictionary(evt_dictionary, branches_dic)
