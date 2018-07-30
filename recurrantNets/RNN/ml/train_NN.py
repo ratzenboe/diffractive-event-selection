@@ -30,7 +30,8 @@ from modules.logger                             import logger
 from modules.load_model                         import train_model
 from modules.data_preparation                   import get_data_dictionary, preprocess, \
                                                        fix_missing_values, shape_data, \
-                                                       get_sub_dictionary, save_data_dictionary
+                                                       get_sub_dictionary, save_data_dictionary, \
+                                                       get_evt_id_list
 from modules.utils                              import print_dict, split_dictionary, \
                                                        pause_for_input, get_subsample, \
                                                        print_array_in_dictionary_stats, \
@@ -109,6 +110,11 @@ def main():
         evt_dictionary = get_data_dictionary(inpath)
         print('\n:: Event dictionary loaded from file: {}'.format(
             output_path + 'evt_dic.pkl'))
+        # train only on events with no clusters
+        indices = np.arange(evt_dictionary['event']['has_no_calo_clusters'].shape[0])[(evt_dictionary['event']['has_no_calo_clusters']==True).ravel()]
+        for key in evt_dictionary.keys():
+                evt_dictionary[key] = evt_dictionary[key][indices]
+
     except(OSError, IOError, TypeError, ValueError):
         raise IOError('The event dictionary cannot be loaded from {}!'.format(inpath))
 
@@ -261,7 +267,7 @@ def main():
         # if one or several aux-outputs exist the main output is on the
         # first position in the list
         y_train_score = y_train_score[0]
-
+ 
     num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, 
                                                     out_path, label='train')
     MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)

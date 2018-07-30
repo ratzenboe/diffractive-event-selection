@@ -58,7 +58,6 @@ def main():
         # ----------- data-parameters --------------
         branches_dic      = data_params['branches']
         evt_id_string     = data_params['evt_id']
-        missing_vals_dic  = data_params['missing_values']
         remove_features   = data_params['remove_features']
         print('evt_id_string: {}'.format(evt_id_string))
         # ------------ run-parameters --------------
@@ -74,9 +73,15 @@ def main():
         # raise TypeError('We want to produce the evt_dic again')
         evt_dictionary = get_data_dictionary(inpath)
         print('\n:: Event dictionary loaded from file: {}'.format(inpath))
-        evt_dictionary = get_sub_dictionary(evt_dictionary, branches_dic)
-    except(OSError, IOError, TypeError, ValueError):
+        # train only on events with no clusters
+        indices = np.arange(evt_dictionary['event']['has_no_calo_clusters'].shape[0])[(evt_dictionary['event']['has_no_calo_clusters']==True).ravel()]
+        for key in evt_dictionary.keys():
+                evt_dictionary[key] = evt_dictionary[key][indices]
+
+except(OSError, IOError, TypeError, ValueError):
         raise IOError('The event dictionary cannot be loaded from {}!'.format(inpath))
+
+    evt_dictionary = get_sub_dictionary(evt_dictionary, branches_dic)
 
     if evt_id_string in evt_dictionary['event'].dtype.names:
         print('{} in event category!'.format(evt_id_string))
@@ -88,7 +93,6 @@ def main():
     print('\nType evt-id-np: {}'.format(type(evt_id_np)))
     print(evt_id_np)
 
-    evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
     evt_dictionary, list_of_engineered_features = engineer_features(evt_dictionary, replace=False)
     
     # function that extracts the evt-id from each 'event'-array and puts it into a list
@@ -115,16 +119,6 @@ def main():
     if evt_id_string in evt_dictionary['event'].dtype.names:
         raise KeyError('Attention, the event id key is still in the data! '\
                 'By not removing it the machine will treat it as a feature') 
-
-    # lets remove some features to check if we get a worse performance 
-    if 'koala' in run_mode_user: 
-        evt_dictionary.pop('fmd', None)
-        evt_dictionary.pop('ad', None)
-        evt_dictionary.pop('v0', None)
-        evt_dictionary.pop('calo_cluster', None)
-        evt_dictionary.pop('phos', None)
-        evt_dictionary.pop('emcal', None)
-
     # if plot:
     #     print('\n::  Plotting the features...')
     #     plot_all_features(evt_dictionary, out_path, real_bg=False)
@@ -137,9 +131,6 @@ def main():
     # returns a numpy array (due to fit_transform function)
     preprocess(evt_dictionary, model_dir, load_fitted_attributes=True)
 
-    # before we lose track of the column names we save the eta-phi-diff columns
-    # which we will (is needed for the koala mode)
-    eta_phi_dist_feature_arr = evt_dictionary['event']['eta_phi_diff'].ravel()
     #####################################################################################
 
     print('\n::  Converting the data from numpy record arrays to standard numpy arrays...')
