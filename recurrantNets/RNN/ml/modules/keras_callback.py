@@ -19,13 +19,18 @@ class callback_ROC(keras.callbacks.Callback):
     Custom callback class for Keras which calculates and plots ROC AUCs after each training epoch.
     """
     
-    def __init__(self, X_train, y_train, output_prefix=None):
+    def __init__(self, X_train, y_train, sample_weight_train=None, output_prefix=None):
         self.best = 0
         self.wait = 0
         self.X_train = X_train
         if type(y_train)==list:
             y_train = y_train[0]
         self.y_train = y_train.ravel()
+
+        if sample_weight_train is not None:
+            self.sample_weight_train = sample_weight_train
+        else:
+            self.sample_weight_train = np.ones((y_train.shape[0],))
 
         if output_prefix is not None:
             self.output_prefix = output_prefix
@@ -76,7 +81,9 @@ class callback_ROC(keras.callbacks.Callback):
             print('\n\n shape1: {}, shape2: {}\n\n'.format(
                 val_data_y.shape, y_pred_val.shape))
 
-            roc_auc_val = roc_auc_score(val_data_y, y_pred_val)
+            roc_auc_val = roc_auc_score(val_data_y, 
+                                        y_pred_val, 
+                                        sample_weight=self.sample_weight_train)
             self.aucs_val.append(roc_auc_val)
             self.aucs_train.append(0)
             
@@ -103,14 +110,16 @@ class callback_ROC(keras.callbacks.Callback):
                 y_pred_val = y_pred_val.ravel()
             # y_pred_val = self.model.predict(self.validation_data[0])
             
-            roc_auc_val = roc_auc_score(val_data_y, y_pred_val)
+            roc_auc_val = roc_auc_score(val_data_y, y_pred_val, 
+                                        sample_weight=self.validation_data[-1])
             self.aucs_val.append(roc_auc_val)
 
             y_pred_train = self.model.predict(self.X_train)
             if type(y_pred_train)==list:
                 y_pred_train = y_pred_train[0]
             # y_pred_train = y_pred_train.ravel()
-            roc_auc_train = roc_auc_score(self.y_train, y_pred_train) 
+            roc_auc_train = roc_auc_score(self.y_train, y_pred_train,
+                                          sample_weight=self.sample_weight_train) 
             self.aucs_train.append(roc_auc_train)
         
             print("Epoch {} took {:.1f}s".format(epoch, time.time() - start_time)),
