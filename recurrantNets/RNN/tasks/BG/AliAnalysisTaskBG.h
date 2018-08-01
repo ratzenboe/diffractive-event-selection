@@ -58,6 +58,7 @@ class AliAnalysisTaskBG : public AliAnalysisTaskSE, public CEPBGBase
         // Output objects 
         TList*                  fOutList;           //! output list
         TH1F*                   fInvMass_FD;        //! invariant mass of feed down evts
+        TH1F*                   fInvMass_Sig;       //! invariant mass of signal evts
         // feed down describing histograms
         TH1F*                   fInvMass_FD_emcal;  //! FD that only consists of extra gammas
         TH1F*                   fInvMass_FD_3plus;  //! FD that could be detectable by 3+ methods

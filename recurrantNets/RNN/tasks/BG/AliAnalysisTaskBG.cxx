@@ -63,6 +63,7 @@ AliAnalysisTaskBG::AliAnalysisTaskBG()
   , fFilesList("")
   // output objects
   , fOutList(0)
+  , fInvMass_Sig(0)
   , fInvMass_FD(0)
   , fInvMass_FD_emcal(0)
   , fInvMass_FD_3plus(0)
@@ -107,6 +108,7 @@ AliAnalysisTaskBG::AliAnalysisTaskBG(const char* name,
   , fFilesList("")
   // output objects
   , fOutList(0)
+  , fInvMass_Sig(0)
   , fInvMass_FD(0)
   , fInvMass_FD_emcal(0)
   , fInvMass_FD_3plus(0)
@@ -179,6 +181,8 @@ void AliAnalysisTaskBG::UserCreateOutputObjects()
     fOutList = new TList();             // this is a list which will contain all of your histograms
     fOutList->SetOwner(kTRUE);          // memory stuff: the list is owner of all objects 
                                         // it contains and will delete them if requested 
+    fInvMass_Sig = new TH1F("fInvMass_Sig", "fInvMass_Sig",100, 0, 3);
+
     fInvMass_FD = new TH1F("fInvMass_FD", "fInvMass_FD",100, 0, 3);
     fInvMass_FD_emcal = new TH1F("fInvMass_FD_emcal", "fInvMass_FD_emcal",100, 0, 3);
     fInvMass_FD_3plus = new TH1F("fInvMass_FD_3plus", "fInvMass_FD_3plus",100, 0, 3);
@@ -202,6 +206,7 @@ void AliAnalysisTaskBG::UserCreateOutputObjects()
     fInvMass_noBGCluster_sig = new TH1F("fInvMass_noBGCluster_sig", "fInvMass_noBGCluster_sig",100, 0, 3);
     fInvMass_noBGCluster_FD = new TH1F("fInvMass_noBGCluster_FD", "fInvMass_noBGCluster_FD",100, 0, 3);
 
+    fOutList->Add(fInvMass_Sig);          
     fOutList->Add(fInvMass_FD);          
     fOutList->Add(fInvMass_FD_emcal);          
     fOutList->Add(fInvMass_FD_3plus);          
@@ -266,6 +271,21 @@ void AliAnalysisTaskBG::UserExec(Option_t *)
     TArrayI *TTindices  = new TArrayI();
     Bool_t isGoodEvt = lhc16filter(fESD,nTracksAccept,fTTmask,fTTpattern,nTracksTT,TTindices); 
     if (!isGoodEvt) return ;
+    
+    // fill signal information
+    std::vector<Int_t> good_evt_particles = {211, -211};
+    if (HasRightParticles(fTracks, nTracksTT, TTindices, 
+                           fPIDResponse, fPIDCombined, 
+                           fMCEvent, good_evt_particles)) {
+        // has pi+ pi-
+        if (EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent)) {
+            // is signal event
+            fInvMass_Sig->Fill(GetMass(fTracks, nTracksTT, TTindices, fMCEvent));
+            // signal evt is not needed any longer, as the other analysis use bg evts
+            return ;
+        }
+    }
+
     fnEvtsPassedFilter++;
     std::vector<Int_t> ls_plus_evt = {211, 211};
     std::vector<Int_t> ls_minus_evt = {-211, -211};

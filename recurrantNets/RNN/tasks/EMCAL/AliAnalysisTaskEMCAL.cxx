@@ -277,8 +277,8 @@ void AliAnalysisTaskEMCAL::UserExec(Option_t *)
     //////////////////////////////////////////////////////////////////////////////////
     // ----------------------- EMCAL Hits --------------------------------------------
     // the directory may have changed we therefore update the neccessary global vars
-    if (UpdateGlobalVars(CurrentFileName(), Entry())) EMCalHits(isSignal);
-    else { printf("<E> global varaibles cannot be updated!\n"); return; }
+    /* if (UpdateGlobalVars(CurrentFileName(), Entry())) EMCalHits(isSignal); */
+    /* else { printf("<E> global varaibles cannot be updated!\n"); return; } */
     //////////////////////////////////////////////////////////////////////////////////
 
     fnFinishedAnalysis++;
@@ -340,7 +340,7 @@ void AliAnalysisTaskEMCAL::EMCalAnalysis(Bool_t isSignal, AliMCEvent* MCevt,
         // ///////////////////////////////////////////////////////////////////////////////
         // we match clusters ourselves
         dPhiEtaMin = 999.;
-        if (MatchTracks(clust, tracks, nTracksTT, TTindices, MCevt, dPhiEtaMin)) {
+        if (MatchTracks(clust, tracks, nTracksTT, TTindices, dPhiEtaMin)) {
             partpdg = 211;
             if (IsClusterFromPDG(clust, partpdg, MCevt)) 
                 fdPhiEta_pion->Fill(dPhiEtaMin);
@@ -348,10 +348,12 @@ void AliAnalysisTaskEMCAL::EMCalAnalysis(Bool_t isSignal, AliMCEvent* MCevt,
             if (IsClusterFromPDG(clust, partpdg, MCevt) && !isSignal)
                 fdPhiEta_gamma->Fill(dPhiEtaMin);
         }
-        if (dPhiEtaMin<0.6) nClusMatched++;
+        if (dPhiEtaMin<0.51) nClusMatched++;
         // only plot energy that comes not from a cluster
-        else energy += clust->E();
+        // we want the energy in general not from matched cluters
+        /* else energy += clust->E(); */
         // ///////////////////////////////////////////////////////////////////////////////
+        energy += clust->E();
     }
         
     // ///////////////////////////////////////////////////////////////////////////////
