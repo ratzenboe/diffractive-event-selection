@@ -124,6 +124,65 @@ void PlotTask::PrintHists() const
 }
 
 //_______________________________________________________________________________________
+void PlotTask::AddFile(TString fname, TString name_addon, TString option) 
+{
+    if (name_addon!="") name_addon = "_"+name_addon;
+    // open the file
+    TFile* file = TFile::Open(fname.Data());
+    if (!file) { printf("<E> File %s not found!\n", fname.Data()); return ;  }
+    TDirectory* dir = 0x0;
+    TList *h_lst = 0x0;
+    // get the contained TList
+    if (option.Contains("BG")) {
+        dir = file->GetDirectory("BGTask");
+        if (!dir) { 
+            printf("<E> Direcotry not found in file %s\n", fname.Data()); 
+            gSystem->Exit(1); 
+        }
+        h_lst = (TList*)dir->Get("BGOutputContainer");
+    }
+    else if (option.Contains("EMCAL")) {
+        dir = file->GetDirectory("EMCALTask");
+        if (!dir) { 
+            printf("<E> Direcotry not found in file %s\n", fname.Data()); 
+            gSystem->Exit(1); 
+        }
+        h_lst = (TList*)dir->Get("EMCALOutputContainer");
+    }
+    else {
+        TList* lst = file->GetListOfKeys() ;
+        h_lst = new TList();
+        lst->SetOwner(kFALSE);
+        if (!lst) { printf("<E> No keys found in file\n"); gSystem->Exit(1); }
+        TIter next(lst) ;
+        TKey* key ;
+        TObject* obj ;
+        while ( key = (TKey*)next() ) {
+            obj = key->ReadObj() ;
+            if ( !obj->InheritsFrom("TH1F") ) {
+                printf("<W> Object %s is not 1D histogram : "
+                       "will not be read in\n", obj->GetName()) ;
+            }
+            printf("Hist name: %s title: %s\n",obj->GetName(),obj->GetTitle());
+            TH1F* hist = (TH1F*) obj->Clone((obj->GetName()+name_addon).Data());
+            hist->SetTitle((obj->GetName()+name_addon).Data());
+            hist->SetDirectory(0);
+            h_lst->Add(hist);
+        }
+    }
+    if (h_lst->GetSize()==0) { printf("No histograms found!"); }
+    for (Int_t ii(0); ii<h_lst->GetSize(); ii++) {
+        /* TH1 hist = (TH1*)h_lst->At(ii); */
+        /* hist = (TH1*)h_lst->At(ii); */
+        fHistList->Add((TH1*)h_lst->At(ii));
+    }
+
+    file->Close();
+    if (file) { delete file; file=0x0; dir=0x0; }
+    /* delete h_lst; */
+}
+
+//_______________________________________________________________________________________
 void PlotTask::ResetSizes()
 {
     fTitleSize = 42;
@@ -235,6 +294,7 @@ TString PlotTask::Title(TH1F* hist) const
     return out_str;
 }
 
+//_______________________________________________________________________________________
 TCanvas* PlotTask::Significance(TH1F* h_sig, TH1F* h_bg) const
 {
     TCanvas* canv = new TCanvas("SigBg","",1450,1000);
@@ -326,7 +386,7 @@ TCanvas* PlotTask::Significance(TH1F* h_sig, TH1F* h_bg) const
     ymax = canv->GetFrame()->GetY2();
     ymin = canv->GetFrame()->GetY1();
     printf("xmax: %.2f, y_max: %.2f\n", xmax, ymax);
-    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}";
+    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.104)}}{#sqrt{s}=13 TeV}";
     if (fTextString!="") tex_str = fTextString;
     Double_t x(0), y(0);
     RelativeTextPosition(x,y);
@@ -480,7 +540,7 @@ TCanvas* PlotTask::SigBg(TH1F* h_sig, TH1F* h_bg) const
     xmax = canv->GetFrame()->GetX2();
     ymax = canv->GetFrame()->GetY2();
     printf("xmax: %.2f, y_max: %.2f\n", xmax, ymax);
-    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}";
+    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.104)}}{#sqrt{s}=13 TeV}";
     if (fTextString!="") tex_str = fTextString;
     Double_t x(0), y(0);
     RelativeTextPosition(x,y);
@@ -566,6 +626,35 @@ void PlotTask::AddHists(TString finalName, TString hname1, TString hname2,
 void PlotTask::ChangeTitleOfHist(TString hname, TString newTitle)
 {
     ((TH1F*)fHistList->FindObject(hname))->SetTitle(newTitle);
+}
+
+//_______________________________________________________________________________________
+void PlotTask::ReductionRateHist(TString horiginal, TString hreduced, TString newname)
+{
+    TH1F* h_1 = (TH1F*)((TH1F*)fHistList->FindObject(horiginal))->Clone(newname);
+    h_1->SetTitle(newname);
+    TH1F* h_2 = (TH1F*)fHistList->FindObject(hreduced);
+    if (h_2->Integral() > h_1->Integral()) { 
+        printf("<E> %s contains more datapoints then %s! Swap histograms!", 
+                hreduced.Data(), horiginal.Data()); 
+        return ;
+    }
+
+    Double_t h1_i, h2_i, reduction;
+    for (Int_t ii(1); ii<=h_1->GetSize()-2; ii++) {
+        h1_i = h_1->GetBinContent(ii); 
+        h2_i = h_2->GetBinContent(ii);
+        if (h1_i==0) reduction = 0.;
+        else if (h2_i==0) reduction = 1.;
+        else reduction = 1. - h2_i/h1_i;
+        // calculate the reduction rate bin content i
+        h_1->SetBinContent(ii, reduction);
+    }
+    Int_t nCells = h_1->GetNbinsX()+2;  // +2 = over and underflow bin
+    Double_t errors[nCells] = {0.};
+    h_1->SetError(errors);
+
+    fHistList->Add(h_1);
 }
 
 //_______________________________________________________________________________________
@@ -780,7 +869,7 @@ TCanvas* PlotTask::rp(TH1F* main_hist, TH1F* h2, TH1F* h3, TH1F* h4, TH1F* h5) c
     TLatex tex;
     tex.SetTextFont(43);
     tex.SetTextSize(fPlotTextSize);
-    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}";
+    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.104)}}{#sqrt{s}=13 TeV}";
     if (fTextString!="") tex_str = fTextString;
     Double_t x(0), y(0);
     RelativeTextPosition(x,y);
@@ -907,7 +996,7 @@ TCanvas* PlotTask::PlotAddHists(TH1F* hist1, TH1F* h_2, TH1F* h_3, TH1F* h_4, TH
     xmax = canv->GetFrame()->GetX2();
     ymax = canv->GetFrame()->GetY2();
     printf("xmax: %.2f, y_max: %.2f\n", xmax, ymax);
-    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}";
+    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.104)}}{#sqrt{s}=13 TeV}";
     if (fTextString!="") tex_str = fTextString;
     Double_t x(0), y(0);
     RelativeTextPosition(x,y);
@@ -979,7 +1068,7 @@ TCanvas* PlotTask::PlotHist(TH1F* hist) const
     ymax = canv->GetFrame()->GetY2();
     ymin = canv->GetFrame()->GetY1();
     printf("xmax: %.2f, y_max: %.2f\n", xmax, ymax);
-    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.08)}}{#sqrt{s}=13 TeV}";
+    TString tex_str = "#splitline{#splitline{ALICE simulation, this thesis}{Pythia-8 MBR (#varepsilon=0.104)}}{#sqrt{s}=13 TeV}";
     if (fTextString!="") tex_str = fTextString;
     Double_t x(0), y(0);
     RelativeTextPosition(x,y);
