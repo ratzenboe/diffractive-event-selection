@@ -12,6 +12,10 @@ class PlotTask
                         PlotTask(TString fname, TString option="");
     // Destructor
                         ~PlotTask();
+
+    // add histograms from a diffent file
+    void                AddFile(TString filename, TString name_addon="", TString option="");
+
     // Setters
     void                SetLog(Bool_t lp) { fLogPlot = lp; }
     // Sizes
@@ -53,6 +57,9 @@ class PlotTask
     void                AddHists(TString finalName, TString hname1, TString hname2,
                                  TString hname3="", TString hname4="");
     void                LikeSignHist(TString hLSplus, TString hLSminus);
+    // calculate reduction rate from horiginal to hreduced and save new histogram under newname:
+    void                ReductionRateHist(TString horiginal, TString hreduced, TString newname);
+
     // print out the various histograms stored in fHistlist
     void                PrintHists() const;
     // Change title of a histogram
