@@ -29,15 +29,15 @@ from modules.control                            import config_file_to_dict
 from modules.logger                             import logger
 from modules.load_model                         import train_model
 from modules.data_preparation                   import get_data_dictionary, preprocess, \
-                                                       fix_missing_values, shape_data, \
-                                                       get_sub_dictionary, save_data_dictionary, \
-                                                       get_evt_id_list
+                                                       fix_missing_values, get_sub_dictionary, \
+                                                       save_data_dictionary, get_evt_id_list
 from modules.utils                              import print_dict, split_dictionary, \
                                                        pause_for_input, get_subsample, \
                                                        print_array_in_dictionary_stats, \
                                                        remove_field_name, flatten_dictionary, \
                                                        special_preprocessing, engineer_features, \
-                                                       flatten_feature, get_new_feature, inv_mass
+                                                       flatten_feature, get_new_feature, inv_mass, \
+                                                       reweight_evt_dics, shape_data
 from modules.file_management                    import OutputManager
 from modules.evaluation_plots                   import plot_ROCcurve, plot_MVAoutput, \
                                                        plot_cut_efficiencies, plot_all_features, \
@@ -115,14 +115,19 @@ def main():
         for key in evt_dictionary.keys():
                 evt_dictionary[key] = evt_dictionary[key][indices]
 
+        # get all the features we have specified in the data_params.conf file
+        evt_dictionary = get_sub_dictionary(evt_dictionary, branches_dic)
+        # if evt_id is still in event features remove it
+        if evt_id_string in evt_dictionary['event'].dtype.names:
+            evt_dictionary['event'] = remove_field_name(evt_dictionary['event'], evt_id_string)[0]
+
     except(OSError, IOError, TypeError, ValueError):
         raise IOError('The event dictionary cannot be loaded from {}!'.format(inpath))
 
-    # get all the features we have specified in the data_params.conf file
-    evt_dictionary = get_sub_dictionary(evt_dictionary, branches_dic)
     # fix the missing values (also defined in the 
     evt_dictionary = fix_missing_values(evt_dictionary, missing_vals_dic)
-    evt_dictionary, list_of_engineered_features = engineer_features(evt_dictionary, replace=False)
+    if engineer:
+        evt_dictionary, list_of_engineered_features = engineer_features(evt_dictionary, replace=False)
 
     # Plot ROC curve of inv-mass cut
     # # get invariant mass distr to calculate the inv-mass ROC:
@@ -147,10 +152,27 @@ def main():
         plot_all_features(evt_dictionary, out_path, real_bg=False)
 
     # if koala indices are still left in the data we get rid of them
-    not_99_indices = np.arange(evt_dictionary['target'].shape[0])[evt_dictionary['target']!=99]
-    if not_99_indices.shape[0] != evt_dictionary['target'].shape[0]:
+    if 'koala' not in run_mode_user:
+        not_99_indices = np.arange(evt_dictionary['target'].shape[0])[evt_dictionary['target']!=99]
         for key in evt_dictionary.keys():
             evt_dictionary[key] = evt_dictionary[key][not_99_indices]
+
+    if reweight:
+        reweight_evt_dic = get_data_dictionary(reweight)
+        indices_rewght = np.arange(reweight_evt_dic['event']['has_no_calo_clusters'].shape[0])[(reweight_evt_dic['event']['has_no_calo_clusters']==True).ravel()]
+        for key in reweight_evt_dic.keys():
+            reweight_evt_dic[key] = reweight_evt_dic[key][indices_rewght]
+
+        # get all the features we have specified in the data_params.conf file
+        reweight_evt_dic = get_sub_dictionary(reweight_evt_dic, branches_dic)
+        if engineer:
+            reweight_evt_dic = engineer_features(reweight_evt_dic, replace=False)[0]
+
+        evt_dictionary['sample_weights'] = reweight_evt_dics(evt_dictionary, reweight_evt_dic)
+        print('sample weights: {}'.format(evt_dictionary['sample_weights']))
+
+    else:
+        evt_dictionary['sample_weights'] = np.ones(evt_dictionary['target'].shape[0])
 
     ######################################################################################
     # STEP 1:
@@ -200,6 +222,10 @@ def main():
     print_array_in_dictionary_stats(evt_dic_test, 'Test data info:')
     print_array_in_dictionary_stats(evt_dic_val, 'Validation data info:')
 
+    sample_weight_train = evt_dic_train.pop('sample_weights')
+    sample_weight_test  = evt_dic_test.pop('sample_weights')
+    sample_weight_val   = evt_dic_val.pop('sample_weights')
+
     ######################################################################################
     # STEP 2:
     # ------------------------------- Fitting the model -----------------------------------
@@ -207,6 +233,10 @@ def main():
     # if we want cross validation (in most cases we do) we can in turn easily evaluate the
     # models by passing which metrics should be looked into
 
+    if 'koala' in run_mode_user:
+        y_val_data = evt_dic_val['target']
+        y_val_data[(y_val_data==1) | (y_val_data==0)] = 1
+        y_val_data[y_val_data==99] = 0
     if aux:
         y_val_data = {
                       'main_output': evt_dic_val['target'], 
@@ -228,18 +258,18 @@ def main():
     y_train_truth_save = evt_dic_train['target'].copy()
     history = train_model(evt_dic_train,
                           run_mode_user, 
-                          val_data    = (X_val_data, y_val_data),
+                          val_data    = (X_val_data, y_val_data, sample_weight_val),
                           batch_size  = batch_size,
                           n_epochs    = n_epochs,
                           rnn_layer   = rnn_layer,
                           out_path    = out_path,
                           dropout     = dropout,
-                          class_weight = class_weight,
                           n_layers    = n_layers,
                           layer_nodes = layer_nodes, 
                           batch_norm  = batch_norm,
                           k_reg       = k_reg,
                           activation  = activation,
+                          sample_weight_train = sample_weight_train,
                           flat        = flat,
                           aux         = aux)
 
@@ -268,12 +298,18 @@ def main():
         # first position in the list
         y_train_score = y_train_score[0]
  
-    num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, 
-                                                    out_path, label='train')
+    num_trueSignal, num_trueBackgr = plot_MVAoutput(y_train_truth, y_train_score, out_path,
+                                                    label='train')
     MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
     del num_trueSignal, num_trueBackgr
 
-    plot_ROCcurve(y_train_truth, y_train_score, out_path, label='train')
+    if 'koala' in run_mode_user:
+        not_99_indices = np.arange(y_train_truth.shape[0])[y_train_truth!=99]
+        y_train_truth = y_train_truth[not_99_indices]
+        y_train_score = y_train_score[not_99_indices]
+        sample_weight_train = sample_weight_train[not_99_indices]
+                             
+    plot_ROCcurve(y_train_truth, y_train_score, out_path, sample_weight = sample_weight_train, label='train')
 
     del y_train_truth, y_train_score
     del evt_dic_train
@@ -294,7 +330,14 @@ def main():
     MVAcut_opt = plot_cut_efficiencies(num_trueSignal, num_trueBackgr, out_path)
     del num_trueSignal, num_trueBackgr
 
-    plot_ROCcurve(y_test_truth, y_test_score, out_path, label='test')
+    if 'koala' in run_mode_user:
+        not_99_indices = np.arange(y_test_truth.shape[0])[y_test_truth!=99]
+        y_test_truth = y_test_truth[not_99_indices]
+        y_test_score = y_test_score[not_99_indices]
+        sample_weight_test = sample_weight_test[not_99_indices]
+
+    plot_ROCcurve(y_test_truth, y_test_score, out_path,
+                    sample_weight = sample_weight_test, label='test')
 
     del y_test_truth, y_test_score
     del evt_dic_test
@@ -334,6 +377,14 @@ if __name__ == "__main__":
                         default='output/evt_dic.pkl',
                         type=str)
 
+    parser.add_argument('-reweight', '-reweight_path',
+                        help='path to the reweighting file',
+                        action='store',
+                        dest='reweight',
+                        default=None,
+                        type=str)
+
+
     parser.add_argument('-run_mode', '-run_setting',
                         help='keyword to identify which run settings to \
 			      choose from the config file (default: "run_params")',
@@ -363,6 +414,13 @@ if __name__ == "__main__":
                         dest='aux',
                         default=False)
 
+    parser.add_argument('-engineer', 
+                        help='bool: if engineer_features function should be called',
+                        action='store_true',
+                        dest='engineer',
+                        default=False)
+
+
     command_line_args = parser.parse_args(user_argv)
 
     run_mode_user = command_line_args.run_mode
@@ -370,9 +428,18 @@ if __name__ == "__main__":
     flat = command_line_args.flat
     aux = command_line_args.aux
     inpath = command_line_args.inpath
+    reweight = command_line_args.reweight
+    engineer = command_line_args.engineer
 
     if not os.path.isfile(inpath) or not inpath.endswith('.pkl'):
         raise IOError('No valid "inpath" for the event dictionary provided!\nPlease do so via ' \
                 'command line argument: -inpath /path/to/evt_dic_folder/evt_dic.pkl')
+
+    if reweight:
+        if not os.path.isfile(reweight) or not reweight.endswith('.pkl'):
+            raise IOError('No valid "inpath" for the REWEIGHT - event dictionary provided!\n' \
+                    'Please do so via command line argument: ' \
+                    '-reweight /path/to/reweight_evt_dic_folder/evt_dic.pkl')
+
 
     main()
