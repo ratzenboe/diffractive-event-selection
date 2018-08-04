@@ -18,9 +18,9 @@ special_activations = ['PReLU', 'LeakyReLU', 'ELU']
 
 def train_model(data, run_mode_user, val_data,
                 batch_size=64, n_epochs=50, rnn_layer='LSTM', 
-                out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
+                out_path = 'output/', dropout = 0.2, 
                 n_layers=3, layer_nodes=100, batch_norm=False, k_reg=0.01, activation='relu', 
-                flat=False, aux=False):
+                flat=False, aux=False, sample_weight_train=None):
     """
     Args 
         data:
@@ -86,7 +86,7 @@ def train_model(data, run_mode_user, val_data,
     if ('emcal' not in key_lst and 'selu' not in activation):
         history = train_evt_track(data, val_data, batch_size, n_epochs, rnn_layer,
                            out_path, dropout, n_layers, layer_nodes, batch_norm, 
-                           k_reg, activation, aux, flat)
+                           k_reg, activation, aux, flat, sample_weight_train)
         return history
     
     elif ('emcal' not in key_lst and 'selu' in activation):
@@ -120,6 +120,10 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
                 X_track_train   = train_data.pop('track')
 
             y_train         = train_data.pop('target')
+            # if trained on koala data
+            if y_train[y_train==99].size != 0:
+                y_train[(y_train==1) | (y_train==0)] = 1
+                y_train[y_train==99] = 0
 
             if train_data:
                 raise ValueError('The input dictionary contains unknown keys: {}'.format(
@@ -155,8 +159,8 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
                 track_rnn = (getattr(keras.layers, rnn_layer)(N_FEATURES_track, 
                                                               name='track_rnn', 
                                                               activation='selu',
-                                                              kernel_initializer='lecun_normal'))(track_rnn)
-                if isinstance(dropou,list):
+                                                              kernel_initializer='glorot_normal'))(track_rnn)
+                if isinstance(dropout,list):
                     track_rnn = AlphaDropout(dropout[0], name='track_dropout')(track_rnn)
                 else:
                     track_rnn = AlphaDropout(dropout, name='track_dropout')(track_rnn)
@@ -175,7 +179,7 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
         output_list = []
         output_data = []
         if aux: 
-            aux_output_track = Dense(1, activation='sigmoid', kernel_initializer='lecun_normal',name='aux_evt_trk')(x)
+            aux_output_track = Dense(1, activation='sigmoid', kernel_initializer='glorot_normal',name='aux_evt_trk')(x)
             output_list.append(aux_output_track)
             output_data.append(y_train)
         for i in range(0,n_layers):
@@ -186,7 +190,7 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
             x = Dense(layer_nodes, 
                       activation = 'selu', 
                       bias_initializer='zeros',
-                      kernel_initializer = 'lecun_normal')(x)
+                      kernel_initializer = 'glorot_normal')(x)
             if isinstance(dropout,list):
                 x = AlphaDropout(dropout[i])(x)
             else:
@@ -196,7 +200,7 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
                             activation = 'sigmoid', 
                             name = 'main_output', 
                             bias_initializer = 'zeros',
-                            kernel_initializer = 'lecun_normal')(x)
+                            kernel_initializer = 'glorot_normal')(x)
         output_list.insert(0, main_output)  
         output_data.append(y_train)
         model = Model(inputs=input_list, outputs=output_list)
@@ -231,7 +235,7 @@ def selu_net(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM',
 def train_evt_track(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM', 
         out_path = 'output/', dropout = 0.2, n_layers=3, layer_nodes=100, 
         batch_norm=False, k_reg=0.01, activation='relu', 
-        aux=False, flat=False):
+        aux=False, flat=False, weights=None, sample_weight_train=None):
 
         try:
             train_data = data.copy()
@@ -245,6 +249,10 @@ def train_evt_track(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM'
                 X_track_train   = train_data.pop('track')
 
             y_train         = train_data.pop('target')
+
+            if y_train[y_train==99].size != 0:
+                y_train[(y_train==1) | (y_train==0)] = 1
+                y_train[y_train==99] = 0
 
             if train_data:
                 raise ValueError('The input dictionary contains unknown keys: {}'.format(
@@ -334,11 +342,13 @@ def train_evt_track(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LSTM'
                                save_best_only=True)
             history = model.fit(input_data,
                                 output_data,  
+                                sample_weight=sample_weight_train,
                                 epochs = n_epochs, 
                                 batch_size = batch_size,
                                 validation_data = val_data,
                                 # callbacks = [checkpointer]).history
                                 callbacks = [callback_ROC(input_data, output_data, 
+                                                          sample_weight_train=sample_weight_train,
                                                           output_prefix=out_path),
                                              checkpointer]).history
 
@@ -643,7 +653,7 @@ def train_composite_NN(data, val_data, batch_size=64, n_epochs=30, rnn_layer='LS
 
 
 def train_flat_NN(data, val_data, batch_size=64, n_epochs=50, 
-                  out_path = 'output/', dropout = 0.2, class_weight={0: 1., 1: 1.},
+                  out_path = 'output/', dropout = 0.2, 
                   n_layers=3, layer_nodes=100, batch_norm=False, activation='relu'):
     """
     train a flat NN
@@ -694,7 +704,6 @@ def train_flat_NN(data, val_data, batch_size=64, n_epochs=50,
                             batch_size = batch_size,
                             validation_data = val_data,
                             callbacks = [checkpointer]).history
-                  # class_weight = class_weight)
                   # ,callbacks = [callback_ROC(train_data_dic, 
                   #                           output_targets, 
                   #                           output_prefix=out_path)])
