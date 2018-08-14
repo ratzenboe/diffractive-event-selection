@@ -272,13 +272,22 @@ void AliAnalysisTaskEMCAL::UserExec(Option_t *)
     /* printf("----------------------------- evt end ---------------------------------\n\n"); */
     //////////////////////////////////////////////////////////////////////////////////
     
-    Bool_t isSignal = EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent);  
-    EMCalAnalysis(isSignal, fMCEvent, fTracks, nTracksTT, TTindices);
+    // ///////////////////////////////////////////////////////////////////////////////
+    // EMCal analysis
+    /* Bool_t isSignal = EvtFullRecon(fTracks, nTracksTT, TTindices, fMCEvent); */  
+    /* EMCalAnalysis(isSignal, fMCEvent, fTracks, nTracksTT, TTindices); */
+    //////////////////////////////////////////////////////////////////////////////////
+    
     //////////////////////////////////////////////////////////////////////////////////
     // ----------------------- EMCAL Hits --------------------------------------------
     // the directory may have changed we therefore update the neccessary global vars
     /* if (UpdateGlobalVars(CurrentFileName(), Entry())) EMCalHits(isSignal); */
     /* else { printf("<E> global varaibles cannot be updated!\n"); return; } */
+    //////////////////////////////////////////////////////////////////////////////////
+
+    //////////////////////////////////////////////////////////////////////////////////
+    // fill EventStorage with new event
+    NewEvent(fMCEvent); 
     //////////////////////////////////////////////////////////////////////////////////
 
     fnFinishedAnalysis++;
@@ -294,7 +303,8 @@ void AliAnalysisTaskEMCAL::Terminate(Option_t *)
 {
     // terminate
     // called at the END of the analysis (when all events are processed)
-    /* fEvtStorge.PrintNEvts(); */
+    fEvtStorge.PrintNEvts();
+
     printf("%i/%i events are usable\n", fnEvtsTotal, fAllEvts);
     printf("%i/%i passed lhc16filter\n", fnEvtsPassedFilter, fnEvtsTotal);
     printf("%i/%i passed UpdateGlobalVars\n", fnFinishedAnalysis, fnEvtsPassedFilter);
