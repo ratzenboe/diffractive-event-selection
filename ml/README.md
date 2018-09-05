@@ -15,6 +15,7 @@ the hyperparameters of the model itself which include for example width and dept
 following parameters:
 
 1. The `data_params.conf` file handles important information about the features used during training. 
+
 | Paramerter name   |  Expanation |
 |------------------ |-------------|
 | max_entries       | If variable length sequences are possible (*e.g.* number of tracks, number of clusters) then max_entries defines the maximum number of saved entries (only relevant during event-dictionary creation, NOT during training)  |
