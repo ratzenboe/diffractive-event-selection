@@ -15,17 +15,15 @@ the hyperparameters of the model itself which include for example width and dept
 following parameters:
 
 1. The `data_params.conf` file handles important information about the features used during training. 
-    | Paramerter name   |  Expanation |
-    |------------------ |-------------|
-    | max_entries       | If variable length sequences are possible (*e.g.* number of tracks, number of clusters) then max_entries defines the maximum number 
-                            of saved entries (only relevant during event-dictionary creation, NOT during training)  |
-    | branches          | Features to use during training (evt_id in *event* should be left in the featues, gets removed automatically)  |
-    | missing_values    | If a feature has an internally saved special missing value, then it should be noted here. It will be altered to the default missing value of 999.0  |
-    | evt_id            | String defining the event id name. Important for checks if the event id feature is still in the set of featuers during 
-                            training (should be removed before training)  |
-    | event_string      | String defining the event colom in the event dictionary (default "event"). Used during event-dictionary creation, not needed for training |
-    | cut_dic           | Dictionary specifying the pre-cut applied to the data before they are used during training | 
-    | remove_features   | List containing individual features which should be removed. For mode NN with 2 tracks this is not needed. | 
+| Paramerter name   |  Expanation |
+|------------------ |-------------|
+| max_entries       | If variable length sequences are possible (*e.g.* number of tracks, number of clusters) then max_entries defines the maximum number of saved entries (only relevant during event-dictionary creation, NOT during training)  |
+| branches          | Features to use during training (evt_id in *event* should be left in the featues, gets removed automatically)  |
+| missing_values    | If a feature has an internally saved special missing value, then it should be noted here. It will be altered to the default missing value of 999.0  |
+| evt_id            | String defining the event id name. Important for checks if the event id feature is still in the set of featuers during training (should be removed before training)  |
+| event_string      | String defining the event colom in the event dictionary (default "event"). Used during event-dictionary creation, not needed for training |
+| cut_dic           | Dictionary specifying the pre-cut applied to the data before they are used during training | 
+| remove_features   | List containing individual features which should be removed. For mode NN with 2 tracks this is not needed. | 
     
 1. The `run_params.conf` file 
 
