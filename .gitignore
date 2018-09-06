@@ -123,6 +123,9 @@ venv.bak/
 # ignore OADB folder
 OADB/
 
+# ignore all plot folers
+plots/
+
 # jupyter notebooks 
 *.ipynb
 # .pyc files 
