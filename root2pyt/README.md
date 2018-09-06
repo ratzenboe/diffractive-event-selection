@@ -1,4 +1,10 @@
-## Execution order
+## Root2pyt
+
+The purpose of these programs is to generate a data structure suited for machine learning tasks. The data is initially available in the form of root files, more precisely in the 
+form of special classes (called *CEPBuffers*, written in `c++`) which store the necessary information. The programs explained in the following section transform data saved in various
+files to a single python dictionary which is easy to handle and can be used for all machine learning purposes.
+
+### Execution order
 
 Before anything can be executed we have to enter the ali-environment. This can be fixed in the `.bashrc`.
 
@@ -22,29 +28,3 @@ Before anything can be executed we have to enter the ali-environment. This can b
     ```
     python3 concat_evt_dic.py -filespath /path/to/evtdics/
     ```
-
-## Plots
-
-We can plot the features in the (raw-)buffers easily by using the following pipeline:
-
-1. We initialize the feature plotting by using the following lines
-    ```
-    ./.feature_extraction_to_tlist 
-    ```
-    The `nev`, number of evts, is the number of events per batch. The `filter` defines if the data plotted will have some active filters (*e.g.* !V0). 
-1. The previous step outputs many individual small plots each only covering `nev`. We now merge the files with
-    ```
-    ./TListMerger.sh -filesdir=/path/to/previous/output/ -exedir=/exe/dir/
-    ```
-
-### Ratio plots
-
-If we ran the previous plotting script with multiple cuts selected or over diffenrent datasets we can compare the featrue distributions via the following scipt
-```
-./ratioplot.sh -file1=/path/to/file1 -file2=/path/to/file2 -outputdir=/out/path/ -exedir=/path/to/exedir/
-```
-**Warning:** this script may fail in `root-v5` as the `TRatioPlot` class may not be implemented. Execute in `root-v6`
-
-
-
-
