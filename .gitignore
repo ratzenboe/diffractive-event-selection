@@ -107,16 +107,8 @@ venv.bak/
 *~
 
 # output files are too big for a online repository
-/recurrantNets/RNN/data/*
-/recurrantNets/RNN/ml/output/*
-/imageNets/pretrainedmodels/*
-
-# ignore the save copy
-recurrantNets/RNN/code/modules/load_model_save.py
-
-# ignore old programs and unrelated grid-scripts
-recurrantNets/RNN/progs/old_progs
-recurrantNets/RNN/progs/grid_scripts
+/data/*
+/ml/output/*
 
 # ignore files.txt files
 *files*.txt
@@ -128,7 +120,7 @@ recurrantNets/RNN/progs/grid_scripts
 *.root
 *.zip
 
-# ignore OADB folders
+# ignore OADB folder
 OADB/
 
 # jupyter notebooks 
