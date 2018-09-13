@@ -16,7 +16,7 @@ following parameters:
 
 1. The `data_params.conf` file handles important information about the features used during training. 
 
-| Paramerter        |  Explanation |
+| Parameter         |  Explanation |
 |------------------ |-------------|
 | max_entries       | If variable length sequences are possible (*e.g.* number of tracks, number of clusters) then max_entries defines the maximum number of saved entries (only relevant during event-dictionary creation, NOT during training)  |
 | branches          | Features to use during training (evt_id in *event* should be left in the featues, gets removed automatically)  |
@@ -27,4 +27,39 @@ following parameters:
 | remove_features   | List containing individual features which should be removed. For mode NN with 2 tracks this is not needed. | 
     
 1. The `run_params.conf` file 
+
+| Parameter         | Explanation   |
+| ---------------   | -----------   |
+| frac_val_sample   | The fraction of the whole data which is used to validate the performance during training. Default: 0.2 |
+| frac_test_sample  | The fraction of the (remaining) training data (after the validation sample is split off used to test the final model performance. Default: 0.25, results in a final split of 60 - 20 - 20 (train-validation-test). |
+| do_standard_scale     | Bool: if the data should be standard scaled for training. |
+| data_set              | String: name of the dataset (not neccessary, just for print-outs |
+
+1. The `model_params.conf` file 
+
+| Parameter         | Explanation   |
+| ---------------   | -----------   |
+| rnn   | String: If the recursive mode is chosen this parameter defines which recursive unit is used. Default: 'LSTM'. |
+| n_layers  | Int: Number of layers of the neural network which is attached to the intput. |
+| layer_nodes     | Int: width of the networks hidden layers. |
+| activation      | String: Network activation function. |
+| batch_size      | Int: Size of the mini-batch fed into the neural network at once. |
+| n_epochs      | Int: Number of training epochs. |
+| dropout      | Float in (0., 1.) or list of floats with length = n_layers: Dropout fraction |
+| k_reg      | Float: Kernel regularizer - not important and currently not in use! |
+| class_weights     | Dictionary: Weights used to compensate for a class imbalance - currently not in use! | 
+
+
+Additionally some command-line arguments can also be used. A detailed description is available via the `--help` command, *i.e.*:
+```
+python train.py --help
+```
+This command opens the help window featuring every commando-line argument with an explanation. **Attention:** there are default settings for every 
+command-line parameter, however, some may not be correct, *e.g.* the `-inpath` argument has to be set if the default path `output/evt_dic.pkl` is non-existing.
+The training is then done via
+```
+python train.py -necessaryarguments
+```
+and the outputs are stored in session folders tagged by the date `ml/output/session-date`. **Attention:** by default the session folders delete themselves if more than 20 folders
+starting with the signature `session_` exist. Therefore, rename important result-folders.
 
