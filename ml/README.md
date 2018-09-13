@@ -63,3 +63,6 @@ python train.py -necessaryarguments
 and the outputs are stored in session folders tagged by the date `ml/output/session-date`. **Attention:** by default the session folders delete themselves if more than 20 folders
 starting with the signature `session_` exist. Therefore, rename important result-folders.
 
+After a model is trained, it can be used to classify data with the `classify.py` script. This script needs an already trained model which is used in oder to reject background events. 
+Here command line arguments are also very important. The program creates `.txt` file with signal-event guesses which is saved in the folder where also the model is saved.
+This `.txt` file can be used to plot invariant mass spectrum of the events which the model recognizes as signal. This is done with the `./plottingscripts/CEPBuffersToList_fromtxtfile.C` file.
